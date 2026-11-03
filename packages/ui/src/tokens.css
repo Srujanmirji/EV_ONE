@@ -1,0 +1,38 @@
+/*
+ * EVONE design tokens (UI_UX.md). Tailwind v4 turns each into utilities,
+ * e.g. --color-ink -> bg-ink / text-ink, --radius-card -> rounded-card.
+ *
+ * Deliberate change from UI_UX.md: "Muted text #747B87" measures about
+ * 4.3:1 on pearl and fails WCAG AA for body text, so text-secondary uses
+ * #596170 (6.6:1). Titanium stays decorative/on-dark only.
+ */
+@theme {
+  --color-ink: #090b0f;
+  --color-graphite: #15171c;
+  --color-paper: #ffffff;
+  --color-pearl: #f8f9fb;
+  --color-mist: #eff1f5;
+  --color-titanium: #c7ccd4;
+  --color-line: #e4e7ec;
+  --color-secondary: #596170;
+  --color-danger: #b42318;
+  --color-danger-surface: #fef3f2;
+  --color-success: #067647;
+  --color-glass: rgb(255 255 255 / 0.18);
+  --color-glass-line: rgb(255 255 255 / 0.35);
+
+  --font-sans: "Inter Variable", sans-serif;
+  --font-display: "Manrope Variable", sans-serif;
+  --text-display: clamp(2.25rem, 6vw, 4.5rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.04em;
+
+  --radius-card: 1.25rem;
+  --radius-field: 0.875rem;
+
+  --container-content: 80rem;
+  --container-prose: 65ch;
+  --container-reading: 47.5rem;
+
+  --spacing-section: clamp(3.5rem, 8vw, 8rem);
+}

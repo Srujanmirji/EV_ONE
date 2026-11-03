@@ -1,24 +1,9 @@
 @import "@fontsource-variable/inter/wght.css";
 @import "@fontsource-variable/manrope/wght.css";
 @import "tailwindcss";
-
-@theme {
-  --color-ink: #090b0f;
-  --color-graphite: #15171c;
-  --color-paper: #ffffff;
-  --color-pearl: #f8f9fb;
-  --color-mist: #eff1f5;
-  --color-line: #e4e7ec;
-  --color-titanium: #c7ccd4;
-  --color-secondary: #596170;
-  --font-sans: "Inter Variable", sans-serif;
-  --font-display: "Manrope Variable", sans-serif;
-  --text-display: clamp(2.25rem, 6vw, 4.5rem);
-  --text-display--line-height: 1.1;
-  --text-display--letter-spacing: -0.04em;
-  --container-content: 80rem;
-  --container-prose: 65ch;
-}
+@import "@evone/ui/tokens.css";
+/* Generate utilities used inside the shared components. */
+@source "../../../packages/ui/src";
 
 @layer base {
   html {

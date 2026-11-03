@@ -1,3 +1,4 @@
+import { buttonClasses, EmptyState } from "@evone/ui";
 import Link from "next/link";
 import type { SiteSection } from "@/lib/site";
 
@@ -22,21 +23,17 @@ export function ComingSoon({ section }: { section: SiteSection }) {
         </div>
       </section>
       <section className="mx-auto w-full max-w-content px-4 py-14 sm:px-8">
-        <div
-          role="status"
-          className="max-w-prose rounded-3xl border border-line bg-paper p-6 sm:p-8"
+        <EmptyState
+          title="Status"
+          className="max-w-prose"
+          action={
+            <Link href="/" className={buttonClasses("secondary")}>
+              Back to home
+            </Link>
+          }
         >
-          <h2 className="font-display text-xl font-semibold">Status</h2>
-          <p className="mt-3 text-base text-secondary">
-            {section.availability}
-          </p>
-          <Link
-            href="/"
-            className="mt-6 inline-flex min-h-11 items-center rounded-full border border-line px-5 font-semibold underline-offset-4 hover:underline"
-          >
-            Back to home
-          </Link>
-        </div>
+          {section.availability}
+        </EmptyState>
       </section>
     </main>
   );

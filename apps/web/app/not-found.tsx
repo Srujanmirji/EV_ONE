@@ -1,3 +1,4 @@
+import { buttonClasses } from "@evone/ui";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -11,10 +12,7 @@ export default function NotFound() {
       <p className="max-w-prose text-secondary">
         This page is unavailable. Return to the EVONE preview to continue.
       </p>
-      <Link
-        href="/"
-        className="inline-flex min-h-11 w-fit items-center rounded-full bg-ink px-6 py-3 text-paper underline-offset-4 hover:underline"
-      >
+      <Link href="/" className={buttonClasses("primary", "lg", "w-fit")}>
         Return to preview
       </Link>
     </main>

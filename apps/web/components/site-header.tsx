@@ -1,3 +1,4 @@
+import { buttonClasses } from "@evone/ui";
 import Link from "next/link";
 import { primaryNav, SELL_SECTION } from "@/lib/site";
 import { MobileNav, NavLink } from "./nav-client";
@@ -25,7 +26,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <Link
             href={SELL_SECTION.href}
-            className="hidden min-h-11 items-center rounded-full bg-ink px-5 text-sm font-semibold text-paper sm:inline-flex"
+            className={buttonClasses("primary", "md", "hidden sm:inline-flex")}
           >
             {SELL_SECTION.label}
           </Link>
