@@ -16,6 +16,16 @@
 ## Outbox pattern
 Write business change and outbox in one DB transaction. Worker polls outbox and pushes BullMQ jobs. Job `id = event_key`; consumer dedupes by unique id. At-least-once delivery expected; handlers must be idempotent. Dead-letter after max retries, alert operators with no PII.
 
+**Implemented (EV-014):**
+- `packages/queue` defines versioned event schemas (`system.ping.v1` so far) and a producer: payloads are validated before enqueue, and the event key is the job id, so a duplicate key runs once.
+- Retry policy: 5 attempts with exponential backoff from 1 s; failed jobs are kept for inspection.
+- `apps/worker` consumes the queue:
+  - invalid or unknown events fail immediately without retries;
+  - a job that exhausts its attempts or is rejected is logged as `job.dead_letter` with no payload and passed to an `onDeadLetter` hook, where operator alerting attaches in EV-019;
+  - graceful SIGTERM finishes the job in progress;
+  - `/health/live` and `/health/ready` serve the host's probes.
+- The database outbox that feeds the queue is not built yet. Add it with the first business event (e.g. listing submitted), writing the outbox row in the same transaction.
+
 ## Observability
 - `request_id`, user pseudonymous id, role/scope, route name, status, latency; do not log phone, email, lead free text or auth secrets.
 - Sentry errors with scrubbing; trace key flows (search, checkout, lead send) and external provider response time.

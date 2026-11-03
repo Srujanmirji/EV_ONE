@@ -25,7 +25,17 @@ jobs:
           --health-interval 2s
           --health-timeout 3s
           --health-retries 30
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
     env:
+      REDIS_URL: redis://127.0.0.1:6379
       DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone
       SHADOW_DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone_shadow
     steps:
@@ -59,7 +69,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone_verify
       - run: pnpm db:migrate:deploy
-      - name: Prove catalogue rules, endpoints and API contract against PostgreSQL
+      - name: Prove catalogue rules, API contract and queue retries against PostgreSQL and Redis
         run: pnpm test:integration
       - name: Prove the demo seed runs on a migrated database
         run: pnpm db:seed:demo

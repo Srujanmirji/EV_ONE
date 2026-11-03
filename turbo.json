@@ -28,7 +28,12 @@
     "test:e2e": {
       "dependsOn": ["build", "@evone/api#build"],
       "cache": false,
-      "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI", "DATABASE_URL"]
+      "passThroughEnv": [
+        "PW_CHROMIUM_EXECUTABLE",
+        "CI",
+        "DATABASE_URL",
+        "REDIS_URL"
+      ]
     },
     "contract:generate": {
       "dependsOn": ["build", "^contract:generate"],
@@ -37,7 +42,7 @@
     "test:integration": {
       "dependsOn": ["build"],
       "cache": false,
-      "passThroughEnv": ["DATABASE_URL"]
+      "passThroughEnv": ["DATABASE_URL", "REDIS_URL"]
     },
     "generate": {
       "outputs": ["src/generated/**"]

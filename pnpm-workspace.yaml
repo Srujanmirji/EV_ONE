@@ -23,6 +23,8 @@ minimumReleaseAgeExclude:
 allowBuilds:
   "@prisma/engines": true
   "@swc/core": false
+  # Optional native speed-up; prebuilt binaries ship as optional deps.
+  msgpackr-extract: false
   prisma: true
   sharp: true
   unrs-resolver: true
