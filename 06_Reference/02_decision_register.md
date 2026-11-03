@@ -15,7 +15,7 @@ All undecided decisions have an owner/date and block relevant implementation. Th
 | ADR-009 | Catalogue content | curated sourced data (no unreviewed auto scrape) | editor | before content launch |
 | ADR-010 | Battery inspection badge | independent signed report only | partner QA | before P1 marketing |
 | ADR-011 | Search | PostgreSQL FTS/trigram first | engineer measures | MVP |
-| ADR-012 | Prisma/PostGIS | pin and test current extension against host | tech lead spike | before DB migration |
+| ADR-012 | Prisma/PostGIS | **proposed** 2026-11-03: Prisma 7.10.1, `Unsupported` geography + raw spatial SQL; spike passed locally, host unverified | owner to accept; verify deployment host PostGIS | before DB migration |
 | ADR-013 | App | website first, Expo later | founder revisit after pilot | P1 |
 | ADR-014 | Pricing | experiment after evidence; no fixed listing subscription price | business lead | pilot |
 | ADR-015 | Retention/privacy | define exact retention, breach and deletion policy with legal counsel | legal + security | production gate |
@@ -48,3 +48,13 @@ Context: The workspace contains the blueprint only. The owner approved the propo
 Decision: Use Next.js App Router for the web and a modular NestJS API when EV-012 begins. Begin EV-009 with a limited exception to its EV-004 prerequisite. EV-004 remains open; this is not core-screen sign-off.
 Consequences: Scaffold only the workspace and minimal buildable web consumer. Do not infer approval for vendor integrations or for EV-062, whose other dependencies remain unsatisfied. Keep the approved visual proposal in `04_Delivery/07_initialization_audit.md` as the foundation direction.
 Revisit trigger: A proposed architecture change or completion of EV-004.
+
+### ADR-012 — Prisma with PostGIS
+Date: 2026-11-03 | Status: proposed (awaiting owner acceptance)
+Context: EV-013 needs a pinned ORM with PostGIS for SRID 4326 charger points. `DATABASE.md` implied current Prisma had first-class PostGIS support. Spike evidence: `04_Delivery/11_ADR-012_prisma_postgis_spike.md`.
+Options: A) Prisma 7.10.1 with `Unsupported("geography(Point, 4326)")` columns, GiST indexes in the schema, and spatial reads/writes via parameterised raw SQL. B) Drizzle ORM, which has native PostGIS column types, replacing Prisma throughout. C) Prisma for everything except a separate query builder for spatial tables.
+Decision (proposed): A. Pin `prisma`, `@prisma/client` and `@prisma/adapter-pg` at 7.10.1 with the `postgresqlExtensions` preview feature.
+Why: Migrations, drift detection, repeat deploys, GiST index use and coordinate round trips all passed against PostgreSQL 17.5 / PostGIS 3.5.2. Spatial code is confined to charging (gated by ADR-006), so a contained raw-SQL repository is cheaper than switching ORMs (B) or running two data layers (C).
+Consequences: Geography columns must be nullable, because a required `Unsupported` column removes `create()` from the client. Spatial SQL lives in one charging repository, with integration tests against real PostGIS. Local databases are created from `template0` with only `postgis`, because extra extensions break `migrate dev`. Prisma 7 refuses agent-run `migrate reset` without explicit user consent; agents use fresh databases instead.
+Open gate: confirm PostGIS 3.x is available on the chosen production Postgres host before the first production migration.
+Revisit trigger: Prisma ships native PostGIS types or Prisma 8 goes stable; spatial queries spread beyond charging; host lacks PostGIS.

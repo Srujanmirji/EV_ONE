@@ -115,4 +115,4 @@ erDiagram
 - Generate seed demo content with `demo=true` and conspicuous labels; never push staged fake verification into production.
 
 ## Prisma/PostGIS note
-As of Nov 2026, Prisma has current PostGIS extension documentation; older versions required `Unsupported`/raw SQL. Pin a tested Prisma version and verify extension support with the deployment PostgreSQL host. Reference: https://www.prisma.io/docs/orm/extensions/postgis
+Tested 2026-11-03 (ADR-012, `04_Delivery/11_ADR-012_prisma_postgis_spike.md`): Prisma 7.10.1 still has **no native PostGIS types**. Declare spatial columns as nullable `Unsupported("geography(Point, 4326)")?` with `@@index([geom], type: Gist)` and the `postgresqlExtensions` preview feature; read and write them with parameterised raw SQL. Migrations, drift checks and GiST index use were verified on PostgreSQL 17.5 / PostGIS 3.5.2. Deployment-host PostGIS support is still unverified. Reference: https://www.prisma.io/docs/orm/extensions/postgis
