@@ -23,7 +23,11 @@ for (const section of sections) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       section.title,
     );
-    await expect(page.getByRole("status")).toContainText(section.availability);
+    if (!section.live) {
+      await expect(page.getByRole("status")).toContainText(
+        section.availability,
+      );
+    }
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       "content",
       section.description,

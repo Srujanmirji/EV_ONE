@@ -19,6 +19,20 @@ const variantSpecs = {
   warrantyText: true,
 } as const;
 
+/** Published variants' specs and reviewed-source dates, for SpecSummary. */
+const summaryVariants = (visible: object) => ({
+  where: visible,
+  select: {
+    batteryKwh: true,
+    claimedRangeKm: true,
+    rangeStandard: true,
+    sources: {
+      where: { reviewedAt: { not: null } },
+      select: { reviewedAt: true },
+    },
+  },
+});
+
 const modelFields = {
   id: true,
   slug: true,
@@ -95,7 +109,7 @@ export class CatalogueRepository {
       },
       orderBy: [{ name: "asc" }, { id: "asc" }],
       take: limit + 1,
-      select: modelFields,
+      select: { ...modelFields, variants: summaryVariants(this.visible) },
     });
   }
 
@@ -111,7 +125,13 @@ export class CatalogueRepository {
         variants: {
           where: this.visible,
           orderBy: [{ name: "asc" }, { id: "asc" }],
-          select: variantSpecs,
+          select: {
+            ...variantSpecs,
+            sources: {
+              where: { reviewedAt: { not: null } },
+              select: { reviewedAt: true },
+            },
+          },
         },
       },
     });

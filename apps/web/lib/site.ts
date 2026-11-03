@@ -17,6 +17,8 @@ export interface SiteSection {
   placement: "primary" | "footer";
   /** What visitors are told today. Never imply the feature works. */
   availability: string;
+  /** True once the section renders real data instead of ComingSoon. */
+  live?: boolean;
 }
 
 export const sections: SiteSection[] = [
@@ -37,7 +39,9 @@ export const sections: SiteSection[] = [
     description:
       "Compare new electric vehicles by sourced specifications, with the test standard behind every range figure.",
     placement: "primary",
-    availability: "The catalogue is being prepared and is not published yet.",
+    availability:
+      "Only models with sourced, reviewed specifications are published.",
+    live: true,
   },
   {
     href: "/accessories",

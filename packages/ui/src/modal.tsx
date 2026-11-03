@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { buttonClasses } from "./button";
+import { cn } from "./cn";
 
 const FOCUSABLE =
   'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -16,6 +17,8 @@ export interface ModalProps {
   /** Buttons for the footer; the first focusable element receives focus. */
   actions?: ReactNode;
   closeLabel?: string;
+  /** "sheet" anchors to the bottom edge on small screens (UX-02 filters). */
+  placement?: "center" | "sheet";
 }
 
 /**
@@ -31,6 +34,7 @@ export function Modal({
   children,
   actions,
   closeLabel = "Close",
+  placement = "center",
 }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const opener = useRef<Element | null>(null);
@@ -95,7 +99,11 @@ export function Modal({
         // A click on the backdrop targets the dialog element itself.
         if (event.target === ref.current) onClose();
       }}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-card bg-paper p-0 text-ink shadow-xl backdrop:bg-ink/60"
+      className={cn(
+        "m-auto w-[min(32rem,calc(100vw-2rem))] rounded-card bg-paper p-0 text-ink shadow-xl backdrop:bg-ink/60",
+        placement === "sheet" &&
+          "max-sm:mb-0 max-sm:max-h-[85svh] max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none",
+      )}
     >
       <div className="flex flex-col gap-4 p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">

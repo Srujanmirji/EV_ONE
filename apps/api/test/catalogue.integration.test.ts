@@ -178,6 +178,26 @@ describe("variant provenance", () => {
   });
 });
 
+describe("model spec summary", () => {
+  it("summarises published variants and counts only reviewed sources", async () => {
+    const brand = await publishedBrand();
+    const m = await model(brand.id);
+    await variant(m.id);
+    await variant(m.id, { publish: false });
+    const body = await json(
+      await api.get(`/models?brandId=${brand.id}`),
+      ModelListResponse,
+    );
+    expect(body.data[0]?.specSummary).toEqual({
+      variantCount: 1,
+      batteryKwh: { min: 30.5, max: 30.5 },
+      claimedRanges: [{ standard: "MIDC", minKm: 315, maxKm: 315 }],
+      reviewedSourceCount: 2,
+      lastReviewedAt: "2026-11-03T10:00:00.000Z",
+    });
+  });
+});
+
 describe("demo data", () => {
   it("is visible and labelled outside production, absent in production", async () => {
     const demo = await publishedBrand({ isDemo: true });

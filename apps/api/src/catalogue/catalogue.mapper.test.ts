@@ -1,6 +1,11 @@
-import { VariantSpecs } from "@evone/contracts";
+import { SpecSummary, VariantSpecs } from "@evone/contracts";
 import { describe, expect, it } from "vitest";
-import { toSources, toSpecs, type VariantRow } from "./catalogue.mapper.js";
+import {
+  toSources,
+  toSpecSummary,
+  toSpecs,
+  type VariantRow,
+} from "./catalogue.mapper.js";
 
 const decimal = (v: string) => ({ toString: () => v });
 const base: VariantRow = {
@@ -73,5 +78,53 @@ describe("toSources", () => {
         reviewedAt: "2026-11-03T10:00:00.000Z",
       },
     ]);
+  });
+});
+
+describe("toSpecSummary", () => {
+  const reviewed = (iso: string) => ({ reviewedAt: new Date(iso) });
+
+  it("keeps ranges separate per test standard and reports min/max", () => {
+    const summary = toSpecSummary([
+      {
+        batteryKwh: decimal("30.00"),
+        claimedRangeKm: 300,
+        rangeStandard: "MIDC",
+        sources: [reviewed("2026-10-01T00:00:00Z")],
+      },
+      {
+        batteryKwh: decimal("40.50"),
+        claimedRangeKm: 400,
+        rangeStandard: "MIDC",
+        sources: [reviewed("2026-11-02T00:00:00Z"), { reviewedAt: null }],
+      },
+      {
+        batteryKwh: null,
+        claimedRangeKm: 350,
+        rangeStandard: "WLTP",
+        sources: [],
+      },
+    ]);
+    expect(summary).toEqual({
+      variantCount: 3,
+      batteryKwh: { min: 30, max: 40.5 },
+      claimedRanges: [
+        { standard: "MIDC", minKm: 300, maxKm: 400 },
+        { standard: "WLTP", minKm: 350, maxKm: 350 },
+      ],
+      reviewedSourceCount: 2,
+      lastReviewedAt: "2026-11-02T00:00:00.000Z",
+    });
+    expect(() => SpecSummary.parse(summary)).not.toThrow();
+  });
+
+  it("reports nothing known for a model without published variants", () => {
+    expect(toSpecSummary([])).toEqual({
+      variantCount: 0,
+      batteryKwh: null,
+      claimedRanges: [],
+      reviewedSourceCount: 0,
+      lastReviewedAt: null,
+    });
   });
 });
