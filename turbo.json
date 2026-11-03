@@ -2,20 +2,45 @@
   "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+      "dependsOn": ["^build", "generate"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**",
+        "dist/**",
+        "src/generated/**"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "lint": {},
-    "typecheck": {
-      "outputs": [".next/types/**"]
+    "lint": {
+      "dependsOn": ["^build", "generate"]
     },
-    "test": {
+    "typecheck": {
+      "outputs": [".next/types/**"],
+      "dependsOn": ["^build", "generate"]
+    },
+    "test:unit": {
+      "dependsOn": ["^build", "generate"]
+    },
+    "test:e2e": {
       "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI", "DATABASE_URL"]
+    },
+    "contract:generate": {
+      "dependsOn": ["build", "^contract:generate"],
       "cache": false
+    },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL"]
+    },
+    "generate": {
+      "outputs": ["src/generated/**"]
     }
   }
 }

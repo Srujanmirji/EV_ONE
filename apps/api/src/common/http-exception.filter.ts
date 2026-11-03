@@ -1,0 +1,55 @@
+import {
+  type ArgumentsHost,
+  Catch,
+  type ExceptionFilter,
+  HttpException,
+  HttpStatus,
+} from "@nestjs/common";
+import type { Request, Response } from "express";
+import type { ErrorEnvelope } from "@evone/contracts";
+import { requestIdOf } from "./request-id.js";
+
+type ErrorCode = ErrorEnvelope["error"]["code"];
+
+const CODES: Record<number, ErrorCode> = {
+  400: "BAD_REQUEST",
+  401: "UNAUTHENTICATED",
+  403: "FORBIDDEN",
+  404: "NOT_FOUND",
+  405: "METHOD_NOT_ALLOWED",
+  409: "CONFLICT",
+  422: "VALIDATION_ERROR",
+  429: "RATE_LIMITED",
+  503: "SERVICE_UNAVAILABLE",
+};
+
+/**
+ * Renders every failure in the API_CONTRACT error envelope. Unexpected errors
+ * become a generic 500 so stack traces and internals never reach clients.
+ */
+@Catch()
+export class EnvelopeExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const http = host.switchToHttp();
+    const req = http.getRequest<Request>();
+    const res = http.getResponse<Response>();
+
+    const isHttp = exception instanceof HttpException;
+    const status = isHttp
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const code = CODES[status] ?? (status >= 500 ? "INTERNAL_ERROR" : "ERROR");
+    const message =
+      isHttp && status < 500
+        ? exception.message
+        : status === 503
+          ? "Service unavailable"
+          : "Something went wrong";
+
+    const body: ErrorEnvelope = {
+      error: { code, message },
+      meta: { requestId: requestIdOf(req) },
+    };
+    res.status(status).json(body);
+  }
+}

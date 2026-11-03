@@ -1,0 +1,151 @@
+// EVONE data model. Conventions: DATABASE.md. PostGIS rules: ADR-012
+// (spatial columns are nullable `Unsupported("geography(Point, 4326)")?`
+// with `@@index([col], type: Gist)`; spatial SQL stays in one repository).
+// Domain tables arrive with their tasks (EV-021 catalogue, EV-027 listings).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+  previewFeatures     = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [postgis]
+}
+
+// ── Catalogue (EV-021) ────────────────────────────────────────────────────
+// Specs are nullable: NULL means "unknown", never zero. A variant can only
+// be PUBLISHED when every non-null spec has a reviewed https source in
+// spec_sources (enforced by database triggers, see the EV-021 migration).
+
+enum PublishStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum VehicleType {
+  SCOOTER
+  MOTORCYCLE
+  CAR
+  THREE_WHEELER
+}
+
+enum ModelAvailability {
+  ON_SALE
+  UPCOMING
+  DISCONTINUED
+  UNKNOWN
+}
+
+/// Test cycle a claimed range was measured under. Ranges from different
+/// standards are not comparable and must never be shown without it.
+enum RangeStandard {
+  MIDC
+  IDC
+  WLTP
+  NEDC
+  EPA
+  OEM_UNSPECIFIED
+}
+
+/// Variant columns a spec_sources row can cite. range covers both
+/// claimed_range_km and range_standard.
+enum SpecField {
+  BATTERY_KWH
+  CLAIMED_RANGE
+  MOTOR_KW
+  CHARGING_AC_KW
+  CHARGING_DC_KW
+  WARRANTY
+}
+
+enum SourceKind {
+  OEM
+  REGULATOR
+  PRESS
+  DEALER
+  OTHER
+}
+
+model Brand {
+  id        String        @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String        @unique
+  logoKey   String?       @map("logo_key")
+  status    PublishStatus @default(DRAFT)
+  isDemo    Boolean       @default(false) @map("is_demo")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  models    EvModel[]
+
+  @@map("brands")
+}
+
+model EvModel {
+  id                 String            @id @default(uuid()) @db.Uuid
+  brandId            String            @map("brand_id") @db.Uuid
+  name               String
+  slug               String
+  vehicleType        VehicleType       @map("vehicle_type")
+  availabilityStatus ModelAvailability @default(UNKNOWN) @map("availability_status")
+  releaseDate        DateTime?         @map("release_date") @db.Date
+  status             PublishStatus     @default(DRAFT)
+  isDemo             Boolean           @default(false) @map("is_demo")
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  brand              Brand             @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  variants           EvVariant[]
+
+  @@unique([brandId, slug])
+  @@index([status, vehicleType])
+  @@map("ev_models")
+}
+
+model EvVariant {
+  id             String         @id @default(uuid()) @db.Uuid
+  modelId        String         @map("model_id") @db.Uuid
+  name           String
+  slug           String
+  batteryKwh     Decimal?       @map("battery_kwh") @db.Decimal(6, 2)
+  claimedRangeKm Int?           @map("claimed_range_km")
+  rangeStandard  RangeStandard? @map("range_standard")
+  motorKw        Decimal?       @map("motor_kw") @db.Decimal(6, 2)
+  chargingAcKw   Decimal?       @map("charging_ac_kw") @db.Decimal(5, 2)
+  chargingDcKw   Decimal?       @map("charging_dc_kw") @db.Decimal(6, 2)
+  warrantyText   String?        @map("warranty_text")
+  status         PublishStatus  @default(DRAFT)
+  isDemo         Boolean        @default(false) @map("is_demo")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  model          EvModel        @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  sources        SpecSource[]
+
+  @@unique([modelId, slug])
+  @@index([status])
+  @@map("ev_variants")
+}
+
+model SpecSource {
+  id          String     @id @default(uuid()) @db.Uuid
+  variantId   String     @map("variant_id") @db.Uuid
+  fieldName   SpecField  @map("field_name")
+  /// The value exactly as the source states it, for reviewer comparison.
+  valueText   String     @map("value_text")
+  sourceUrl   String     @map("source_url")
+  sourceKind  SourceKind @map("source_kind")
+  effectiveAt DateTime?  @map("effective_at") @db.Date
+  /// Set when a reviewer has checked the value against the source.
+  reviewedAt  DateTime?  @map("reviewed_at") @db.Timestamptz(6)
+  /// users.id once identity exists (EV-016); no FK until then.
+  reviewerId  String?    @map("reviewer_id") @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  variant     EvVariant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([variantId, fieldName])
+  @@map("spec_sources")
+}

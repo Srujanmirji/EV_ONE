@@ -11,6 +11,23 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: evone
+          POSTGRES_PASSWORD: ci_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evone"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone
+      SHADOW_DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone_shadow
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: pnpm/action-setup@v6.1.1
@@ -22,9 +39,32 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm test:unit
       - run: pnpm build
+      - name: Prove openapi.json and the SDK match the contracts
+        run: pnpm contract:check
+      - name: Prove gates reject invalid input
+        run: pnpm verify:gates
+      # Fresh databases from template0: the image's default database ships
+      # extra extensions that Prisma reports as drift (ADR-012).
+      - name: Create empty databases
+        env:
+          PGPASSWORD: ci_only
+        run: |
+          for db in evone evone_shadow evone_verify; do
+            psql -h 127.0.0.1 -U evone -d postgres -c "CREATE DATABASE $db TEMPLATE template0"
+          done
+      - name: Prove migrations are repeatable and reversible
+        run: pnpm db:migrate:verify
+        env:
+          DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone_verify
+      - run: pnpm db:migrate:deploy
+      - name: Prove catalogue publishing rules against PostgreSQL
+        run: pnpm test:integration
+      - name: Prove the demo seed runs on a migrated database
+        run: pnpm db:seed:demo
       - run: pnpm --filter @evone/web exec playwright install --with-deps chromium
-      - run: pnpm test
+      - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

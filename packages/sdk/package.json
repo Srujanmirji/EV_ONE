@@ -1,0 +1,33 @@
+{
+  "name": "@evone/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test:unit": "vitest run",
+    "contract:generate": "openapi-typescript ../contracts/openapi.json --output src/schema.ts --root-types && prettier --write src/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "@evone/contracts": "workspace:*",
+    "@types/node": "24.19.2",
+    "eslint": "9.39.5",
+    "openapi-typescript": "7.13.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.0.5"
+  }
+}

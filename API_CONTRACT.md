@@ -187,3 +187,18 @@ Legal review must approve fields/text. Do not collect PAN, Aadhaar or bank recor
 
 ## OpenAPI generation
 `packages/contracts` contains Zod schemas and shared enums. API code validates the same schemas; CI generates `openapi.json` and typed `packages/sdk` client. Breaking changes require API versioning and contract tests.
+
+**Implemented (EV-018).** Endpoints implemented so far: `GET /health/live` and `GET /health/ready`.
+
+To add or change an endpoint:
+1. Define or extend strict Zod schemas in `packages/contracts/src` (`z.strictObject`, so undocumented fields fail). Register every exposed schema with `component(id, schema)` or `dataEnvelope(id, data)`.
+2. Add the route to `routes` in `packages/contracts/src/routes.ts`, with every status code it returns.
+3. Implement it in `apps/api`, typing responses with the contract types.
+4. Run `pnpm build && pnpm contract:generate` and commit the regenerated `packages/contracts/openapi.json` and `packages/sdk/src/schema.ts`.
+
+CI enforces all of this:
+- `pnpm contract:check` fails if the generated files are stale.
+- `apps/api/src/contract.test.ts` fails if the API serves a route the registry lacks, lacks a route the registry lists, or returns a body that does not parse with its schema.
+- The API end-to-end tests call the built server through `@evone/sdk`.
+
+Clients use `createEvoneClient({ origin })` from `@evone/sdk`. Types are compile-time only; responses are not re-validated at runtime.

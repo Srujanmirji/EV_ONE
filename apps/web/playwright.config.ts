@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Full Chromium (not the headless shell) so browser-only requests such as
+// favicons are exercised. PW_CHROMIUM_EXECUTABLE lets sandboxes with a
+// preinstalled, differently versioned Chromium run the suite locally.
+const executablePath = process.env.PW_CHROMIUM_EXECUTABLE;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -9,6 +14,8 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:3100",
     trace: "retain-on-failure",
+    channel: "chromium",
+    launchOptions: executablePath ? { executablePath } : {},
   },
   projects: [
     {
