@@ -1,0 +1,17 @@
+# Preserve the supplied blueprint rather than reformatting it.
+/*.md
+/01_Product/
+/02_UI_UX/
+/03_Engineering/
+/04_Delivery/
+/05_Operations/
+/06_Reference/
+/MANIFEST_SHA256.txt
+/assets/
+pnpm-lock.yaml
+**/node_modules/
+**/.next/
+**/.turbo/
+**/next-env.d.ts
+**/playwright-report/
+**/test-results/

@@ -1,0 +1,8 @@
+{
+  "name": "@evone/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./nextjs.json": "./nextjs.json"
+  }
+}

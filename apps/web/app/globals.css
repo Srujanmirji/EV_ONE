@@ -1,0 +1,43 @@
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/manrope/wght.css";
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #090b0f;
+  --color-graphite: #15171c;
+  --color-paper: #ffffff;
+  --color-pearl: #f8f9fb;
+  --color-titanium: #c7ccd4;
+  --color-secondary: #596170;
+  --font-sans: "Inter Variable", sans-serif;
+  --font-display: "Manrope Variable", sans-serif;
+  --text-display: clamp(2.25rem, 6vw, 4.5rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.04em;
+  --container-content: 80rem;
+  --container-prose: 65ch;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    background: var(--color-pearl);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  body {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  ::selection {
+    color: var(--color-paper);
+    background: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+  }
+}
