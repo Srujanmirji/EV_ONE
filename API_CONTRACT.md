@@ -47,11 +47,18 @@
 |---|---|---|---|
 | GET | `/brands` | public | brands/vehicle type filters |
 | GET | `/models?brandId=&vehicleType=` | public | published models |
-| GET | `/models/{slug}` | public | model with variants |
+| GET | `/brands/{brandSlug}/models/{modelSlug}` | public | model with variants (model slugs are unique per brand; replaces the ambiguous `/models/{slug}`) |
 | GET | `/variants/{id}` | public | canonical spec + data provenance |
 | GET | `/compare?variantIds=id1,id2` | public | compare 2–3 variants |
 | GET | `/model-prices?variantId=&regionCode=` | public | latest sourced price/date |
 | POST/PATCH | `/admin/catalogue/models` | editor/admin | publish/maintain model |
+
+**Implemented (EV-023):** `GET /brands`, `GET /models`, `GET /brands/{brandSlug}/models/{modelSlug}` and `GET /variants/{id}`. `/compare` is EV-026, and `/model-prices` waits for the prices table.
+- **Published only.** Brand, model and variant must all be `PUBLISHED`. Anything else returns 404, the same as missing. `is_demo` rows are excluded when `NODE_ENV=production` and flagged `isDemo` elsewhere.
+- **`/brands`** lists only published brands that have at least one published model. It is not paginated: brands are a small, bounded set.
+- **`/models`** is ordered by `(name, id)`, not `(createdAt, id)`. Postgres timestamps keep microseconds that a JavaScript `Date` drops, so a timestamp cursor can skip or repeat rows; text and UUID compare exactly. `nextCursor` is opaque.
+- **Specs:** `null` means unknown. `claimedRange` is always `{ km, standard }` or `null`. `sources` lists only reviewed sources and never exposes reviewer identity.
+- **Errors:** invalid query or path values, unknown parameters and tampered cursors return 400 `VALIDATION_ERROR` with per-field `fields`.
 
 ## Used EV marketplace
 | Method | Path | Access | Purpose |
@@ -188,7 +195,7 @@ Legal review must approve fields/text. Do not collect PAN, Aadhaar or bank recor
 ## OpenAPI generation
 `packages/contracts` contains Zod schemas and shared enums. API code validates the same schemas; CI generates `openapi.json` and typed `packages/sdk` client. Breaking changes require API versioning and contract tests.
 
-**Implemented (EV-018).** Endpoints implemented so far: `GET /health/live` and `GET /health/ready`.
+**Implemented (EV-018).** Health endpoints since EV-018; catalogue reads since EV-023 (see above).
 
 To add or change an endpoint:
 1. Define or extend strict Zod schemas in `packages/contracts/src` (`z.strictObject`, so undocumented fields fail). Register every exposed schema with `component(id, schema)` or `dataEnvelope(id, data)`.
@@ -198,7 +205,7 @@ To add or change an endpoint:
 
 CI enforces all of this:
 - `pnpm contract:check` fails if the generated files are stale.
-- `apps/api/src/contract.test.ts` fails if the API serves a route the registry lacks, lacks a route the registry lists, or returns a body that does not parse with its schema.
+- `apps/api/test/contract.integration.test.ts` (against PostgreSQL) fails if the API serves a route the registry lacks, lacks a route the registry lists, has no request for a documented status, or returns a body that does not parse with its schema.
 - The API end-to-end tests call the built server through `@evone/sdk`.
 
 Clients use `createEvoneClient({ origin })` from `@evone/sdk`. Types are compile-time only; responses are not re-validated at runtime.
