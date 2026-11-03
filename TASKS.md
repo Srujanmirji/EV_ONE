@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024 and EV-025 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -76,8 +76,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-025** · P0 · M · **Build EV detail and variant page**
   Depends: `EV-023` · **Done when:** Correct spec units, source-date, gallery and unknown states.
   `/evs/[brand]/[model]` and `/evs/[brand]/[model]/[variant]`: specs with units, test standard in full, per-value reviewed source with effective/checked dates, "Not stated" unknowns, real 404s (soft-404 defect fixed). Accessible `Gallery` component built and tested; **vehicle pages show its empty state because no licensed photos or media pipeline exist yet (EV-020, AGENTS rules 6/9; owner agreed)**. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41680514294). [Evidence](04_Delivery/19_EV-025_detail_evidence.md).
-- [ ] **EV-026** · P0 · S · **Build compare 2–3 EV variants**  
+- [x] **EV-026** · P0 · S · **Build compare 2–3 EV variants**
   Depends: `EV-025` · **Done when:** Missing fields handled; mobile comparison usable.
+  API `GET /compare` (2–3 distinct, ordered, all-or-nothing 404) and `/compare` page: shareable URL, "—"/"Not stated" unknowns, differences view, mixed-test-standard warning, add-to-comparison tray; table scrolls inside a focusable region on phones without page overflow (real overflow defect fixed, mutation-tested). Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41684765959). [Evidence](04_Delivery/20_EV-026_compare_evidence.md).
 
 ## Marketplace (12 tasks)
 
