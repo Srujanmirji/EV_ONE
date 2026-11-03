@@ -15,7 +15,10 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "turbo run test"
+    "test": "turbo run test:unit test:e2e",
+    "test:unit": "turbo run test:unit",
+    "test:e2e": "turbo run test:e2e",
+    "verify:gates": "node scripts/verify-quality-gates.mjs"
   },
   "devDependencies": {
     "prettier": "3.9.10",

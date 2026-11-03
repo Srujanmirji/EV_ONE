@@ -13,9 +13,11 @@
     "typecheck": {
       "outputs": [".next/types/**"]
     },
-    "test": {
+    "test:unit": {},
+    "test:e2e": {
       "dependsOn": ["build"],
-      "cache": false
+      "cache": false,
+      "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI"]
     }
   }
 }

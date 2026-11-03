@@ -15,14 +15,16 @@ The web preview runs at `http://127.0.0.1:3000`. Root scripts dispatch through T
 pnpm format:check
 pnpm lint
 pnpm typecheck
+pnpm test:unit
 pnpm build
+pnpm verify:gates
 pnpm --filter @evone/web exec playwright install chromium
-pnpm test
+pnpm test:e2e
 ```
 
 Browser evidence is written to `apps/web/test-results/`; failed tests retain a trace. Fonts are self-hosted from the pinned Fontsource packages (Inter and Manrope, SIL Open Font License), with no Google Fonts request at build or runtime. This preview is explicitly `noindex, nofollow` until publishing is authorized. It collects no user data and has no inventory, checkout or lead intake.
 
-No unit runner is installed yet because there is no business logic. The initial test suite covers the running production application. Integration, migration, seed and contract scripts below are future acceptance targets, not implemented commands.
+Unit tests use Vitest; put `*.test.ts` files beside the code they cover (`apps/web/lib/site-metadata.test.ts` is the first). Playwright specs live in `apps/web/tests/`. pnpm settings (`engineStrict`, `saveExact`) live in `pnpm-workspace.yaml` because pnpm 11 ignores them in `.npmrc`, so installs on any Node other than 24.18.0 fail. In sandboxes whose preinstalled Chromium does not match the pinned Playwright, set `PW_CHROMIUM_EXECUTABLE` to that binary instead of installing another browser. Integration, migration, seed and contract scripts below are future acceptance targets, not implemented commands.
 
 ## Stage 1 — later setup prerequisites
 - GitHub repo private for initial work, team access and required review.
