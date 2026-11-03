@@ -1,17 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { ConfigError, loadConfig } from "./env.js";
 
+const REDIS_URL = "redis://127.0.0.1:6379";
 const DATABASE_URL = "postgresql://user:secret@127.0.0.1:5432/evone";
 
 describe("loadConfig", () => {
   it("applies safe local defaults", () => {
-    expect(loadConfig({ DATABASE_URL })).toEqual({
+    expect(loadConfig({ REDIS_URL, DATABASE_URL })).toEqual({
       NODE_ENV: "development",
       API_HOST: "127.0.0.1",
       API_PORT: 4000,
       API_READINESS_TIMEOUT_MS: 2000,
+      REDIS_URL,
       DATABASE_URL,
     });
+  });
+
+  it("rejects a malformed Redis URL through ConfigError", () => {
+    expect(() => loadConfig({ DATABASE_URL, REDIS_URL: "not-url" })).toThrow(
+      expect.objectContaining({ invalidKeys: ["REDIS_URL"] }) as Error,
+    );
   });
 
   it("requires DATABASE_URL", () => {
@@ -20,11 +28,11 @@ describe("loadConfig", () => {
 
   it("rejects a non-postgres DATABASE_URL without echoing it", () => {
     const bad = "mysql://user:hunter2@db/evone";
-    expect(() => loadConfig({ DATABASE_URL: bad })).toThrow(
+    expect(() => loadConfig({ REDIS_URL, DATABASE_URL: bad })).toThrow(
       expect.objectContaining({ invalidKeys: ["DATABASE_URL"] }) as Error,
     );
     try {
-      loadConfig({ DATABASE_URL: bad });
+      loadConfig({ REDIS_URL, DATABASE_URL: bad });
     } catch (error) {
       expect((error as Error).message).not.toContain("hunter2");
     }
@@ -32,6 +40,7 @@ describe("loadConfig", () => {
 
   it("coerces numeric variables from strings", () => {
     const config = loadConfig({
+      REDIS_URL,
       DATABASE_URL,
       API_PORT: "8080",
       NODE_ENV: "production",
@@ -47,7 +56,7 @@ describe("loadConfig", () => {
     ["NODE_ENV", "staging"],
     ["API_READINESS_TIMEOUT_MS", "5"],
   ])("rejects %s=%s", (key, value) => {
-    expect(() => loadConfig({ DATABASE_URL, [key]: value })).toThrow(
+    expect(() => loadConfig({ REDIS_URL, DATABASE_URL, [key]: value })).toThrow(
       ConfigError,
     );
   });
@@ -56,6 +65,7 @@ describe("loadConfig", () => {
     const secretLooking = "sk_live_should_never_be_printed";
     try {
       loadConfig({
+        REDIS_URL,
         DATABASE_URL,
         API_PORT: secretLooking,
         NODE_ENV: secretLooking,

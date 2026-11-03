@@ -15,7 +15,11 @@ export const slug = (base: string) => `${run}-${base}-${++n}`;
 
 export async function startApi(nodeEnv: "test" | "production" = "test") {
   const app: INestApplication = await createApp({
-    config: loadConfig({ NODE_ENV: nodeEnv, DATABASE_URL: databaseUrl }),
+    config: loadConfig({
+      REDIS_URL: "redis://127.0.0.1:6379",
+      NODE_ENV: nodeEnv,
+      DATABASE_URL: databaseUrl,
+    }),
     db,
   });
   await app.listen(0, "127.0.0.1");

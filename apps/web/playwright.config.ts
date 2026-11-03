@@ -68,6 +68,7 @@ export default defineConfig({
         API_HOST: "127.0.0.1",
         API_PORT: String(API_PORT),
         DATABASE_URL: databaseUrl,
+        REDIS_URL: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
       },
     },
     {
