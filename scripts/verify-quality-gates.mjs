@@ -25,6 +25,8 @@ for (const [pkg, dir, srcDir, hasUnit] of [
   ["@evone/web", "apps/web", "lib", true],
   ["@evone/api", "apps/api", "src", true],
   ["@evone/db", "packages/db", "src", false],
+  ["@evone/contracts", "packages/contracts", "src", true],
+  ["@evone/sdk", "packages/sdk", "src", true],
 ]) {
   gates.push(
     {

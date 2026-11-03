@@ -25,7 +25,9 @@
     "db:migrate:deploy": "pnpm --filter @evone/db migrate:deploy",
     "db:migrate:status": "pnpm --filter @evone/db migrate:status",
     "db:migrate:rollback": "pnpm --filter @evone/db migrate:rollback",
-    "db:migrate:verify": "pnpm --filter @evone/db migrate:verify"
+    "db:migrate:verify": "pnpm --filter @evone/db migrate:verify",
+    "contract:generate": "turbo run contract:generate",
+    "contract:check": "turbo run contract:generate && git diff --exit-code -- packages/contracts/openapi.json packages/sdk/src/schema.ts"
   },
   "devDependencies": {
     "prettier": "3.9.10",

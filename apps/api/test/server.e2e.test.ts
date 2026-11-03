@@ -2,6 +2,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
+import { createEvoneClient } from "@evone/sdk";
 import { afterEach, describe, expect, it } from "vitest";
 
 const entry = fileURLToPath(new URL("../dist/main.js", import.meta.url));
@@ -20,8 +21,6 @@ interface Body {
   error: { code: string; message: string };
   meta: { requestId: string };
 }
-const readJson = async (res: Response): Promise<Body> =>
-  (await res.json()) as Body;
 
 function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -80,12 +79,21 @@ describe("built API process", () => {
     const base = `http://127.0.0.1:${port}`;
     await waitForLive(base);
 
-    const ready = await fetch(`${base}/api/v1/health/ready`);
-    expect(ready.status).toBe(200);
-    expect((await readJson(ready)).data).toMatchObject({
+    // Through the generated SDK: proves it matches the real server.
+    const api = createEvoneClient({ origin: base });
+    const live = await api.GET("/health/live");
+    expect(live.response.status).toBe(200);
+    expect(live.data?.data.status).toBe("ok");
+    const ready = await api.GET("/health/ready");
+    expect(ready.response.status).toBe(200);
+    expect(ready.data?.data).toEqual({
       status: "ready",
       checks: [{ name: "database", status: "up" }],
+      draining: false,
     });
+    expect(ready.data?.meta.requestId).toBe(
+      ready.response.headers.get("x-request-id"),
+    );
 
     proc.kill("SIGTERM");
     // NestJS runs its shutdown hooks, then re-raises the signal, so the

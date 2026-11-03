@@ -1,9 +1,8 @@
 import { Controller, Get, Inject, Req, Res } from "@nestjs/common";
 import type { Request, Response } from "express";
-import type { DataEnvelope } from "../common/envelope.js";
+import type { LiveResponse, ReadinessResponse } from "@evone/contracts";
 import { requestIdOf } from "../common/request-id.js";
 import { HealthService } from "./health.service.js";
-import type { ReadinessReport } from "./readiness.js";
 
 @Controller("health")
 export class HealthController {
@@ -13,7 +12,7 @@ export class HealthController {
   @Get("live")
   live(@Req() req: Request, @Res() res: Response): void {
     res.setHeader("Cache-Control", "no-store");
-    const body: DataEnvelope<{ status: "ok" }> = {
+    const body: LiveResponse = {
       data: { status: "ok" },
       meta: { requestId: requestIdOf(req) },
     };
@@ -25,7 +24,7 @@ export class HealthController {
   async ready(@Req() req: Request, @Res() res: Response): Promise<void> {
     const report = await this.health.readiness();
     res.setHeader("Cache-Control", "no-store");
-    const body: DataEnvelope<ReadinessReport & { draining: boolean }> = {
+    const body: ReadinessResponse = {
       data: { ...report, draining: this.health.isDraining() },
       meta: { requestId: requestIdOf(req) },
     };
