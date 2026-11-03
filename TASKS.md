@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010 and EV-012 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012 and EV-013 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -39,8 +39,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-012** · P0 · M · **Create NestJS API and health endpoints**
   Depends: `EV-009` · **Done when:** Startup config, liveness and readiness tests pass.
   `apps/api` (NestJS 12, ESM) with Zod-validated startup config and `/api/v1/health/{live,ready}`; 18 unit and 2 built-process tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41657126777). Readiness registry awaits EV-013/EV-014 checks. [Files, commands and evidence](04_Delivery/10_EV-012_api_health_evidence.md).
-- [ ] **EV-013** · P0 · M · **Provision Postgres+PostGIS and migrations**  
+- [x] **EV-013** · P0 · M · **Provision Postgres+PostGIS and migrations**
   Depends: `EV-012` · **Done when:** Migrations repeatable and rollback strategy documented.
+  `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
 - [ ] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**  
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
 - [ ] **EV-015** · P0 · M · **Build global design tokens and components**  
