@@ -1,7 +1,9 @@
 import {
   type BrandSummary,
+  type ModelDetail,
   ModelListQuery,
   type ModelSummary,
+  type VariantDetail,
 } from "@evone/contracts";
 import { createEvoneClient } from "@evone/sdk";
 
@@ -102,3 +104,88 @@ export function catalogueHref(filters: CatalogueFilters): string {
   const qs = query.toString();
   return qs ? `/evs?${qs}` : "/evs";
 }
+
+export type DetailResult<T> =
+  { kind: "ok"; data: T } | { kind: "not-found" } | { kind: "unavailable" };
+
+type Options = { apiOrigin?: string; fetch?: typeof fetch };
+
+function client(options: Options) {
+  const origin = options.apiOrigin ?? process.env.API_BASE_URL;
+  if (!origin) {
+    console.error("catalogue: API_BASE_URL is not set");
+    return null;
+  }
+  return createEvoneClient({
+    origin,
+    ...(options.fetch ? { fetch: options.fetch } : {}),
+  });
+}
+
+/** Published model with its published variants. 404/400 → not-found. */
+export async function loadModel(
+  brandSlug: string,
+  modelSlug: string,
+  options: Options = {},
+): Promise<DetailResult<ModelDetail>> {
+  const api = client(options);
+  if (!api) return { kind: "unavailable" };
+  try {
+    const res = await api.GET("/brands/{brandSlug}/models/{modelSlug}", {
+      params: { path: { brandSlug, modelSlug } },
+    });
+    if (res.data) return { kind: "ok", data: res.data.data };
+    if (res.response.status === 404 || res.response.status === 400)
+      return { kind: "not-found" };
+    return { kind: "unavailable" };
+  } catch (error) {
+    console.error(
+      "catalogue: model request failed",
+      error instanceof Error ? error.message : error,
+    );
+    return { kind: "unavailable" };
+  }
+}
+
+/**
+ * Variant addressed by URL slugs: resolve it through its published model,
+ * then fetch specs with provenance by id.
+ */
+export async function loadVariant(
+  brandSlug: string,
+  modelSlug: string,
+  variantSlug: string,
+  options: Options = {},
+): Promise<DetailResult<{ model: ModelDetail; variant: VariantDetail }>> {
+  const model = await loadModel(brandSlug, modelSlug, options);
+  if (model.kind !== "ok") return model;
+  const summary = model.data.variants.find((v) => v.slug === variantSlug);
+  if (!summary) return { kind: "not-found" };
+  const api = client(options);
+  if (!api) return { kind: "unavailable" };
+  try {
+    const res = await api.GET("/variants/{id}", {
+      params: { path: { id: summary.id } },
+    });
+    if (res.data)
+      return {
+        kind: "ok",
+        data: { model: model.data, variant: res.data.data },
+      };
+    if (res.response.status === 404) return { kind: "not-found" };
+    return { kind: "unavailable" };
+  } catch (error) {
+    console.error(
+      "catalogue: variant request failed",
+      error instanceof Error ? error.message : error,
+    );
+    return { kind: "unavailable" };
+  }
+}
+
+export const modelHref = (m: { slug: string; brand: { slug: string } }) =>
+  `/evs/${m.brand.slug}/${m.slug}`;
+export const variantHref = (
+  m: { slug: string; brand: { slug: string } },
+  variantSlug: string,
+) => `${modelHref(m)}/${variantSlug}`;

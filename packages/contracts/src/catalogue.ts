@@ -190,6 +190,33 @@ export const ModelPathParams = z.strictObject({
 });
 export const VariantPathParams = z.strictObject({ id: z.uuid() });
 
+/** `?variantIds=a,b[,c]`: 2–3 distinct published variant ids, in display order. */
+export const CompareQuery = z.strictObject({
+  variantIds: z
+    .string()
+    .max(200)
+    .describe(
+      "Comma-separated variant ids (2 or 3, distinct), in display order.",
+    )
+    .transform((value) => value.split(",").map((id) => id.trim()))
+    .pipe(
+      z
+        .array(z.uuid())
+        .min(2, "Choose at least 2 variants")
+        .max(3, "Compare at most 3 variants")
+        .refine(
+          (ids) =>
+            new Set(ids.map((id) => id.toLowerCase())).size === ids.length,
+          "Variants must be distinct",
+        ),
+    ),
+});
+
+export const CompareResponse = dataEnvelope(
+  "CompareResponse",
+  z.array(VariantDetail),
+);
+
 export type BrandSummary = z.infer<typeof BrandSummary>;
 export type ModelSummary = z.infer<typeof ModelSummary>;
 export type SpecSummary = z.infer<typeof SpecSummary>;
@@ -203,3 +230,4 @@ export type ModelListResponse = z.infer<typeof ModelListResponse>;
 export type BrandListResponse = z.infer<typeof BrandListResponse>;
 export type ModelDetailResponse = z.infer<typeof ModelDetailResponse>;
 export type VariantDetailResponse = z.infer<typeof VariantDetailResponse>;
+export type CompareResponse = z.infer<typeof CompareResponse>;

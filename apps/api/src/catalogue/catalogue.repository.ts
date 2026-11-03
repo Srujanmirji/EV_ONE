@@ -33,6 +33,31 @@ const summaryVariants = (visible: object) => ({
   },
 });
 
+/** Variant specs plus model context and reviewed sources (provenance). */
+const variantDetailSelect = {
+  ...variantSpecs,
+  model: {
+    select: {
+      slug: true,
+      name: true,
+      vehicleType: true,
+      brand: { select: { slug: true, name: true } },
+    },
+  },
+  sources: {
+    where: { reviewedAt: { not: null } },
+    orderBy: [{ fieldName: "asc" as const }, { reviewedAt: "desc" as const }],
+    select: {
+      fieldName: true,
+      valueText: true,
+      sourceUrl: true,
+      sourceKind: true,
+      effectiveAt: true,
+      reviewedAt: true,
+    },
+  },
+};
+
 const modelFields = {
   id: true,
   slug: true,
@@ -144,29 +169,19 @@ export class CatalogueRepository {
         id,
         model: { ...this.visible, brand: this.visible },
       },
-      select: {
-        ...variantSpecs,
-        model: {
-          select: {
-            slug: true,
-            name: true,
-            vehicleType: true,
-            brand: { select: { slug: true, name: true } },
-          },
-        },
-        sources: {
-          where: { reviewedAt: { not: null } },
-          orderBy: [{ fieldName: "asc" }, { reviewedAt: "desc" }],
-          select: {
-            fieldName: true,
-            valueText: true,
-            sourceUrl: true,
-            sourceKind: true,
-            effectiveAt: true,
-            reviewedAt: true,
-          },
-        },
+      select: variantDetailSelect,
+    });
+  }
+
+  /** Published variants among `ids`; order not guaranteed. */
+  findVariants(ids: string[]) {
+    return this.db.evVariant.findMany({
+      where: {
+        ...this.visible,
+        id: { in: ids },
+        model: { ...this.visible, brand: this.visible },
       },
+      select: variantDetailSelect,
     });
   }
 }

@@ -18,6 +18,8 @@
 └── /admin ── moderation, EV catalogue, products, orders, content, finance, audit
 ```
 
+Implementation note (EV-026): the comparison page is `/compare` (top level) rather than `/evs/compare`, because `/evs/{brand}` would otherwise shadow a brand with the slug `compare`.
+
 ## Flow A — Used EV purchase enquiry
 Search → filter → card → detail → sign-in if needed → privacy notice → enquiry → seller notified → seller acknowledges → buyer sees status. **Not** vehicle checkout.
 

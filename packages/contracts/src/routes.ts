@@ -1,6 +1,8 @@
 import type { z } from "zod";
 import {
   BrandListResponse,
+  CompareQuery,
+  CompareResponse,
   ModelDetailResponse,
   ModelListQuery,
   ModelListResponse,
@@ -124,6 +126,23 @@ export const routes: RouteContract[] = [
       200: {
         description: "Variant with provenance.",
         schema: VariantDetailResponse,
+      },
+      400: badRequest,
+      404: notFound,
+    },
+  },
+  {
+    operationId: "compareVariants",
+    method: "get",
+    path: "/compare",
+    summary:
+      "2–3 published variants with specs and reviewed sources, in the requested order. 404 if any is not published.",
+    tag: "catalogue",
+    query: CompareQuery,
+    responses: {
+      200: {
+        description: "Variants in requested order.",
+        schema: CompareResponse,
       },
       400: badRequest,
       404: notFound,
