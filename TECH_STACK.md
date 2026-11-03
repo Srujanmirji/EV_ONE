@@ -7,7 +7,7 @@
 | Public web | Next.js + React + TypeScript strict | SEO/SSR for listings, model pages and journal |
 | Mobile | React Native + Expo **later** | shared API/SDK, independent native design |
 | Admin / dealer | Next.js app | protected operational UI, same web tokens |
-| Styling | Tailwind CSS + shadcn/ui | consistent reusable responsive components |
+| Styling | Tailwind CSS + shadcn/ui-style components | implemented in `@evone/ui` without the shadcn CLI or Radix (EV-015); native `<dialog>` for modals |
 | Motion | Motion for React | tasteful interactions and reduced-motion support |
 | API | NestJS on Node LTS | modular domains and validation boundaries |
 | Contracts | Zod → generated OpenAPI 3.1 → typed SDK | keep schema/SDK aligned in CI |

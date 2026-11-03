@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013 and EV-018 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023 and EV-024 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -34,8 +34,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**
   Depends: `EV-009` · **Done when:** CI fails invalid types and formatting.
   Vitest added; `pnpm verify:gates` proves typecheck, format, lint and unit tests reject broken probes, and Node 24.18.0 is now enforced at install. Passes locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41655114949). [Files, commands and evidence](04_Delivery/09_EV-010_tooling_evidence.md).
-- [ ] **EV-011** · P0 · M · **Create Next.js web app shell and routes**  
+- [x] **EV-011** · P0 · M · **Create Next.js web app shell and routes**
   Depends: `EV-009` · **Done when:** Nav/footer, basic SEO and responsive shell work.
+  Header with mobile menu, footer, honest "not available yet" page per sitemap section, title template/descriptions/canonicals, robots.txt and sitemap.xml with indexing off until ADR-002; one registry (`apps/web/lib/site.ts`). 52 browser checks at four widths, mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41669888052). Follows the planned sitemap; EV-004 sign-off still open. [Evidence](04_Delivery/16_EV-011_web_shell_evidence.md).
 - [x] **EV-012** · P0 · M · **Create NestJS API and health endpoints**
   Depends: `EV-009` · **Done when:** Startup config, liveness and readiness tests pass.
   `apps/api` (NestJS 12, ESM) with Zod-validated startup config and `/api/v1/health/{live,ready}`; 18 unit and 2 built-process tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41657126777). Readiness registry awaits EV-013/EV-014 checks. [Files, commands and evidence](04_Delivery/10_EV-012_api_health_evidence.md).
@@ -44,8 +45,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
 - [ ] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**  
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
-- [ ] **EV-015** · P0 · M · **Build global design tokens and components**  
+- [x] **EV-015** · P0 · M · **Build global design tokens and components**
   Depends: `EV-011` · **Done when:** Tokens, buttons, inputs, cards, modals, empty/error states.
+  `@evone/ui`: UI_UX.md tokens, Button, TextField/SelectField/Checkbox, Card, native-dialog Modal, EmptyState/ErrorState/Skeleton; shell migrated; `/ui-kit` reference (noindex). axe WCAG 2.2 AA clean on every page at four widths; two real a11y defects fixed; mutation-tested. Muted text kept at `#596170` because the spec's `#747B87` fails AA. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41672655002). [Evidence](04_Delivery/17_EV-015_ui_evidence.md).
 - [ ] **EV-016** · P0 · M · **Integrate managed auth with API**  
   Depends: `EV-005,EV-012` · **Done when:** Expired/invalid JWT rejected server-side.
 - [ ] **EV-017** · P0 · M · **Implement scoped RBAC and audit middleware**  
@@ -60,14 +62,17 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 
 ## Catalogue (6 tasks)
 
-- [ ] **EV-021** · P0 · M · **Create brand/model/variant schema and seeds**  
+- [x] **EV-021** · P0 · M · **Create brand/model/variant schema and seeds**
   Depends: `EV-013` · **Done when:** Schema supports source-referenced real specs.
+  Catalogue tables with `spec_sources`; the database refuses to publish a stated spec without a reviewed https source (deferred triggers, 18 mutation-tested PostgreSQL integration tests). Fictional `DEMO` seed, never production. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41665429328). Deviations (computed coverage view instead of `data_status`; prices deferred; vehicle types to confirm) in `DATABASE.md`. [Evidence](04_Delivery/14_EV-021_catalogue_evidence.md).
 - [ ] **EV-022** · P0 · M · **Build catalogue editor forms and permissions**  
   Depends: `EV-021` · **Done when:** Editors create drafts, admin approves publish.
-- [ ] **EV-023** · P0 · M · **Implement catalogue read endpoints**  
+- [x] **EV-023** · P0 · M · **Implement catalogue read endpoints**
   Depends: `EV-021,EV-018` · **Done when:** Pagination, published-only and schema contract tests.
-- [ ] **EV-024** · P0 · M · **Build EV catalogue listing UI**  
+  `GET /brands`, `/models` (keyset pagination on name+id), `/brands/{brandSlug}/models/{modelSlug}`, `/variants/{id}` with reviewed provenance; published-only and demo-hidden-in-production; contract test covers every documented status. Mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41668025897). Path and sort deviations in `API_CONTRACT.md`. [Evidence](04_Delivery/15_EV-023_catalogue_api_evidence.md).
+- [x] **EV-024** · P0 · M · **Build EV catalogue listing UI**
   Depends: `EV-015,EV-023` · **Done when:** Responsive filters and source-aware cards.
+  `/evs`: server-rendered via SDK; URL-persistent GET filters (sidebar, bottom sheet on mobile); cards with battery, range per test standard, "Not stated", demo label and reviewed-source count/date (additive API `specSummary`); loading/empty/invalid/unavailable states; 12-per-page pagination. Browser tests against real API + PostgreSQL at four widths with axe; mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41676438270). [Evidence](04_Delivery/18_EV-024_catalogue_ui_evidence.md).
 - [ ] **EV-025** · P0 · M · **Build EV detail and variant page**  
   Depends: `EV-023` · **Done when:** Correct spec units, source-date, gallery and unknown states.
 - [ ] **EV-026** · P0 · S · **Build compare 2–3 EV variants**  

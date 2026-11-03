@@ -5,6 +5,15 @@ import { defineConfig, devices } from "@playwright/test";
 // preinstalled, differently versioned Chromium run the suite locally.
 const executablePath = process.env.PW_CHROMIUM_EXECUTABLE;
 
+const API_PORT = 4100;
+const API_ORIGIN = `http://127.0.0.1:${API_PORT}`;
+const databaseUrl = process.env.DATABASE_URL ?? "";
+if (!databaseUrl) {
+  throw new Error(
+    "Web e2e needs DATABASE_URL (migrated and seeded) for the catalogue API.",
+  );
+}
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -47,10 +56,26 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: "pnpm start --port 3100",
-    url: "http://127.0.0.1:3100",
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  // The catalogue page reads the real API, which reads PostgreSQL.
+  webServer: [
+    {
+      command: "node ../api/dist/main.js",
+      url: `${API_ORIGIN}/api/v1/health/ready`,
+      reuseExistingServer: false,
+      timeout: 60_000,
+      env: {
+        NODE_ENV: "test",
+        API_HOST: "127.0.0.1",
+        API_PORT: String(API_PORT),
+        DATABASE_URL: databaseUrl,
+      },
+    },
+    {
+      command: "pnpm start --port 3100",
+      url: "http://127.0.0.1:3100",
+      reuseExistingServer: false,
+      timeout: 60_000,
+      env: { API_BASE_URL: API_ORIGIN },
+    },
+  ],
 });

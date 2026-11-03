@@ -21,6 +21,10 @@ Tesla-level cinematic product hierarchy plus Apple-inspired **restrained** trans
 
 Typography: `Manrope` headings, `Inter` body. Desktop max width 1280px, responsive grid 12 cols, 24px gutters; section spacing 96–128px desktop and 56–72px mobile. Buttons radius 999px; cards 16–20px. Glass blur 16–24px only where background has enough contrast. Strong keyboard focus rings; never disable contrast for beauty.
 
+**Implementation (EV-015).** Tokens live in `packages/ui/src/tokens.css`, and components in `@evone/ui`: Button and `buttonClasses`, TextField, SelectField, Checkbox, Card, Modal, EmptyState, ErrorState and Skeleton. Visual reference and automated accessibility checks run at `/ui-kit` (not indexed, not linked). Two deliberate differences:
+- **Muted text uses `#596170`, not `#747B87`.** The specified colour is about 4.3:1 on pearl and fails WCAG AA; an axe scan with it fails on every page.
+- **Components follow shadcn/ui's approach** (Tailwind variants on native elements) without its CLI or Radix dependencies. The modal is a native `<dialog>` plus explicit Tab wrapping.
+
 ## Approved page hierarchy
 1. Hero with headline + silver EV photo and primary actions.
 2. Single glass search bar with used/new/accessories tabs.

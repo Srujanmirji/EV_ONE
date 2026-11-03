@@ -11,6 +11,94 @@
     }
   ],
   "paths": {
+    "/brands": {
+      "get": {
+        "operationId": "listBrands",
+        "summary": "Published brands that have at least one published model, with their vehicle types.",
+        "tags": ["catalogue"],
+        "responses": {
+          "200": {
+            "description": "Brands ordered by name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/{brandSlug}/models/{modelSlug}": {
+      "get": {
+        "operationId": "getModel",
+        "summary": "A published model with its published variants. Model slugs are unique per brand.",
+        "tags": ["catalogue"],
+        "parameters": [
+          {
+            "name": "brandSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "modelSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Model with variants.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not published.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health/live": {
       "get": {
         "operationId": "getLiveness",
@@ -78,10 +166,221 @@
           }
         }
       }
+    },
+    "/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "Published models, ordered by name then id, cursor-paginated.",
+        "tags": ["catalogue"],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/VehicleType"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of models.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters (VALIDATION_ERROR).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/variants/{id}": {
+      "get": {
+        "operationId": "getVariant",
+        "summary": "A published variant's specs with the reviewed source behind each stated value.",
+        "tags": ["catalogue"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Variant with provenance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters (VALIDATION_ERROR).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not published.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "BrandListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BrandSummary"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
+        "additionalProperties": false
+      },
+      "BrandRef": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["slug", "name"],
+        "additionalProperties": false
+      },
+      "BrandSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "vehicleTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VehicleType"
+            }
+          }
+        },
+        "required": ["id", "slug", "name", "isDemo", "vehicleTypes"],
+        "additionalProperties": false
+      },
+      "ClaimedRange": {
+        "type": "object",
+        "properties": {
+          "km": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "standard": {
+            "$ref": "#/components/schemas/RangeStandard"
+          }
+        },
+        "required": ["km", "standard"],
+        "additionalProperties": false
+      },
       "ErrorCode": {
         "type": "string",
         "enum": [
@@ -166,6 +465,211 @@
         "required": ["requestId"],
         "additionalProperties": false
       },
+      "ModelAvailability": {
+        "type": "string",
+        "enum": ["ON_SALE", "UPCOMING", "DISCONTINUED", "UNKNOWN"]
+      },
+      "ModelDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "vehicleType": {
+            "$ref": "#/components/schemas/VehicleType"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/ModelAvailability"
+          },
+          "releaseDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandRef"
+          },
+          "specSummary": {
+            "$ref": "#/components/schemas/SpecSummary"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantSummary"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "vehicleType",
+          "availability",
+          "releaseDate",
+          "isDemo",
+          "brand",
+          "specSummary",
+          "variants"
+        ],
+        "additionalProperties": false
+      },
+      "ModelDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
+        "additionalProperties": false
+      },
+      "ModelListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelSummary"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "page", "meta"],
+        "additionalProperties": false
+      },
+      "ModelSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "vehicleType": {
+            "$ref": "#/components/schemas/VehicleType"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/ModelAvailability"
+          },
+          "releaseDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandRef"
+          },
+          "specSummary": {
+            "$ref": "#/components/schemas/SpecSummary"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "vehicleType",
+          "availability",
+          "releaseDate",
+          "isDemo",
+          "brand",
+          "specSummary"
+        ],
+        "additionalProperties": false
+      },
+      "NumberRange": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "max": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": ["min", "max"],
+        "additionalProperties": false
+      },
+      "PageInfo": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": ["string", "null"]
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "required": ["nextCursor", "hasMore"],
+        "additionalProperties": false
+      },
+      "RangeByStandard": {
+        "type": "object",
+        "properties": {
+          "standard": {
+            "$ref": "#/components/schemas/RangeStandard"
+          },
+          "minKm": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "maxKm": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["standard", "minKm", "maxKm"],
+        "additionalProperties": false
+      },
+      "RangeStandard": {
+        "type": "string",
+        "enum": ["MIDC", "IDC", "WLTP", "NEDC", "EPA", "OEM_UNSPECIFIED"]
+      },
       "ReadinessCheckResult": {
         "type": "object",
         "properties": {
@@ -212,6 +716,285 @@
         },
         "required": ["data", "meta"],
         "additionalProperties": false
+      },
+      "SourceKind": {
+        "type": "string",
+        "enum": ["OEM", "REGULATOR", "PRESS", "DEALER", "OTHER"]
+      },
+      "SpecField": {
+        "type": "string",
+        "enum": [
+          "BATTERY_KWH",
+          "CLAIMED_RANGE",
+          "MOTOR_KW",
+          "CHARGING_AC_KW",
+          "CHARGING_DC_KW",
+          "WARRANTY"
+        ]
+      },
+      "SpecSourceView": {
+        "type": "object",
+        "properties": {
+          "fieldName": {
+            "$ref": "#/components/schemas/SpecField"
+          },
+          "valueText": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "sourceKind": {
+            "$ref": "#/components/schemas/SourceKind"
+          },
+          "effectiveAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "fieldName",
+          "valueText",
+          "sourceUrl",
+          "sourceKind",
+          "effectiveAt",
+          "reviewedAt"
+        ],
+        "additionalProperties": false
+      },
+      "SpecSummary": {
+        "type": "object",
+        "properties": {
+          "variantCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "batteryKwh": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NumberRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "claimedRanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RangeByStandard"
+            }
+          },
+          "reviewedSourceCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lastReviewedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "variantCount",
+          "batteryKwh",
+          "claimedRanges",
+          "reviewedSourceCount",
+          "lastReviewedAt"
+        ],
+        "additionalProperties": false
+      },
+      "VariantDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "specs": {
+            "$ref": "#/components/schemas/VariantSpecs"
+          },
+          "model": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "vehicleType": {
+                "$ref": "#/components/schemas/VehicleType"
+              },
+              "brand": {
+                "$ref": "#/components/schemas/BrandRef"
+              }
+            },
+            "required": ["slug", "name", "vehicleType", "brand"],
+            "additionalProperties": false
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecSourceView"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "isDemo",
+          "specs",
+          "model",
+          "sources"
+        ],
+        "additionalProperties": false
+      },
+      "VariantDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/VariantDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
+        "additionalProperties": false
+      },
+      "VariantSpecs": {
+        "type": "object",
+        "properties": {
+          "batteryKwh": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "claimedRange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimedRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "motorKw": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chargingAcKw": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chargingDcKw": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warrantyText": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": [
+          "batteryKwh",
+          "claimedRange",
+          "motorKw",
+          "chargingAcKw",
+          "chargingDcKw",
+          "warrantyText"
+        ],
+        "additionalProperties": false
+      },
+      "VariantSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "specs": {
+            "$ref": "#/components/schemas/VariantSpecs"
+          }
+        },
+        "required": ["id", "slug", "name", "isDemo", "specs"],
+        "additionalProperties": false
+      },
+      "VehicleType": {
+        "type": "string",
+        "enum": ["SCOOTER", "MOTORCYCLE", "CAR", "THREE_WHEELER"]
       }
     }
   }

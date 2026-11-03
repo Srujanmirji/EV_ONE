@@ -11,6 +11,33 @@ function refFor(schema: z.ZodType): { $ref: string } {
   return { $ref: ref(meta.id) };
 }
 
+function parametersFor(
+  schema: z.ZodObject | undefined,
+  location: "path" | "query",
+): Record<string, unknown>[] {
+  if (!schema) return [];
+  // "input" describes what a client sends (before defaults/coercion).
+  // Registered schemas (e.g. VehicleType) come out as `#/$defs/<id>`;
+  // point those at the shared OpenAPI components instead of inlining.
+  const raw = z.toJSONSchema(schema, { io: "input", metadata: schemaRegistry });
+  const json = JSON.parse(
+    JSON.stringify(raw).replaceAll('"#/$defs/', '"#/components/schemas/'),
+  ) as {
+    properties?: Record<string, Record<string, unknown>>;
+    required?: string[];
+  };
+  return Object.entries(json.properties ?? {}).map(([name, property]) => {
+    const { $schema: _ignored, ...rest } = property;
+    void _ignored;
+    return {
+      name,
+      in: location,
+      required: location === "path" || (json.required ?? []).includes(name),
+      schema: rest,
+    };
+  });
+}
+
 /** OpenAPI 3.1 document generated from the Zod contracts. Deterministic. */
 export function buildOpenApiDocument(): Record<string, unknown> {
   const generated = z.toJSONSchema(schemaRegistry, { uri: ref }) as {
@@ -42,12 +69,17 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         "application/json": { schema: refFor(defaultErrorResponse.schema) },
       },
     };
+    const parameters = [
+      ...parametersFor(route.params, "path"),
+      ...parametersFor(route.query, "query"),
+    ];
     paths[route.path] = {
       ...paths[route.path],
       [route.method]: {
         operationId: route.operationId,
         summary: route.summary,
         tags: [route.tag],
+        ...(parameters.length > 0 ? { parameters } : {}),
         responses,
       },
     };
