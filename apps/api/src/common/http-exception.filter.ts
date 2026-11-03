@@ -8,6 +8,7 @@ import {
 import type { Request, Response } from "express";
 import type { ErrorEnvelope } from "@evone/contracts";
 import { requestIdOf } from "./request-id.js";
+import { RequestValidationError } from "./validation.js";
 
 type ErrorCode = ErrorEnvelope["error"]["code"];
 
@@ -46,6 +47,14 @@ export class EnvelopeExceptionFilter implements ExceptionFilter {
           ? "Service unavailable"
           : "Something went wrong";
 
+    if (exception instanceof RequestValidationError) {
+      const invalid: ErrorEnvelope = {
+        error: { code: "VALIDATION_ERROR", message, fields: exception.fields },
+        meta: { requestId: requestIdOf(req) },
+      };
+      res.status(status).json(invalid);
+      return;
+    }
     const body: ErrorEnvelope = {
       error: { code, message },
       meta: { requestId: requestIdOf(req) },

@@ -8,11 +8,15 @@ import {
 } from "@nestjs/common";
 import { API_CONFIG } from "./config/config.token.js";
 import type { ApiConfig } from "./config/env.js";
+import type { DbClient } from "@evone/db";
+import { CatalogueModule } from "./catalogue/catalogue.module.js";
+import { DB_CLIENT } from "./database/database.token.js";
 import { HealthModule } from "./health/health.module.js";
 import { READINESS_CHECKS, type ReadinessCheck } from "./health/readiness.js";
 
 export interface AppOptions {
   config: ApiConfig;
+  db: DbClient;
   readinessChecks?: ReadinessCheck[];
   /** Run after the HTTP server stops, e.g. closing database pools. */
   shutdownHooks?: (() => Promise<void>)[];
@@ -25,6 +29,7 @@ const SHUTDOWN_HOOKS = Symbol("SHUTDOWN_HOOKS");
 class CoreModule {
   static register({
     config,
+    db,
     readinessChecks = [],
     shutdownHooks = [],
   }: AppOptions): DynamicModule {
@@ -32,10 +37,11 @@ class CoreModule {
       module: CoreModule,
       providers: [
         { provide: API_CONFIG, useValue: config },
+        { provide: DB_CLIENT, useValue: db },
         { provide: READINESS_CHECKS, useValue: readinessChecks },
         { provide: SHUTDOWN_HOOKS, useValue: shutdownHooks },
       ],
-      exports: [API_CONFIG, READINESS_CHECKS, SHUTDOWN_HOOKS],
+      exports: [API_CONFIG, DB_CLIENT, READINESS_CHECKS, SHUTDOWN_HOOKS],
     };
   }
 }
@@ -62,7 +68,7 @@ export class AppModule implements OnApplicationShutdown {
   static register(options: AppOptions): DynamicModule {
     return {
       module: AppModule,
-      imports: [CoreModule.register(options), HealthModule],
+      imports: [CoreModule.register(options), HealthModule, CatalogueModule],
     };
   }
 }
