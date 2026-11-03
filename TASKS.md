@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009 is verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009 and EV-010 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -31,8 +31,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-009** · P0 · S · **Create pnpm Turborepo monorepo**
   Depends: `EV-004` · **Done when:** apps and packages install/build under CI.
   Owner-approved prerequisite exception: accepted ADR-001 (2026-11-03); EV-004 stays open. Workspace/web preview implemented; frozen install, lint, formatting, strict typecheck, production build and 8 browser tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41651932287). [Files, commands and evidence](04_Delivery/08_EV-009_foundation_evidence.md).
-- [ ] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**  
+- [x] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**
   Depends: `EV-009` · **Done when:** CI fails invalid types and formatting.
+  Vitest added; `pnpm verify:gates` proves typecheck, format, lint and unit tests reject broken probes, and Node 24.18.0 is now enforced at install. Passes locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41655114949). [Files, commands and evidence](04_Delivery/09_EV-010_tooling_evidence.md).
 - [ ] **EV-011** · P0 · M · **Create Next.js web app shell and routes**  
   Depends: `EV-009` · **Done when:** Nav/footer, basic SEO and responsive shell work.
 - [ ] **EV-012** · P0 · M · **Create NestJS API and health endpoints**  
