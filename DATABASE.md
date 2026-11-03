@@ -114,6 +114,28 @@ erDiagram
 - Migration flow: schema review → migration SQL → staging test → backup → prod deploy → post-migration verification; prefer expand/contract.
 - Generate seed demo content with `demo=true` and conspicuous labels; never push staged fake verification into production.
 
+## Catalogue implementation (EV-021)
+
+Implemented in `packages/db` (migration `20261103152727_catalogue`).
+
+- **Tables:** `brands`, `ev_models`, `ev_variants`, `spec_sources`.
+- **Enums:** `PublishStatus`, `VehicleType` (SCOOTER, MOTORCYCLE, CAR, THREE_WHEELER), `ModelAvailability`, `RangeStandard` (MIDC, IDC, WLTP, NEDC, EPA, OEM_UNSPECIFIED), `SpecField`, `SourceKind`.
+- **Unknown values:** a NULL spec means unknown and is shown as such, never as zero.
+
+**Database-enforced rules:**
+- Units must be positive.
+- `claimed_range_km` and `range_standard` are both set or both NULL.
+- Slugs are lowercase words joined by hyphens, unique per parent.
+- Sources must be `https`, and `reviewed_at` and `reviewer_id` are set together.
+- **Publish guard** (deferred to commit, so sources and status can change in one transaction): a variant can be `PUBLISHED` only if its model and brand are published and every non-NULL spec has a reviewed source. Once published, its sources cannot be deleted or un-reviewed, unsourced specs cannot be added, the variant cannot be deleted (archive it instead), and its model and brand cannot be unpublished.
+
+**Deviations from the table above, deliberate:**
+- `ev_variants.data_status` is not stored. The view `ev_variant_unsourced_specs` computes which stated specs lack a reviewed source, so the rule and the status cannot disagree.
+- `spec_sources.reviewer_id` has no foreign key yet. It will reference `users` once identity exists (EV-016/017).
+- `vehicle_prices` is not part of EV-021. It is added with the first task that shows prices.
+
+**Demo data:** `pnpm db:seed:demo` creates the fictional "DEMO Motors (fictional)" brand. Every row has `is_demo = true`, every name starts with `DEMO`, and every source is on `example.com`. It is idempotent and refuses `NODE_ENV=production`. Public read endpoints (EV-023) must exclude `is_demo` rows in production.
+
 ## Migration workflow and rollback strategy (EV-013)
 
 Implemented in `packages/db` (Prisma 7.10.1, ADR-012). Commands run from the repository root.
