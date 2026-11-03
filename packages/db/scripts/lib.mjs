@@ -52,7 +52,8 @@ export async function latestApplied(client) {
 
 /**
  * Structural fingerprint of the database from the system catalog:
- * extensions, relations, columns, indexes, constraints and enum types,
+ * extensions, relations (incl. views), columns, indexes, constraints,
+ * non-extension functions, user triggers and enum types,
  * excluding Prisma's own history table. Independent of Prisma's diff, which
  * does not report every change (it ignores some extension drops).
  */
@@ -74,6 +75,14 @@ export async function schemaSnapshot(client) {
     constraints: `SELECT conrelid::regclass::text || ' ' || conname || ' ' || pg_get_constraintdef(oid)
       FROM pg_constraint WHERE connamespace = 'public'::regnamespace
         AND conrelid::regclass::text <> '_prisma_migrations' ORDER BY 1`,
+    functions: `SELECT p.oid::regprocedure::text FROM pg_proc p
+      WHERE p.pronamespace = 'public'::regnamespace
+        AND NOT EXISTS (SELECT 1 FROM pg_depend d
+          WHERE d.classid = 'pg_proc'::regclass AND d.objid = p.oid AND d.deptype = 'e')
+      ORDER BY 1`,
+    triggers: `SELECT pg_get_triggerdef(t.oid) FROM pg_trigger t
+      WHERE NOT t.tgisinternal
+        AND t.tgrelid::regclass::text NOT LIKE '_prisma_migrations%' ORDER BY 1`,
     enums: `SELECT t.typname || ':' || string_agg(e.enumlabel, ',' ORDER BY e.enumsortorder)
       FROM pg_type t JOIN pg_enum e ON e.enumtypid = t.oid GROUP BY t.typname ORDER BY 1`,
   };

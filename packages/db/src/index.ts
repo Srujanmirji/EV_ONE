@@ -16,3 +16,5 @@ export function createDbClient(connectionString: string): DbClient {
 export async function pingDatabase(db: DbClient): Promise<void> {
   await db.$queryRaw`SELECT 1`;
 }
+
+export { seedDemoCatalogue, DEMO_REVIEWER_ID } from "./seed-demo.js";
