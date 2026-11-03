@@ -20,9 +20,10 @@ minimumReleaseAgeExclude:
   - "@tailwindcss/postcss@4.3.4"
   - tailwindcss@4.3.4
 
-onlyBuiltDependencies:
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  "@swc/core": false
+  sharp: true
+  unrs-resolver: true
 
 engineStrict: true
 saveExact: true

@@ -1,45 +1,55 @@
 #!/usr/bin/env node
 // Negative check for EV-010: each quality gate must FAIL on a deliberately
 // broken probe file. A gate that passes on bad input is reported as broken.
-// Probes are temporary, written inside apps/web and always removed.
+// Probes are temporary, written inside each app and always removed.
 import { spawnSync } from "node:child_process";
 import { rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname;
-const web = join(root, "apps/web");
+
+const typeProbe = 'export const probe: number = "not a number";\n';
+const lintProbe = "export const probe = (value: any): unknown => value;\n";
+const unitProbe =
+  'import { expect, it } from "vitest";\n\nit("fails on purpose", () => {\n  expect(1).toBe(2);\n});\n';
 
 const gates = [
   {
-    name: "typecheck rejects invalid types",
-    file: "lib/__gate_probe_type.ts",
-    content: 'export const probe: number = "not a number";\n',
-    command: ["pnpm", ["--filter", "@evone/web", "typecheck"]],
-  },
-  {
     name: "format:check rejects unformatted code",
-    file: "lib/__gate_probe_format.ts",
+    file: "apps/web/lib/__gate_probe_format.ts",
     content: "export   const probe = {a:1,\n b:2}\n",
     command: ["pnpm", ["format:check"]],
   },
-  {
-    name: "lint rejects rule violations",
-    file: "lib/__gate_probe_lint.ts",
-    content: "export const probe = (value: any): unknown => value;\n",
-    command: ["pnpm", ["--filter", "@evone/web", "lint"]],
-  },
-  {
-    name: "test:unit rejects failing tests",
-    file: "lib/__gate_probe_unit.test.ts",
-    content:
-      'import { expect, it } from "vitest";\n\nit("fails on purpose", () => {\n  expect(1).toBe(2);\n});\n',
-    command: ["pnpm", ["--filter", "@evone/web", "test:unit"]],
-  },
 ];
+for (const [pkg, dir, srcDir] of [
+  ["@evone/web", "apps/web", "lib"],
+  ["@evone/api", "apps/api", "src"],
+]) {
+  gates.push(
+    {
+      name: `${pkg} typecheck rejects invalid types`,
+      file: `${dir}/${srcDir}/__gate_probe_type.ts`,
+      content: typeProbe,
+      command: ["pnpm", ["--filter", pkg, "typecheck"]],
+    },
+    {
+      name: `${pkg} lint rejects rule violations`,
+      file: `${dir}/${srcDir}/__gate_probe_lint.ts`,
+      content: lintProbe,
+      command: ["pnpm", ["--filter", pkg, "lint"]],
+    },
+    {
+      name: `${pkg} test:unit rejects failing tests`,
+      file: `${dir}/${srcDir}/__gate_probe_unit.test.ts`,
+      content: unitProbe,
+      command: ["pnpm", ["--filter", pkg, "test:unit"]],
+    },
+  );
+}
 
 let broken = 0;
 for (const gate of gates) {
-  const path = join(web, gate.file);
+  const path = join(root, gate.file);
   writeFileSync(path, gate.content);
   try {
     const [cmd, args] = gate.command;
