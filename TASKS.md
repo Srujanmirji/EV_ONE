@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-018, EV-021 and EV-023 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021 and EV-023 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -45,8 +45,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
 - [ ] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**  
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
-- [ ] **EV-015** · P0 · M · **Build global design tokens and components**  
+- [x] **EV-015** · P0 · M · **Build global design tokens and components**
   Depends: `EV-011` · **Done when:** Tokens, buttons, inputs, cards, modals, empty/error states.
+  `@evone/ui`: UI_UX.md tokens, Button, TextField/SelectField/Checkbox, Card, native-dialog Modal, EmptyState/ErrorState/Skeleton; shell migrated; `/ui-kit` reference (noindex). axe WCAG 2.2 AA clean on every page at four widths; two real a11y defects fixed; mutation-tested. Muted text kept at `#596170` because the spec's `#747B87` fails AA. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41672655002). [Evidence](04_Delivery/17_EV-015_ui_evidence.md).
 - [ ] **EV-016** · P0 · M · **Integrate managed auth with API**  
   Depends: `EV-005,EV-012` · **Done when:** Expired/invalid JWT rejected server-side.
 - [ ] **EV-017** · P0 · M · **Implement scoped RBAC and audit middleware**  
