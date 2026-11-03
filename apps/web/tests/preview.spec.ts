@@ -36,6 +36,14 @@ test("preview renders honestly, fits the viewport and supports keyboard entry", 
     ),
   ).toBe(true);
   expect(errors).toEqual([]);
+  const iconHref = await page
+    .locator('link[rel="icon"]')
+    .first()
+    .getAttribute("href");
+  expect(iconHref).toBeTruthy();
+  const icon = await page.request.get(iconHref!);
+  expect(icon.status()).toBe(200);
+  expect(icon.headers()["content-type"]).toContain("image/svg+xml");
   await page.getByRole("main").blur();
   await page.screenshot({
     path: testInfo.outputPath("preview.png"),

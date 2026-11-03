@@ -52,6 +52,13 @@ The root is a static, truthfully labelled preview, with no async data surfaces o
 
 Fonts are bundled locally. No concept screenshot is served as a working interface, no photos have been repurposed for listings, and no verified claims, counts, prices or partner offers are shown. Monitoring for this task is build/CI failures plus browser console/page-error assertions; production telemetry remains EV-019.
 
+## Post-acceptance audit fixes (2026-11-03)
+
+- Full Chromium requested `/favicon.ico` and logged a 404 console error, failing the preview test in every viewport; the headless shell used by CI does not request favicons, so CI stayed green. Added `apps/web/app/icon.svg` (original monogram) and asserted the declared icon returns 200 `image/svg+xml`.
+- `apps/web/next-env.d.ts` is generated and was rewritten by every build, dirtying the tree. It is now gitignored; `pnpm typecheck` (`next typegen`) regenerates it.
+- Verified locally: format, lint, typecheck and build pass; 8/8 Playwright tests pass against full Chromium.
+- Known gap: `engine-strict=true` only warns for the root `engines.node` mismatch under pnpm 11; Node 24.18.0 is enforced in CI via `.node-version` only.
+
 ## Remaining gates
 
 - EV-004 core-screen sign-off remains open.
