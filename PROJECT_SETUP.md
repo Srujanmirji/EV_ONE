@@ -9,7 +9,9 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-The web preview runs at `http://127.0.0.1:3000`. Root scripts dispatch through Turborepo. `pnpm start` serves the web build after `pnpm build`.
+The web preview runs at `http://127.0.0.1:3000` and the API at `http://127.0.0.1:4000/api/v1`. Root scripts dispatch through Turborepo. `pnpm start` serves the web build after `pnpm build`; `pnpm --filter @evone/api start` serves the built API.
+
+API configuration is validated with Zod at startup (`apps/api/src/config/env.ts`); an invalid value stops the process with exit code 1 and names the variable without printing its value. All current variables are optional; see `apps/api/.env.example`. `/health/live` never touches dependencies. `/health/ready` returns 503 when any registered `ReadinessCheck` fails or exceeds `API_READINESS_TIMEOUT_MS`, and from the moment shutdown begins. EV-013 and EV-014 add their Postgres and Redis checks to `READINESS_CHECKS`. Inject providers with explicit `@Inject(Token)`: it keeps dependency injection working whichever compiler runs (tsc for builds, SWC for dev and tests).
 
 ```bash
 pnpm format:check
@@ -24,7 +26,7 @@ pnpm test:e2e
 
 Browser evidence is written to `apps/web/test-results/`; failed tests retain a trace. Fonts are self-hosted from the pinned Fontsource packages (Inter and Manrope, SIL Open Font License), with no Google Fonts request at build or runtime. This preview is explicitly `noindex, nofollow` until publishing is authorized. It collects no user data and has no inventory, checkout or lead intake.
 
-Unit tests use Vitest; put `*.test.ts` files beside the code they cover (`apps/web/lib/site-metadata.test.ts` is the first). Playwright specs live in `apps/web/tests/`. pnpm settings (`engineStrict`, `saveExact`) live in `pnpm-workspace.yaml` because pnpm 11 ignores them in `.npmrc`, so installs on any Node other than 24.18.0 fail. In sandboxes whose preinstalled Chromium does not match the pinned Playwright, set `PW_CHROMIUM_EXECUTABLE` to that binary instead of installing another browser. Integration, migration, seed and contract scripts below are future acceptance targets, not implemented commands.
+Unit tests use Vitest; put `*.test.ts` files beside the code they cover. API process tests live in `apps/api/test/*.e2e.test.ts` and run against `dist/`. Playwright specs live in `apps/web/tests/`. pnpm settings (`engineStrict`, `saveExact`, `allowBuilds`) live in `pnpm-workspace.yaml` because pnpm 11 ignores them in `.npmrc`, so installs on any Node other than 24.18.0 fail. In sandboxes whose preinstalled Chromium does not match the pinned Playwright, set `PW_CHROMIUM_EXECUTABLE` to that binary instead of installing another browser. Integration, migration, seed and contract scripts below are future acceptance targets, not implemented commands.
 
 ## Stage 1 — later setup prerequisites
 - GitHub repo private for initial work, team access and required review.
