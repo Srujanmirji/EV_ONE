@@ -31,7 +31,11 @@ let requests: Record<string, Record<string, string>> = {};
 
 beforeAll(async () => {
   app = await createApp({
-    config: loadConfig({ NODE_ENV: "test", DATABASE_URL: databaseUrl }),
+    config: loadConfig({
+      NODE_ENV: "test",
+      DATABASE_URL: databaseUrl,
+      REDIS_URL: "redis://127.0.0.1:6379",
+    }),
     db,
     readinessChecks: [dependency],
   });

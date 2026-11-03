@@ -31,6 +31,8 @@ Local environment: Node 24.18.0, pnpm 11.20.0, native Redis 8.10.3 on isolated p
 | `REDIS_URL=redis://127.0.0.1:16379 pnpm --filter @evone/api exec vitest run --config vitest.e2e.config.ts test/worker.e2e.test.ts` | 2 pass: built worker consumes a real queued job and exits gracefully on SIGTERM; malformed config exits 1 without leaking credentials |
 | `DATABASE_URL=postgresql://evone:unused@127.0.0.1:1/evone REDIS_URL=redis://127.0.0.1:16379 pnpm --filter @evone/api exec vitest run --config vitest.e2e.config.ts test/server.e2e.test.ts -t 'Redis down\|refuses to start'` | 3 pass, 2 excluded by selection: built API stays live with Redis down and reports 503; missing/invalid config refused |
 
+The first hosted run reached integration tests and exposed one missed `REDIS_URL` in the contract-test config fixture; the fixture was corrected to match the other in-process API tests. Redis integration checks passed in that run; full hosted verification remained pending at this correction.
+
 Review found an IPv6 hostname-bracket bug and malformed-URL refinement exception; both fixed with regression tests. The initial outage integration test also exposed BullMQ's indefinite initial-connect wait; readiness now rejects before starting a Redis command while disconnected.
 
 ## Scope and limits
