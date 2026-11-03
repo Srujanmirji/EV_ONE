@@ -114,5 +114,32 @@ erDiagram
 - Migration flow: schema review → migration SQL → staging test → backup → prod deploy → post-migration verification; prefer expand/contract.
 - Generate seed demo content with `demo=true` and conspicuous labels; never push staged fake verification into production.
 
+## Migration workflow and rollback strategy (EV-013)
+
+Implemented in `packages/db` (Prisma 7.10.1, ADR-012). Commands run from the repository root.
+
+**Writing a migration**
+1. Edit `packages/db/prisma/schema.prisma`, then run `pnpm db:migrate:dev --name <change>` against the local Compose database (`pnpm db:up`).
+2. Review the generated `migration.sql`. Never edit a migration that has been applied anywhere shared.
+3. Write `down.sql` beside it by hand. Prisma's `migrate diff` does not generate reliable down scripts: for the baseline it produced an empty script instead of dropping PostGIS. CI fails if any migration lacks `down.sql`.
+4. `pnpm db:migrate:verify` (CI runs it on an empty database) proves that:
+   - deploy is repeatable and a second deploy is a no-op;
+   - the database matches `schema.prisma`;
+   - rolling back the latest migration leaves exactly the system-catalog state of the earlier migrations;
+   - re-deploying after the rollback restores the full schema.
+
+**Shape changes to be reversible (expand/contract).** Add nullable columns, tables and indexes first (expand). Deploy code that writes both shapes, backfill, and switch reads. Only then remove the old shape (contract) in a later release. Each step stays backward compatible with the application version before it, so rolling back the app never needs a schema rollback. Large indexes use `CREATE INDEX CONCURRENTLY` in their own migration, which cannot run inside a transaction.
+
+**Rollback order of preference**
+1. **Roll back the application, keep the schema.** Expand-phase migrations are safe to leave in place. This is the default response to a bad release.
+2. **Forward fix.** Write a new migration that corrects the problem. Production history only moves forward.
+3. **Failed migration** (Prisma marks it failed and blocks further deploys): inspect the partial state, apply the needed parts of `down.sql` manually, then `prisma migrate resolve --rolled-back <name>`. Fix the migration and redeploy.
+4. **Revert a successful migration:** `pnpm db:migrate:rollback --confirm <latest_migration_name>`. It only reverts the latest applied migration and refuses any other name. It runs `down.sql` and removes the history row in one transaction, so either both happen or neither does. In production this needs a fresh backup and an owner-approved incident ticket, because `down.sql` can drop data the newer release wrote.
+5. **Restore from backup / point-in-time recovery** for destructive contract migrations or data corruption. The production host must provide PITR before launch (ADR-015 retention policy, production gate).
+
+**Deploy sequence:** backup or confirm PITR → `prisma migrate deploy` (never `migrate dev` or `reset` outside local) → `/api/v1/health/ready` → application deploy → smoke test. Prisma 7 refuses agent-run `migrate reset` without explicit user consent; keep that guard.
+
+**Local database rule:** create databases from `template0` with only `postgis`. The stock `postgis/postgis` image pre-installs `postgis_topology`, `postgis_tiger_geocoder` and `fuzzystrmatch`, and `migrate dev` treats those as drift. `infra/docker/docker-compose.yml` replaces the image's init script to prevent this.
+
 ## Prisma/PostGIS note
 Tested 2026-11-03 (ADR-012, `04_Delivery/11_ADR-012_prisma_postgis_spike.md`): Prisma 7.10.1 still has **no native PostGIS types**. Declare spatial columns as nullable `Unsupported("geography(Point, 4326)")?` with `@@index([geom], type: Gist)` and the `postgresqlExtensions` preview feature; read and write them with parameterised raw SQL. Migrations, drift checks and GiST index use were verified on PostgreSQL 17.5 / PostGIS 3.5.2. Deployment-host PostGIS support is still unverified. Reference: https://www.prisma.io/docs/orm/extensions/postgis
