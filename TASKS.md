@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009 to EV-015, EV-018, EV-021 and EV-023 to EV-026 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -43,8 +43,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-013** · P0 · M · **Provision Postgres+PostGIS and migrations**
   Depends: `EV-012` · **Done when:** Migrations repeatable and rollback strategy documented.
   `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
-- [ ] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**  
+- [x] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
+  Redis 7.4 (compose + CI); `packages/queue` (versioned validated events, event key = job id, 5 attempts exponential backoff) and `apps/worker` (non-retried invalid input, payload-free dead letters with hook, health, graceful SIGTERM). Retry, dead-letter and idempotency proven against real Redis and the built process; mutation-tested; passing in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41691256142). Outbox deferred to the first business event. [Evidence](04_Delivery/21_EV-014_worker_evidence.md).
 - [x] **EV-015** · P0 · M · **Build global design tokens and components**
   Depends: `EV-011` · **Done when:** Tokens, buttons, inputs, cards, modals, empty/error states.
   `@evone/ui`: UI_UX.md tokens, Button, TextField/SelectField/Checkbox, Card, native-dialog Modal, EmptyState/ErrorState/Skeleton; shell migrated; `/ui-kit` reference (noindex). axe WCAG 2.2 AA clean on every page at four widths; two real a11y defects fixed; mutation-tested. Muted text kept at `#596170` because the spec's `#747B87` fails AA. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41672655002). [Evidence](04_Delivery/17_EV-015_ui_evidence.md).
