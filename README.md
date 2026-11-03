@@ -19,13 +19,15 @@ Open `http://127.0.0.1:3000`. No credentials or external services are required. 
 pnpm format:check
 pnpm lint
 pnpm typecheck
+pnpm test:unit
 pnpm build
+pnpm verify:gates
 pnpm --filter @evone/web exec playwright install chromium
-pnpm test
+pnpm test:e2e
 pnpm start
 ```
 
-`pnpm test` builds first through Turbo, starts an isolated production server on port 3100, and checks the preview and 404 recovery at four viewport widths. CI also installs Chromium's Linux system dependencies. The suite fails if port 3100 is already occupied.
+`pnpm test:unit` runs Vitest (`*.test.ts` beside the code). `pnpm test:e2e` builds first through Turbo, starts an isolated production server on port 3100, and checks the preview and 404 recovery at four viewport widths in full Chromium. `pnpm test` runs both. `pnpm verify:gates` writes deliberately broken probe files and fails if typecheck, format, lint or unit tests accept them. CI also installs Chromium's Linux system dependencies. The suite fails if port 3100 is already occupied.
 
 Implemented workspace members: `apps/web` and `packages/config`. The API, admin, mobile, worker, contracts, SDK and shared UI packages are introduced by their own tasks when used. Documentation stays at its existing paths. The original `MANIFEST_SHA256.txt` describes the supplied blueprint archive, not current edited files.
 

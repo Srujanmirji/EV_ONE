@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
+import { previewMetadata } from "@/lib/site-metadata";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "EVONE — Preview",
-  description:
-    "An early look at EVONE, an electric vehicle ecosystem for India. Vehicle discovery and transactions are not available yet.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = previewMetadata;
 
 export default function RootLayout({
   children,

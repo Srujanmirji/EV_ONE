@@ -22,9 +22,12 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm test:unit
       - run: pnpm build
+      - name: Prove gates reject invalid input
+        run: pnpm verify:gates
       - run: pnpm --filter @evone/web exec playwright install --with-deps chromium
-      - run: pnpm test
+      - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

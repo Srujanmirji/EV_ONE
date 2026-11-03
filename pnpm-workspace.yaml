@@ -23,3 +23,6 @@ minimumReleaseAgeExclude:
 onlyBuiltDependencies:
   - sharp
   - unrs-resolver
+
+engineStrict: true
+saveExact: true
