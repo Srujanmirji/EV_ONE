@@ -1,0 +1,21 @@
+-- Reverts 20261103152727_catalogue. Drops all catalogue data.
+DROP TRIGGER IF EXISTS "brands_parent_publish_guard" ON "brands";
+DROP TRIGGER IF EXISTS "ev_models_parent_publish_guard" ON "ev_models";
+DROP TRIGGER IF EXISTS "spec_sources_publish_guard" ON "spec_sources";
+DROP TRIGGER IF EXISTS "ev_variants_no_delete_published" ON "ev_variants";
+DROP TRIGGER IF EXISTS "ev_variants_publish_guard" ON "ev_variants";
+DROP FUNCTION IF EXISTS "evone_parent_publish_guard"();
+DROP FUNCTION IF EXISTS "evone_spec_sources_publish_guard"();
+DROP FUNCTION IF EXISTS "evone_ev_variants_publish_guard"();
+DROP FUNCTION IF EXISTS "evone_assert_variant_publishable"(UUID);
+DROP VIEW IF EXISTS "ev_variant_unsourced_specs";
+DROP TABLE IF EXISTS "spec_sources";
+DROP TABLE IF EXISTS "ev_variants";
+DROP TABLE IF EXISTS "ev_models";
+DROP TABLE IF EXISTS "brands";
+DROP TYPE IF EXISTS "SourceKind";
+DROP TYPE IF EXISTS "SpecField";
+DROP TYPE IF EXISTS "RangeStandard";
+DROP TYPE IF EXISTS "ModelAvailability";
+DROP TYPE IF EXISTS "VehicleType";
+DROP TYPE IF EXISTS "PublishStatus";

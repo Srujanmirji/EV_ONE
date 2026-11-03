@@ -2,27 +2,37 @@
 
 ## EV-009 local foundation
 
-The runnable workspace is now this directory; do not create a nested `evone` folder. Use Node `24.18.0` and pnpm `11.20.0`. The preview requires no environment variables, database, Docker or provider credentials.
+The runnable workspace is now this directory; do not create a nested `evone` folder. Use Node `24.18.0` and pnpm `11.20.0`. The API needs PostgreSQL with PostGIS; Docker provides it locally. No provider credentials are needed.
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm db:up
+export DATABASE_URL=postgresql://evone:evone_local_only@127.0.0.1:5432/evone
+export SHADOW_DATABASE_URL=postgresql://evone:evone_local_only@127.0.0.1:5432/evone_shadow
+pnpm db:migrate:deploy
 pnpm dev
 ```
 
-The web preview runs at `http://127.0.0.1:3000`. Root scripts dispatch through Turborepo. `pnpm start` serves the web build after `pnpm build`.
+The Compose credentials are local-only placeholders. Database scripts: `db:migrate:dev`, `db:migrate:deploy`, `db:migrate:status`, `db:migrate:rollback --confirm <name>` `db:migrate:verify` (needs an empty database and a role with CREATEDB), `db:seed:demo` (fictional catalogue, never production) and `test:integration` (catalogue rules against a migrated database). The workflow and rollback strategy are in `DATABASE.md`.
+
+The web preview runs at `http://127.0.0.1:3000` and the API at `http://127.0.0.1:4000/api/v1`. Root scripts dispatch through Turborepo. `pnpm start` serves the web build after `pnpm build`; `pnpm --filter @evone/api start` serves the built API.
+
+API configuration is validated with Zod at startup (`apps/api/src/config/env.ts`); an invalid value stops the process with exit code 1 and names the variable without printing its value. All current variables are optional; see `apps/api/.env.example`. `/health/live` never touches dependencies. `/health/ready` returns 503 when any registered `ReadinessCheck` fails or exceeds `API_READINESS_TIMEOUT_MS`, and from the moment shutdown begins. EV-013 and EV-014 add their Postgres and Redis checks to `READINESS_CHECKS`. Inject providers with explicit `@Inject(Token)`: it keeps dependency injection working whichever compiler runs (tsc for builds, SWC for dev and tests).
 
 ```bash
 pnpm format:check
 pnpm lint
 pnpm typecheck
+pnpm test:unit
 pnpm build
+pnpm verify:gates
 pnpm --filter @evone/web exec playwright install chromium
-pnpm test
+pnpm test:e2e
 ```
 
 Browser evidence is written to `apps/web/test-results/`; failed tests retain a trace. Fonts are self-hosted from the pinned Fontsource packages (Inter and Manrope, SIL Open Font License), with no Google Fonts request at build or runtime. This preview is explicitly `noindex, nofollow` until publishing is authorized. It collects no user data and has no inventory, checkout or lead intake.
 
-No unit runner is installed yet because there is no business logic. The initial test suite covers the running production application. Integration, migration, seed and contract scripts below are future acceptance targets, not implemented commands.
+Unit tests use Vitest; put `*.test.ts` files beside the code they cover. API process tests live in `apps/api/test/*.e2e.test.ts` and run against `dist/`. Playwright specs live in `apps/web/tests/`. pnpm settings (`engineStrict`, `saveExact`, `allowBuilds`) live in `pnpm-workspace.yaml` because pnpm 11 ignores them in `.npmrc`, so installs on any Node other than 24.18.0 fail. In sandboxes whose preinstalled Chromium does not match the pinned Playwright, set `PW_CHROMIUM_EXECUTABLE` to that binary instead of installing another browser. `pnpm contract:generate` regenerates `openapi.json` and the SDK types from `packages/contracts`, and `pnpm contract:check` fails if the committed copies are stale (see `API_CONTRACT.md`, OpenAPI generation). Seed scripts below are future acceptance targets, not implemented commands.
 
 ## Stage 1 — later setup prerequisites
 - GitHub repo private for initial work, team access and required review.

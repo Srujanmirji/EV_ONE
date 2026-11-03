@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009 is verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013 and EV-018 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -31,14 +31,17 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-009** · P0 · S · **Create pnpm Turborepo monorepo**
   Depends: `EV-004` · **Done when:** apps and packages install/build under CI.
   Owner-approved prerequisite exception: accepted ADR-001 (2026-11-03); EV-004 stays open. Workspace/web preview implemented; frozen install, lint, formatting, strict typecheck, production build and 8 browser tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41651932287). [Files, commands and evidence](04_Delivery/08_EV-009_foundation_evidence.md).
-- [ ] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**  
+- [x] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**
   Depends: `EV-009` · **Done when:** CI fails invalid types and formatting.
+  Vitest added; `pnpm verify:gates` proves typecheck, format, lint and unit tests reject broken probes, and Node 24.18.0 is now enforced at install. Passes locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41655114949). [Files, commands and evidence](04_Delivery/09_EV-010_tooling_evidence.md).
 - [ ] **EV-011** · P0 · M · **Create Next.js web app shell and routes**  
   Depends: `EV-009` · **Done when:** Nav/footer, basic SEO and responsive shell work.
-- [ ] **EV-012** · P0 · M · **Create NestJS API and health endpoints**  
+- [x] **EV-012** · P0 · M · **Create NestJS API and health endpoints**
   Depends: `EV-009` · **Done when:** Startup config, liveness and readiness tests pass.
-- [ ] **EV-013** · P0 · M · **Provision Postgres+PostGIS and migrations**  
+  `apps/api` (NestJS 12, ESM) with Zod-validated startup config and `/api/v1/health/{live,ready}`; 18 unit and 2 built-process tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41657126777). Readiness registry awaits EV-013/EV-014 checks. [Files, commands and evidence](04_Delivery/10_EV-012_api_health_evidence.md).
+- [x] **EV-013** · P0 · M · **Provision Postgres+PostGIS and migrations**
   Depends: `EV-012` · **Done when:** Migrations repeatable and rollback strategy documented.
+  `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
 - [ ] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**  
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
 - [ ] **EV-015** · P0 · M · **Build global design tokens and components**  
@@ -47,8 +50,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Depends: `EV-005,EV-012` · **Done when:** Expired/invalid JWT rejected server-side.
 - [ ] **EV-017** · P0 · M · **Implement scoped RBAC and audit middleware**  
   Depends: `EV-016` · **Done when:** Cross-account and cross-dealer access blocked in tests.
-- [ ] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**  
+- [x] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**
   Depends: `EV-012` · **Done when:** OpenAPI and TS SDK generated from validated schemas.
+  `packages/contracts` (strict Zod → OpenAPI 3.1 `openapi.json`) and `packages/sdk` (generated types + `createEvoneClient`); `contract:check`, API route/schema contract test and SDK-driven API e2e all mutation-tested and passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41663040938). [Evidence](04_Delivery/13_EV-018_contracts_evidence.md).
 - [ ] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**  
   Depends: `EV-012` · **Done when:** PII redaction and test alert confirmed.
 - [ ] **EV-020** · P0 · S · **Configure R2 uploads and media validation**  

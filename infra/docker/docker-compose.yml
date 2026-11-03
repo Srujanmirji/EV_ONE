@@ -1,0 +1,25 @@
+# Local development dependencies only. Never point production at these.
+name: evone
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: evone
+      POSTGRES_PASSWORD: evone_local_only
+      POSTGRES_DB: evone
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Replaces the image's 10_postgis.sh, which pre-installs extra
+      # extensions that make `prisma migrate dev` report drift (ADR-012).
+      - ./postgres-init/10_postgis.sh:/docker-entrypoint-initdb.d/10_postgis.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evone -d evone"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres-data:
