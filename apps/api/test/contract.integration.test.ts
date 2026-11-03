@@ -41,6 +41,7 @@ beforeAll(async () => {
   const brand = await publishedBrand();
   const m = await model(brand.id);
   const v = await variant(m.id);
+  const v2 = await variant(m.id);
   requests = {
     getLiveness: { 200: "/health/live" },
     getReadiness: { 200: "/health/ready", 503: "/health/ready" },
@@ -52,6 +53,11 @@ beforeAll(async () => {
     getModel: {
       200: `/brands/${brand.slug}/models/${m.slug}`,
       404: `/brands/${brand.slug}/models/no-such-model`,
+    },
+    compareVariants: {
+      200: `/compare?variantIds=${v.id},${v2.id}`,
+      400: `/compare?variantIds=${v.id}`,
+      404: `/compare?variantIds=${v.id},3f1c2a9e-8b7d-4c6e-9a1b-2d3e4f5a6b7c`,
     },
     getVariant: {
       200: `/variants/${v.id}`,

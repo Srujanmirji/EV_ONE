@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/catalogue/breadcrumbs";
+import { AddToCompare } from "@/components/compare/add-to-compare";
 import { SpecList } from "@/components/catalogue/spec-list";
 import { CatalogueUnavailable } from "@/components/catalogue/unavailable";
 import { loadVariant, modelHref, variantHref } from "@/lib/catalogue";
@@ -71,6 +72,9 @@ export default async function VariantPage({ params }: { params: Params }) {
               </span>
             </p>
           ) : null}
+          <div className="pt-2 [&_button]:border-glass-line [&_button]:bg-glass [&_button]:text-paper">
+            <AddToCompare variantId={v.id} variantName={v.name} />
+          </div>
         </div>
       </section>
 

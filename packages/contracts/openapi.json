@@ -99,6 +99,66 @@
         }
       }
     },
+    "/compare": {
+      "get": {
+        "operationId": "compareVariants",
+        "summary": "2–3 published variants with specs and reviewed sources, in the requested order. 404 if any is not published.",
+        "tags": ["catalogue"],
+        "parameters": [
+          {
+            "name": "variantIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Variants in requested order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters (VALIDATION_ERROR).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not published.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health/live": {
       "get": {
         "operationId": "getLiveness",
@@ -379,6 +439,22 @@
           }
         },
         "required": ["km", "standard"],
+        "additionalProperties": false
+      },
+      "CompareResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantDetail"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
         "additionalProperties": false
       },
       "ErrorCode": {
