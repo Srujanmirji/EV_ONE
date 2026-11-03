@@ -7,6 +7,7 @@ import {
   Checkbox,
   EmptyState,
   ErrorState,
+  Gallery,
   Modal,
   SelectField,
   Skeleton,
@@ -186,6 +187,25 @@ export function UiKit() {
             <Card>
               <Skeleton label="Loading example" lines={4} />
             </Card>
+          </div>
+        </Section>
+
+        <Section title="Gallery">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Gallery
+              label="Example gallery"
+              images={[1, 2, 3].map((n) => ({
+                src: `/kit/photo-${n}.svg`,
+                alt: `Example image ${n}, an abstract circle`,
+                width: 1600,
+                height: 900,
+              }))}
+            />
+            <Gallery
+              label="Example empty gallery"
+              images={[]}
+              emptyText="No photos yet."
+            />
           </div>
         </Section>
 
