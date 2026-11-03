@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009 local implementation is verified; hosted CI is pending. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009 is verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -28,9 +28,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 
 ## Foundation (12 tasks)
 
-- [~] **EV-009** · P0 · S · **Create pnpm Turborepo monorepo**
+- [x] **EV-009** · P0 · S · **Create pnpm Turborepo monorepo**
   Depends: `EV-004` · **Done when:** apps and packages install/build under CI.
-  Owner-approved prerequisite exception: accepted ADR-001 (2026-11-03); EV-004 stays open. Workspace/web preview implemented; frozen install, lint, formatting, strict typecheck, production build and 8 browser tests pass locally. Hosted CI pending. [Files, commands and evidence](04_Delivery/08_EV-009_foundation_evidence.md).
+  Owner-approved prerequisite exception: accepted ADR-001 (2026-11-03); EV-004 stays open. Workspace/web preview implemented; frozen install, lint, formatting, strict typecheck, production build and 8 browser tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41651932287). [Files, commands and evidence](04_Delivery/08_EV-009_foundation_evidence.md).
 - [ ] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**  
   Depends: `EV-009` · **Done when:** CI fails invalid types and formatting.
 - [ ] **EV-011** · P0 · M · **Create Next.js web app shell and routes**  
@@ -235,8 +235,8 @@ All relevant P0 tasks EV-001 through EV-078 must pass for release, subject to ex
 
 ## Current progress
 - Total: **87 tasks** across 16 phases.
-- Completed: **0**; EV-009 implementation is locally verified and awaiting hosted CI before completion.
-- Next engineering gate: EV-009 hosted CI, then EV-010 (tooling acceptance). EV-011 and EV-012 also become dependency-ready after EV-009.
+- Completed: **1** (EV-009).
+- Next engineering task: EV-010 (tooling acceptance). EV-011 and EV-012 are also dependency-ready after EV-009.
 - Discovery EV-001–EV-008 remains open; EV-004 was not completed by the scaffold exception.
 
 ## When something changes

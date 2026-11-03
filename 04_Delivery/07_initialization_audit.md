@@ -1,6 +1,6 @@
 # Initialization audit and foundation proposal
 
-Date: 2026-11-03. Status: owner approved visual direction, Next.js/NestJS architecture and limited EV-009 exception. Local foundation verification passes; hosted CI is pending. See accepted ADR-001 and `08_EV-009_foundation_evidence.md`.
+Date: 2026-11-03. Status: owner approved visual direction, Next.js/NestJS architecture and limited EV-009 exception. EV-009 is verified locally and in hosted CI. See accepted ADR-001 and `08_EV-009_foundation_evidence.md`.
 
 ## Workspace audit
 
@@ -65,7 +65,7 @@ Brief review: preserves the approved automotive composition, typography and mark
 
 ## Current tracking
 
-- Completed task: none.
-- Active foundation task: EV-009, exception approved and local checks passing; hosted CI pending.
+- Completed task: EV-009, exception approved and local/hosted checks passing.
+- Next foundation task: EV-010 (tooling acceptance).
 - EV-004 remains open; no discovery, provider or legal sign-off is asserted.
 - Application checks and eight browser tests now pass; see the evidence record. The workspace audit above records the initial pre-implementation state.

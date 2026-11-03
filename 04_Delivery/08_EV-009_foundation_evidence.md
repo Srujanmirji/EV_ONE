@@ -1,6 +1,6 @@
 # EV-009 — Workspace foundation evidence
 
-Date: 2026-11-03. Branch: `feat/EV-009-monorepo`.
+Date: 2026-11-03. Initial branch: `feat/EV-009-monorepo`, renamed to `main` at the owner's request. Status: EV-009 complete.
 
 ## Scope and approval
 
@@ -22,7 +22,9 @@ Next's lint plugins currently declare ESLint 9 compatibility; ESLint 10 initiall
 
 ## Verification
 
-Local results below are verified on macOS. The owner subsequently authorized adding `https://github.com/Srujanmirji/EV_ONE.git`, renaming the branch to `main` and pushing. The remote was empty on inspection. Hosted CI is pending the first push.
+Local results below are verified on macOS. The owner subsequently authorized adding `https://github.com/Srujanmirji/EV_ONE.git`, renaming the branch to `main` and pushing. The remote was empty on inspection. Initial commit `b7a5ba927f70c69dc97a133d5b1fd070a1c1b806` was pushed successfully, with `main` tracking `origin/main`.
+
+[Hosted Foundation checks run 41651932287](https://github.com/Srujanmirji/EV_ONE/actions/runs/41651932287) passed on Ubuntu: frozen install, format, lint, typecheck, production build, Chromium setup, browser tests and artifact upload. `gh run watch 41651932287 --repo Srujanmirji/EV_ONE --exit-status --interval 10` exited 0; the verify job completed in 52 seconds. This satisfies EV-009's CI gate. A follow-up updates the actions to the current official releases (checkout 7.0.1, pnpm/action-setup 6.1.1, setup-node 7.1.0, upload-artifact 7.0.2) to remove the deprecated Node 20 action runtime warning; its run is visible in the repository's Actions history.
 
 | Command / check | Actual result |
 |---|---|
@@ -52,7 +54,6 @@ Fonts are bundled locally. No concept screenshot is served as a working interfac
 
 ## Remaining gates
 
-- First hosted CI run on the owner-authorized remote. Do not claim Linux runner results from macOS verification.
 - EV-004 core-screen sign-off remains open.
 - EV-010 tooling acceptance remains separate despite the minimal scripts needed by this scaffold.
 - No API, database, auth, payments, charging, finance, inventory or homepage search implementation.
