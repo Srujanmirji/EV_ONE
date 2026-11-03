@@ -13,14 +13,16 @@
   },
   "scripts": {
     "generate": "prisma generate",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
-    "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "prisma generate && eslint . --max-warnings 0",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
     "migrate:rollback": "node scripts/migrate-rollback.mjs",
-    "migrate:verify": "node scripts/migrate-verify.mjs"
+    "migrate:verify": "node scripts/migrate-verify.mjs",
+    "test:integration": "vitest run",
+    "seed:demo": "node dist/seed-demo-cli.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
@@ -33,6 +35,7 @@
     "eslint": "9.39.5",
     "prisma": "7.10.1",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.1"
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.0.5"
   }
 }

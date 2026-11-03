@@ -59,6 +59,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone_verify
       - run: pnpm db:migrate:deploy
+      - name: Prove catalogue publishing rules against PostgreSQL
+        run: pnpm test:integration
+      - name: Prove the demo seed runs on a migrated database
+        run: pnpm db:seed:demo
       - run: pnpm --filter @evone/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7.0.2
