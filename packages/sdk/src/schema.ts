@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+  "/brands": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Published brands that have at least one published model, with their vehicle types. */
+    get: operations["listBrands"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/brands/{brandSlug}/models/{modelSlug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** A published model with its published variants. Model slugs are unique per brand. */
+    get: operations["getModel"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/health/live": {
     parameters: {
       query?: never;
@@ -38,10 +72,64 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Published models, ordered by name then id, cursor-paginated. */
+    get: operations["listModels"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/variants/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** A published variant's specs with the reviewed source behind each stated value. */
+    get: operations["getVariant"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    BrandListResponse: {
+      data: components["schemas"]["BrandSummary"][];
+      meta: components["schemas"]["Meta"];
+    };
+    BrandRef: {
+      slug: string;
+      name: string;
+    };
+    BrandSummary: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      name: string;
+      isDemo: boolean;
+      vehicleTypes: components["schemas"]["VehicleType"][];
+    };
+    ClaimedRange: {
+      km: number;
+      standard: components["schemas"]["RangeStandard"];
+    };
     /** @enum {string} */
     ErrorCode:
       | "BAD_REQUEST"
@@ -77,6 +165,46 @@ export interface components {
       /** Format: uuid */
       requestId: string;
     };
+    /** @enum {string} */
+    ModelAvailability: "ON_SALE" | "UPCOMING" | "DISCONTINUED" | "UNKNOWN";
+    ModelDetail: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      name: string;
+      vehicleType: components["schemas"]["VehicleType"];
+      availability: components["schemas"]["ModelAvailability"];
+      releaseDate: string | null;
+      isDemo: boolean;
+      brand: components["schemas"]["BrandRef"];
+      variants: components["schemas"]["VariantSummary"][];
+    };
+    ModelDetailResponse: {
+      data: components["schemas"]["ModelDetail"];
+      meta: components["schemas"]["Meta"];
+    };
+    ModelListResponse: {
+      data: components["schemas"]["ModelSummary"][];
+      page: components["schemas"]["PageInfo"];
+      meta: components["schemas"]["Meta"];
+    };
+    ModelSummary: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      name: string;
+      vehicleType: components["schemas"]["VehicleType"];
+      availability: components["schemas"]["ModelAvailability"];
+      releaseDate: string | null;
+      isDemo: boolean;
+      brand: components["schemas"]["BrandRef"];
+    };
+    PageInfo: {
+      nextCursor: string | null;
+      hasMore: boolean;
+    };
+    /** @enum {string} */
+    RangeStandard: "MIDC" | "IDC" | "WLTP" | "NEDC" | "EPA" | "OEM_UNSPECIFIED";
     ReadinessCheckResult: {
       name: string;
       /** @enum {string} */
@@ -92,6 +220,63 @@ export interface components {
       data: components["schemas"]["ReadinessReport"];
       meta: components["schemas"]["Meta"];
     };
+    /** @enum {string} */
+    SourceKind: "OEM" | "REGULATOR" | "PRESS" | "DEALER" | "OTHER";
+    /** @enum {string} */
+    SpecField:
+      | "BATTERY_KWH"
+      | "CLAIMED_RANGE"
+      | "MOTOR_KW"
+      | "CHARGING_AC_KW"
+      | "CHARGING_DC_KW"
+      | "WARRANTY";
+    SpecSourceView: {
+      fieldName: components["schemas"]["SpecField"];
+      valueText: string;
+      /** Format: uri */
+      sourceUrl: string;
+      sourceKind: components["schemas"]["SourceKind"];
+      effectiveAt: string | null;
+      /** Format: date-time */
+      reviewedAt: string;
+    };
+    VariantDetail: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      name: string;
+      isDemo: boolean;
+      specs: components["schemas"]["VariantSpecs"];
+      model: {
+        slug: string;
+        name: string;
+        vehicleType: components["schemas"]["VehicleType"];
+        brand: components["schemas"]["BrandRef"];
+      };
+      sources: components["schemas"]["SpecSourceView"][];
+    };
+    VariantDetailResponse: {
+      data: components["schemas"]["VariantDetail"];
+      meta: components["schemas"]["Meta"];
+    };
+    VariantSpecs: {
+      batteryKwh: number | null;
+      claimedRange: components["schemas"]["ClaimedRange"] | null;
+      motorKw: number | null;
+      chargingAcKw: number | null;
+      chargingDcKw: number | null;
+      warrantyText: string | null;
+    };
+    VariantSummary: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      name: string;
+      isDemo: boolean;
+      specs: components["schemas"]["VariantSpecs"];
+    };
+    /** @enum {string} */
+    VehicleType: "SCOOTER" | "MOTORCYCLE" | "CAR" | "THREE_WHEELER";
   };
   responses: never;
   parameters: never;
@@ -99,18 +284,112 @@ export interface components {
   headers: never;
   pathItems: never;
 }
+export type SchemaBrandListResponse =
+  components["schemas"]["BrandListResponse"];
+export type SchemaBrandRef = components["schemas"]["BrandRef"];
+export type SchemaBrandSummary = components["schemas"]["BrandSummary"];
+export type SchemaClaimedRange = components["schemas"]["ClaimedRange"];
 export type SchemaErrorCode = components["schemas"]["ErrorCode"];
 export type SchemaErrorEnvelope = components["schemas"]["ErrorEnvelope"];
 export type SchemaLiveResponse = components["schemas"]["LiveResponse"];
 export type SchemaLiveStatus = components["schemas"]["LiveStatus"];
 export type SchemaMeta = components["schemas"]["Meta"];
+export type SchemaModelAvailability =
+  components["schemas"]["ModelAvailability"];
+export type SchemaModelDetail = components["schemas"]["ModelDetail"];
+export type SchemaModelDetailResponse =
+  components["schemas"]["ModelDetailResponse"];
+export type SchemaModelListResponse =
+  components["schemas"]["ModelListResponse"];
+export type SchemaModelSummary = components["schemas"]["ModelSummary"];
+export type SchemaPageInfo = components["schemas"]["PageInfo"];
+export type SchemaRangeStandard = components["schemas"]["RangeStandard"];
 export type SchemaReadinessCheckResult =
   components["schemas"]["ReadinessCheckResult"];
 export type SchemaReadinessReport = components["schemas"]["ReadinessReport"];
 export type SchemaReadinessResponse =
   components["schemas"]["ReadinessResponse"];
+export type SchemaSourceKind = components["schemas"]["SourceKind"];
+export type SchemaSpecField = components["schemas"]["SpecField"];
+export type SchemaSpecSourceView = components["schemas"]["SpecSourceView"];
+export type SchemaVariantDetail = components["schemas"]["VariantDetail"];
+export type SchemaVariantDetailResponse =
+  components["schemas"]["VariantDetailResponse"];
+export type SchemaVariantSpecs = components["schemas"]["VariantSpecs"];
+export type SchemaVariantSummary = components["schemas"]["VariantSummary"];
+export type SchemaVehicleType = components["schemas"]["VehicleType"];
 export type $defs = Record<string, never>;
 export interface operations {
+  listBrands: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Brands ordered by name. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BrandListResponse"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getModel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandSlug: string;
+        modelSlug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Model with variants. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModelDetailResponse"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
   getLiveness: {
     parameters: {
       query?: never;
@@ -165,6 +444,98 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ReadinessResponse"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  listModels: {
+    parameters: {
+      query?: {
+        brandId?: string;
+        vehicleType?: components["schemas"]["VehicleType"];
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of models. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModelListResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getVariant: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Variant with provenance. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["VariantDetailResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
         };
       };
       /** @description Error in the contract error envelope. */

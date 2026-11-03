@@ -1,4 +1,13 @@
 import type { z } from "zod";
+import {
+  BrandListResponse,
+  ModelDetailResponse,
+  ModelListQuery,
+  ModelListResponse,
+  ModelPathParams,
+  VariantDetailResponse,
+  VariantPathParams,
+} from "./catalogue.js";
 import { ErrorEnvelope } from "./common.js";
 import { LiveResponse, ReadinessResponse } from "./health.js";
 
@@ -14,8 +23,21 @@ export interface RouteContract {
   path: string;
   summary: string;
   tag: string;
+  /** Validated query string; each property becomes an OpenAPI parameter. */
+  query?: z.ZodObject;
+  /** Validated path parameters, named as in `path`. */
+  params?: z.ZodObject;
   responses: Record<number, RouteResponse>;
 }
+
+const badRequest: RouteResponse = {
+  description: "Invalid parameters (VALIDATION_ERROR).",
+  schema: ErrorEnvelope,
+};
+const notFound: RouteResponse = {
+  description: "Not found or not published.",
+  schema: ErrorEnvelope,
+};
 
 /**
  * Every implemented endpoint. The API's contract test fails if a route is
@@ -49,6 +71,62 @@ export const routes: RouteContract[] = [
         description: "A dependency is down or shutdown has begun.",
         schema: ReadinessResponse,
       },
+    },
+  },
+  {
+    operationId: "listBrands",
+    method: "get",
+    path: "/brands",
+    summary:
+      "Published brands that have at least one published model, with their vehicle types.",
+    tag: "catalogue",
+    responses: {
+      200: {
+        description: "Brands ordered by name.",
+        schema: BrandListResponse,
+      },
+    },
+  },
+  {
+    operationId: "listModels",
+    method: "get",
+    path: "/models",
+    summary: "Published models, ordered by name then id, cursor-paginated.",
+    tag: "catalogue",
+    query: ModelListQuery,
+    responses: {
+      200: { description: "A page of models.", schema: ModelListResponse },
+      400: badRequest,
+    },
+  },
+  {
+    operationId: "getModel",
+    method: "get",
+    path: "/brands/{brandSlug}/models/{modelSlug}",
+    summary:
+      "A published model with its published variants. Model slugs are unique per brand.",
+    tag: "catalogue",
+    params: ModelPathParams,
+    responses: {
+      200: { description: "Model with variants.", schema: ModelDetailResponse },
+      404: notFound,
+    },
+  },
+  {
+    operationId: "getVariant",
+    method: "get",
+    path: "/variants/{id}",
+    summary:
+      "A published variant's specs with the reviewed source behind each stated value.",
+    tag: "catalogue",
+    params: VariantPathParams,
+    responses: {
+      200: {
+        description: "Variant with provenance.",
+        schema: VariantDetailResponse,
+      },
+      400: badRequest,
+      404: notFound,
     },
   },
 ];
