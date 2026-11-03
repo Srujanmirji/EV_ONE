@@ -32,6 +32,22 @@ Write business change and outbox in one DB transaction. Worker polls outbox and 
 - Business counter alert for failed payment reconciliation, queue DLQ, unusual listing approvals, provider outage, elevated error rate.
 - Feature flags disable finance partner sends, payment intake, charger live-status and article publishing independently.
 
+**Implemented (EV-019, partial):**
+
+`@evone/observability` provides `redact`, `createLogger` and Sentry helpers.
+- **`redact`** removes values under sensitive keys (password, token, auth, cookie, email, phone, address, name fields, message/notes, Aadhaar/PAN, UPI/IFSC/account, IP, location; camelCase and snake_case both match). It also masks emails, Indian mobile numbers, bearer tokens, JWTs, 4-4-4 digit groups and credentials in URLs inside any string.
+- **`createLogger`** writes one redacted JSON line per event.
+- **Sentry helpers:** `initErrorTracking` runs with `sendDefaultPii: false` and no tracing; every event and breadcrumb is redacted, and request bodies, cookies, headers, query strings and user are dropped before sending.
+
+**API:**
+- one `http.request` line per request (method, path without query, status, duration, requestId), health probes at debug;
+- 5xx errors are logged as `http.error` (error name only) and reported to Sentry tagged with requestId and route; 4xx errors are not reported;
+- NestJS framework logs go through the same logger.
+
+**Worker:** the same logger; dead letters raise a Sentry alert `job.dead_letter` with event, jobId and reason only.
+
+**Not done:** the "test alert confirmed" acceptance needs a Sentry project. Set `SENTRY_DSN`, run `pnpm --filter @evone/api sentry:test`, and confirm the `sentry.test_alert` event and its tags in Sentry. The web app has no error tracking yet; add `@sentry/nextjs` with the same `beforeSend` when a DSN exists.
+
 ## Incident levels
 P0: data leak, unauthorized access, incorrect charge/capture, widespread loss of access → immediate containment and counsel/partner escalation. P1: checkout down, seller enquiry not delivered, bad published public data → flag off and clear customer messaging. P2: cosmetic or noncritical editorial errors → scheduled fix.
 

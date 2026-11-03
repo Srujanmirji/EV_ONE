@@ -19,6 +19,11 @@ export const envSchema = z.object({
     .min(100)
     .max(30000)
     .default(2000),
+  /** Error tracking; off when unset (local, CI, not yet configured). */
+  SENTRY_DSN: z.url({ protocol: /^https$/ }).optional(),
+  /** Build identifier shown on error reports, e.g. the git SHA. */
+  APP_RELEASE: z.string().max(100).optional(),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
 export type ApiConfig = z.infer<typeof envSchema>;

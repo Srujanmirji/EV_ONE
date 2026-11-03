@@ -11,6 +11,10 @@ export const workerEnv = z.object({
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(50).default(5),
   WORKER_HEALTH_HOST: z.string().min(1).default("127.0.0.1"),
   WORKER_HEALTH_PORT: z.coerce.number().int().min(1).max(65535).default(4010),
+  /** Error tracking and dead-letter alerts; off when unset. */
+  SENTRY_DSN: z.url({ protocol: /^https$/ }).optional(),
+  APP_RELEASE: z.string().max(100).optional(),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
 export type WorkerConfig = z.infer<typeof workerEnv>;

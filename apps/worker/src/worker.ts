@@ -7,7 +7,7 @@ import {
   type Redis,
 } from "@evone/queue";
 import { type Job, UnrecoverableError, Worker } from "bullmq";
-import type { Logger } from "./log.js";
+import type { Logger } from "@evone/observability";
 
 export type Handlers = {
   [N in EventName]: (payload: EventPayload<N>, job: Job) => Promise<void>;

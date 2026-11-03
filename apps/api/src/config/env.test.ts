@@ -11,7 +11,20 @@ describe("loadConfig", () => {
       API_PORT: 4000,
       API_READINESS_TIMEOUT_MS: 2000,
       DATABASE_URL,
+      LOG_LEVEL: "info",
     });
+  });
+
+  it("accepts an https Sentry DSN and rejects anything else", () => {
+    expect(
+      loadConfig({
+        DATABASE_URL,
+        SENTRY_DSN: "https://k@o1.ingest.sentry.io/2",
+      }).SENTRY_DSN,
+    ).toBe("https://k@o1.ingest.sentry.io/2");
+    expect(() =>
+      loadConfig({ DATABASE_URL, SENTRY_DSN: "http://k@host/1" }),
+    ).toThrow(ConfigError);
   });
 
   it("requires DATABASE_URL", () => {

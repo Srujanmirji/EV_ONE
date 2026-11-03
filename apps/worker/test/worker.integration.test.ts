@@ -9,7 +9,7 @@ import { type Job, QueueEvents } from "bullmq";
 import { afterEach, describe, expect, it } from "vitest";
 import { createHandlers, LAST_PING_KEY } from "../src/handlers.js";
 import { createHealthServer } from "../src/health.js";
-import type { LogFields } from "../src/log.js";
+import type { LogFields, Logger } from "@evone/observability";
 import {
   createEventWorker,
   type DeadLetter,
@@ -33,13 +33,16 @@ async function setup(handlers: Handlers, opts: { attempts?: number } = {}) {
     return c;
   };
   const logs: { level: string; event: string; fields: LogFields }[] = [];
-  const logger = {
-    info: (event: string, fields: LogFields = {}) =>
-      logs.push({ level: "info", event, fields }),
-    warn: (event: string, fields: LogFields = {}) =>
-      logs.push({ level: "warn", event, fields }),
-    error: (event: string, fields: LogFields = {}) =>
-      logs.push({ level: "error", event, fields }),
+  const record =
+    (level: string) =>
+    (event: string, fields: LogFields = {}): void =>
+      void logs.push({ level, event, fields });
+  const logger: Logger = {
+    debug: record("debug"),
+    info: record("info"),
+    warn: record("warn"),
+    error: record("error"),
+    child: () => logger,
   };
   const dead: DeadLetter[] = [];
   // Fast backoff keeps the retry tests quick; the policy shape is the same.

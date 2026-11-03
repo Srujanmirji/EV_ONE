@@ -3,20 +3,36 @@ import { createRedisConnection } from "@evone/queue";
 import { loadWorkerConfig, WorkerConfigError } from "./config.js";
 import { createHandlers } from "./handlers.js";
 import { createHealthServer } from "./health.js";
-import { jsonLogger } from "./log.js";
+import {
+  captureAlert,
+  createLogger,
+  flushErrorTracking,
+  initErrorTracking,
+} from "@evone/observability";
 import { createEventWorker } from "./worker.js";
 
 async function main(): Promise<void> {
   const config = loadWorkerConfig(process.env);
-  const logger = jsonLogger();
+  const logger = createLogger({ service: "worker", level: config.LOG_LEVEL });
+  const tracking = initErrorTracking({
+    dsn: config.SENTRY_DSN,
+    environment: config.NODE_ENV,
+    service: "worker",
+    release: config.APP_RELEASE,
+  });
   const redis = createRedisConnection(config.REDIS_URL);
   const worker = createEventWorker({
     connection: redis,
     handlers: createHandlers(redis),
     logger,
     concurrency: config.WORKER_CONCURRENCY,
-    // Operator alerting (Sentry/PagerDuty) attaches here in EV-019.
-    onDeadLetter: () => undefined,
+    // Operator alert with identifiers only; never the payload.
+    onDeadLetter: (dead) =>
+      captureAlert("job.dead_letter", {
+        event: dead.name,
+        jobId: dead.jobId,
+        reason: dead.reason,
+      }),
   });
   const health = createHealthServer(redis, worker);
   health.listen(config.WORKER_HEALTH_PORT, config.WORKER_HEALTH_HOST);
@@ -24,6 +40,7 @@ async function main(): Promise<void> {
   logger.info("worker.started", {
     concurrency: config.WORKER_CONCURRENCY,
     healthPort: config.WORKER_HEALTH_PORT,
+    errorTracking: tracking,
   });
 
   let stopping = false;
@@ -35,6 +52,7 @@ async function main(): Promise<void> {
     // Waits for jobs in progress to finish; unstarted jobs stay queued.
     await worker.close();
     await redis.quit();
+    await flushErrorTracking();
     health.close();
     logger.info("worker.stopped", { signal });
     process.exit(0);

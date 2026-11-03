@@ -6,6 +6,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [swc.vite({ module: { type: "es6" } })],
   test: {
+    // Per-package cache: parallel Turbo runs otherwise share and delete one
+    // root cache directory (ENOTEMPTY race).
+    fsModuleCachePath: "node_modules/.vitest-cache",
+
     environment: "node",
     include: ["src/**/*.test.ts"],
   },

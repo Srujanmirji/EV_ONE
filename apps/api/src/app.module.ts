@@ -7,6 +7,8 @@ import {
   type OnApplicationShutdown,
 } from "@nestjs/common";
 import { API_CONFIG } from "./config/config.token.js";
+import type { Logger as EvoneLogger } from "@evone/observability";
+import type { ErrorReporter } from "./common/http-exception.filter.js";
 import type { ApiConfig } from "./config/env.js";
 import type { DbClient } from "@evone/db";
 import { CatalogueModule } from "./catalogue/catalogue.module.js";
@@ -16,6 +18,10 @@ import { READINESS_CHECKS, type ReadinessCheck } from "./health/readiness.js";
 
 export interface AppOptions {
   config: ApiConfig;
+  /** Redacting JSON logger; silent when omitted (unit tests). */
+  logger?: EvoneLogger;
+  /** Sends unexpected (5xx) errors to error tracking. */
+  reportError?: ErrorReporter;
   db: DbClient;
   readinessChecks?: ReadinessCheck[];
   /** Run after the HTTP server stops, e.g. closing database pools. */
