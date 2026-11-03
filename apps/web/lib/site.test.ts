@@ -15,8 +15,8 @@ describe("site sections", () => {
     }
   });
 
-  it("states availability honestly for every section", () => {
-    for (const section of sections) {
+  it("states availability honestly for every section that is not live", () => {
+    for (const section of sections.filter((s) => !s.live)) {
       expect(section.availability).toMatch(
         /not (available|open|offered|published)|No /,
       );

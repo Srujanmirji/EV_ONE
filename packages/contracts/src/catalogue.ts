@@ -80,6 +80,33 @@ export const BrandSummary = component(
   "A published brand with at least one published model.",
 );
 
+export const NumberRange = component(
+  "NumberRange",
+  z.strictObject({ min: z.number().positive(), max: z.number().positive() }),
+);
+
+export const RangeByStandard = component(
+  "RangeByStandard",
+  z.strictObject({
+    standard: RangeStandard,
+    minKm: z.int().positive(),
+    maxKm: z.int().positive(),
+  }),
+  "Claimed range across variants, never merged across test standards.",
+);
+
+export const SpecSummary = component(
+  "SpecSummary",
+  z.strictObject({
+    variantCount: z.int().nonnegative(),
+    batteryKwh: NumberRange.nullable(),
+    claimedRanges: z.array(RangeByStandard),
+    reviewedSourceCount: z.int().nonnegative(),
+    lastReviewedAt: z.iso.datetime().nullable(),
+  }),
+  "Across the model's published variants. Every stated figure has a reviewed source.",
+);
+
 export const ModelSummary = component(
   "ModelSummary",
   z.strictObject({
@@ -91,6 +118,7 @@ export const ModelSummary = component(
     releaseDate: z.iso.date().nullable(),
     isDemo: z.boolean(),
     brand: BrandRef,
+    specSummary: SpecSummary,
   }),
 );
 
@@ -164,6 +192,7 @@ export const VariantPathParams = z.strictObject({ id: z.uuid() });
 
 export type BrandSummary = z.infer<typeof BrandSummary>;
 export type ModelSummary = z.infer<typeof ModelSummary>;
+export type SpecSummary = z.infer<typeof SpecSummary>;
 export type ModelDetail = z.infer<typeof ModelDetail>;
 export type VariantSummary = z.infer<typeof VariantSummary>;
 export type VariantDetail = z.infer<typeof VariantDetail>;

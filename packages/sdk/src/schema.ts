@@ -177,6 +177,7 @@ export interface components {
       releaseDate: string | null;
       isDemo: boolean;
       brand: components["schemas"]["BrandRef"];
+      specSummary: components["schemas"]["SpecSummary"];
       variants: components["schemas"]["VariantSummary"][];
     };
     ModelDetailResponse: {
@@ -198,10 +199,20 @@ export interface components {
       releaseDate: string | null;
       isDemo: boolean;
       brand: components["schemas"]["BrandRef"];
+      specSummary: components["schemas"]["SpecSummary"];
+    };
+    NumberRange: {
+      min: number;
+      max: number;
     };
     PageInfo: {
       nextCursor: string | null;
       hasMore: boolean;
+    };
+    RangeByStandard: {
+      standard: components["schemas"]["RangeStandard"];
+      minKm: number;
+      maxKm: number;
     };
     /** @enum {string} */
     RangeStandard: "MIDC" | "IDC" | "WLTP" | "NEDC" | "EPA" | "OEM_UNSPECIFIED";
@@ -239,6 +250,13 @@ export interface components {
       effectiveAt: string | null;
       /** Format: date-time */
       reviewedAt: string;
+    };
+    SpecSummary: {
+      variantCount: number;
+      batteryKwh: components["schemas"]["NumberRange"] | null;
+      claimedRanges: components["schemas"]["RangeByStandard"][];
+      reviewedSourceCount: number;
+      lastReviewedAt: string | null;
     };
     VariantDetail: {
       /** Format: uuid */
@@ -302,7 +320,9 @@ export type SchemaModelDetailResponse =
 export type SchemaModelListResponse =
   components["schemas"]["ModelListResponse"];
 export type SchemaModelSummary = components["schemas"]["ModelSummary"];
+export type SchemaNumberRange = components["schemas"]["NumberRange"];
 export type SchemaPageInfo = components["schemas"]["PageInfo"];
+export type SchemaRangeByStandard = components["schemas"]["RangeByStandard"];
 export type SchemaRangeStandard = components["schemas"]["RangeStandard"];
 export type SchemaReadinessCheckResult =
   components["schemas"]["ReadinessCheckResult"];
@@ -312,6 +332,7 @@ export type SchemaReadinessResponse =
 export type SchemaSourceKind = components["schemas"]["SourceKind"];
 export type SchemaSpecField = components["schemas"]["SpecField"];
 export type SchemaSpecSourceView = components["schemas"]["SpecSourceView"];
+export type SchemaSpecSummary = components["schemas"]["SpecSummary"];
 export type SchemaVariantDetail = components["schemas"]["VariantDetail"];
 export type SchemaVariantDetailResponse =
   components["schemas"]["VariantDetailResponse"];
