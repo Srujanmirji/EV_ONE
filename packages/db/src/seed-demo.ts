@@ -144,7 +144,7 @@ export async function seedDemoCatalogue(
             data: {
               variantId: variant.id,
               fieldName: FIELD_OF[key as keyof typeof FIELD_OF],
-              valueText: `DEMO ${shown}`,
+              valueText: shown.startsWith("DEMO") ? shown : `DEMO ${shown}`,
               sourceUrl: `${DEMO_SOURCE}/${m.slug}/${v.slug}`,
               sourceKind: "OTHER",
               reviewedAt: new Date("2026-11-03T00:00:00Z"),
