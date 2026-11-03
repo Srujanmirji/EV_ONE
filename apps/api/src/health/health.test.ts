@@ -26,6 +26,8 @@ async function start(
       API_READINESS_TIMEOUT_MS: timeoutMs,
       DATABASE_URL: "postgresql://unused@127.0.0.1:1/unused",
     }),
+    // Health routes never touch the database.
+    db: {} as never,
     readinessChecks,
   });
   await app.listen(0, "127.0.0.1");

@@ -10,6 +10,7 @@ async function main(): Promise<void> {
   const db = createDbClient(config.DATABASE_URL);
   const app = await createApp({
     config,
+    db,
     readinessChecks: [new DatabaseReadinessCheck(db)],
     shutdownHooks: [() => db.$disconnect()],
   });

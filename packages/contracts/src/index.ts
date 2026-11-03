@@ -1,3 +1,4 @@
+export * from "./catalogue.js";
 export * from "./common.js";
 export * from "./health.js";
 export { buildOpenApiDocument, API_BASE_PATH } from "./openapi.js";
