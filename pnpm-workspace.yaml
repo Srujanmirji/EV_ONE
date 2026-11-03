@@ -21,7 +21,9 @@ minimumReleaseAgeExclude:
   - tailwindcss@4.3.4
 
 allowBuilds:
+  "@prisma/engines": true
   "@swc/core": false
+  prisma: true
   sharp: true
   unrs-resolver: true
 

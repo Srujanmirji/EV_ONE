@@ -1,18 +1,41 @@
 import { describe, expect, it } from "vitest";
 import { ConfigError, loadConfig } from "./env.js";
 
+const DATABASE_URL = "postgresql://user:secret@127.0.0.1:5432/evone";
+
 describe("loadConfig", () => {
   it("applies safe local defaults", () => {
-    expect(loadConfig({})).toEqual({
+    expect(loadConfig({ DATABASE_URL })).toEqual({
       NODE_ENV: "development",
       API_HOST: "127.0.0.1",
       API_PORT: 4000,
       API_READINESS_TIMEOUT_MS: 2000,
+      DATABASE_URL,
     });
   });
 
+  it("requires DATABASE_URL", () => {
+    expect(() => loadConfig({})).toThrow(ConfigError);
+  });
+
+  it("rejects a non-postgres DATABASE_URL without echoing it", () => {
+    const bad = "mysql://user:hunter2@db/evone";
+    expect(() => loadConfig({ DATABASE_URL: bad })).toThrow(
+      expect.objectContaining({ invalidKeys: ["DATABASE_URL"] }) as Error,
+    );
+    try {
+      loadConfig({ DATABASE_URL: bad });
+    } catch (error) {
+      expect((error as Error).message).not.toContain("hunter2");
+    }
+  });
+
   it("coerces numeric variables from strings", () => {
-    const config = loadConfig({ API_PORT: "8080", NODE_ENV: "production" });
+    const config = loadConfig({
+      DATABASE_URL,
+      API_PORT: "8080",
+      NODE_ENV: "production",
+    });
     expect(config.API_PORT).toBe(8080);
     expect(config.NODE_ENV).toBe("production");
   });
@@ -24,13 +47,19 @@ describe("loadConfig", () => {
     ["NODE_ENV", "staging"],
     ["API_READINESS_TIMEOUT_MS", "5"],
   ])("rejects %s=%s", (key, value) => {
-    expect(() => loadConfig({ [key]: value })).toThrow(ConfigError);
+    expect(() => loadConfig({ DATABASE_URL, [key]: value })).toThrow(
+      ConfigError,
+    );
   });
 
   it("names invalid keys without echoing their values", () => {
     const secretLooking = "sk_live_should_never_be_printed";
     try {
-      loadConfig({ API_PORT: secretLooking, NODE_ENV: secretLooking });
+      loadConfig({
+        DATABASE_URL,
+        API_PORT: secretLooking,
+        NODE_ENV: secretLooking,
+      });
       expect.unreachable();
     } catch (error) {
       expect(error).toBeInstanceOf(ConfigError);

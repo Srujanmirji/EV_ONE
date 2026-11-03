@@ -1,0 +1,17 @@
+// EVONE data model. Conventions: DATABASE.md. PostGIS rules: ADR-012
+// (spatial columns are nullable `Unsupported("geography(Point, 4326)")?`
+// with `@@index([col], type: Gist)`; spatial SQL stays in one repository).
+// Domain tables arrive with their tasks (EV-021 catalogue, EV-027 listings).
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated"
+  moduleFormat           = "esm"
+  importFileExtension    = "js"
+  previewFeatures        = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [postgis]
+}

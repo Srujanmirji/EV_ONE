@@ -5,6 +5,14 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
 const entry = fileURLToPath(new URL("../dist/main.js", import.meta.url));
+// A migrated database, e.g. from infra/docker/docker-compose.yml.
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error(
+    "API e2e tests need DATABASE_URL pointing at a migrated database.",
+  );
+}
+const unreachableDatabase = "postgresql://evone:unused@127.0.0.1:1/evone";
 let child: ChildProcess | undefined;
 
 interface Body {
@@ -66,6 +74,7 @@ describe("built API process", () => {
     const { proc, output } = run({
       NODE_ENV: "production",
       API_PORT: String(port),
+      DATABASE_URL: databaseUrl,
     });
     child = proc;
     const base = `http://127.0.0.1:${port}`;
@@ -73,7 +82,10 @@ describe("built API process", () => {
 
     const ready = await fetch(`${base}/api/v1/health/ready`);
     expect(ready.status).toBe(200);
-    expect((await readJson(ready)).data.status).toBe("ready");
+    expect((await readJson(ready)).data).toMatchObject({
+      status: "ready",
+      checks: [{ name: "database", status: "up" }],
+    });
 
     proc.kill("SIGTERM");
     // NestJS runs its shutdown hooks, then re-raises the signal, so the
@@ -86,9 +98,40 @@ describe("built API process", () => {
     expect(output().stdout).toContain("Stopped gracefully on SIGTERM");
   });
 
+  it("stays live but not ready when the database is unreachable", async () => {
+    const port = await freePort();
+    const { proc } = run({
+      NODE_ENV: "production",
+      API_PORT: String(port),
+      DATABASE_URL: unreachableDatabase,
+      API_READINESS_TIMEOUT_MS: "1000",
+    });
+    child = proc;
+    const base = `http://127.0.0.1:${port}`;
+    await waitForLive(base);
+    const ready = await fetch(`${base}/api/v1/health/ready`);
+    expect(ready.status).toBe(503);
+    const text = await ready.text();
+    expect(text).not.toContain("127.0.0.1:1");
+    expect((JSON.parse(text) as Body).data.checks).toEqual([
+      { name: "database", status: "down" },
+    ]);
+  });
+
+  it("refuses to start without DATABASE_URL", async () => {
+    const { proc, output } = run({});
+    child = proc;
+    const [code] = (await once(proc, "exit")) as [number | null];
+    expect(code).toBe(1);
+    expect(output().stderr).toContain("DATABASE_URL");
+  });
+
   it("refuses to start on invalid config and does not print the value", async () => {
     const secretLooking = "sk_live_should_never_be_printed";
-    const { proc, output } = run({ API_PORT: secretLooking });
+    const { proc, output } = run({
+      API_PORT: secretLooking,
+      DATABASE_URL: databaseUrl,
+    });
     child = proc;
     const [code] = (await once(proc, "exit")) as [number | null];
     expect(code).toBe(1);
