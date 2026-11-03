@@ -25,7 +25,17 @@ jobs:
           --health-interval 2s
           --health-timeout 3s
           --health-retries 30
+      redis:
+        image: redis:8.10.3-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
     env:
+      REDIS_URL: redis://127.0.0.1:6379
       DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone
       SHADOW_DATABASE_URL: postgresql://evone:ci_only@127.0.0.1:5432/evone_shadow
     steps:

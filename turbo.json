@@ -13,7 +13,16 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "REDIS_URL",
+        "API_HOST",
+        "API_PORT",
+        "API_READINESS_TIMEOUT_MS",
+        "API_BASE_URL",
+        "PUBLIC_WEB_URL"
+      ]
     },
     "lint": {
       "dependsOn": ["^build", "generate"]
@@ -28,7 +37,12 @@
     "test:e2e": {
       "dependsOn": ["build", "@evone/api#build"],
       "cache": false,
-      "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI", "DATABASE_URL"]
+      "passThroughEnv": [
+        "PW_CHROMIUM_EXECUTABLE",
+        "CI",
+        "DATABASE_URL",
+        "REDIS_URL"
+      ]
     },
     "contract:generate": {
       "dependsOn": ["build", "^contract:generate"],
@@ -37,7 +51,7 @@
     "test:integration": {
       "dependsOn": ["build"],
       "cache": false,
-      "passThroughEnv": ["DATABASE_URL"]
+      "passThroughEnv": ["DATABASE_URL", "REDIS_URL"]
     },
     "generate": {
       "outputs": ["src/generated/**"]

@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. EV-014 is verified locally; hosted CI is pending. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -39,12 +39,13 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Header with mobile menu, footer, honest "not available yet" page per sitemap section, title template/descriptions/canonicals, robots.txt and sitemap.xml with indexing off until ADR-002; one registry (`apps/web/lib/site.ts`). 52 browser checks at four widths, mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41669888052). Follows the planned sitemap; EV-004 sign-off still open. [Evidence](04_Delivery/16_EV-011_web_shell_evidence.md).
 - [x] **EV-012** · P0 · M · **Create NestJS API and health endpoints**
   Depends: `EV-009` · **Done when:** Startup config, liveness and readiness tests pass.
-  `apps/api` (NestJS 12, ESM) with Zod-validated startup config and `/api/v1/health/{live,ready}`; 18 unit and 2 built-process tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41657126777). Readiness registry awaits EV-013/EV-014 checks. [Files, commands and evidence](04_Delivery/10_EV-012_api_health_evidence.md).
+  `apps/api` (NestJS 12, ESM) with Zod-validated startup config and `/api/v1/health/{live,ready}`; 18 unit and 2 built-process tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41657126777). Postgres and Redis readiness checks registered by EV-013/EV-014. [Files, commands and evidence](04_Delivery/10_EV-012_api_health_evidence.md).
 - [x] **EV-013** · P0 · M · **Provision Postgres+PostGIS and migrations**
   Depends: `EV-012` · **Done when:** Migrations repeatable and rollback strategy documented.
   `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
-- [ ] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**  
+- [x] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
+  Separate NestJS worker entry in `apps/api` (shared build), BullMQ 6.5.4, Redis 8.10.3 local/CI services, validated private configuration and Redis API readiness. Real Redis tests prove transient retry recovery, three-attempt exhaustion, payload rejection and graceful drain; built-process tests prove job processing and SIGTERM. Locally verified; hosted CI pending. [Evidence and limits](04_Delivery/21_EV-014_worker_evidence.md).
 - [x] **EV-015** · P0 · M · **Build global design tokens and components**
   Depends: `EV-011` · **Done when:** Tokens, buttons, inputs, cards, modals, empty/error states.
   `@evone/ui`: UI_UX.md tokens, Button, TextField/SelectField/Checkbox, Card, native-dialog Modal, EmptyState/ErrorState/Skeleton; shell migrated; `/ui-kit` reference (noindex). axe WCAG 2.2 AA clean on every page at four widths; two real a11y defects fixed; mutation-tested. Muted text kept at `#596170` because the spec's `#747B87` fails AA. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41672655002). [Evidence](04_Delivery/17_EV-015_ui_evidence.md).
@@ -246,8 +247,10 @@ All relevant P0 tasks EV-001 through EV-078 must pass for release, subject to ex
 
 ## Current progress
 - Total: **87 tasks** across 16 phases.
-- Completed: **1** (EV-009).
-- Next engineering task: EV-010 (tooling acceptance). EV-011 and EV-012 are also dependency-ready after EV-009.
+- Completed: **13 / 87** (14.9% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026. EV-014 is locally verified; its hosted CI run is pending.
+- Foundation: **8 / 12**; catalogue: **5 / 6**; all other phases: **0 complete**.
+- Remaining: **74 tasks**. Task count is not an estimate of remaining effort.
+- Next engineering task: **EV-019** (observability). Other dependency-ready tasks: EV-020, EV-048. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
 - Discovery EV-001–EV-008 remains open; EV-004 was not completed by the scaffold exception.
 
 ## When something changes

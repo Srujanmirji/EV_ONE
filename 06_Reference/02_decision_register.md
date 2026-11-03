@@ -47,6 +47,7 @@ Date: 2026-11-03 | Status: accepted
 Context: The workspace contains the blueprint only. The owner approved the proposed visual direction and Next.js/NestJS architecture in chat.
 Decision: Use Next.js App Router for the web and a modular NestJS API when EV-012 begins. Begin EV-009 with a limited exception to its EV-004 prerequisite. EV-004 remains open; this is not core-screen sign-off.
 Consequences: Scaffold only the workspace and minimal buildable web consumer. Do not infer approval for vendor integrations or for EV-062, whose other dependencies remain unsatisfied. Keep the approved visual proposal in `04_Delivery/07_initialization_audit.md` as the foundation direction.
+Implementation note (EV-014, 2026-11-04): the already-approved separate BullMQ worker uses a NestJS application-context entry in `apps/api`, reusing its build and dependencies; there is no new service beyond the approved API + worker architecture.
 Revisit trigger: A proposed architecture change or completion of EV-004.
 
 ### ADR-012 — Prisma with PostGIS

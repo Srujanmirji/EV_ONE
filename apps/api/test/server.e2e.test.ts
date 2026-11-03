@@ -39,7 +39,11 @@ function freePort(): Promise<number> {
 
 function run(env: Record<string, string>) {
   const proc = spawn(process.execPath, [entry], {
-    env: { PATH: process.env.PATH ?? "", ...env },
+    env: {
+      REDIS_URL: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
+      PATH: process.env.PATH ?? "",
+      ...env,
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
   let stdout = "";
@@ -88,7 +92,10 @@ describe("built API process", () => {
     expect(ready.response.status).toBe(200);
     expect(ready.data?.data).toEqual({
       status: "ready",
-      checks: [{ name: "database", status: "up" }],
+      checks: [
+        { name: "database", status: "up" },
+        { name: "redis", status: "up" },
+      ],
       draining: false,
     });
     expect(ready.data?.meta.requestId).toBe(
@@ -123,7 +130,31 @@ describe("built API process", () => {
     expect(text).not.toContain("127.0.0.1:1");
     expect((JSON.parse(text) as Body).data.checks).toEqual([
       { name: "database", status: "down" },
+      { name: "redis", status: "up" },
     ]);
+  });
+
+  it("reports Redis down without exposing its connection details", async () => {
+    const port = await freePort();
+    const { proc } = run({
+      NODE_ENV: "production",
+      API_PORT: String(port),
+      DATABASE_URL: unreachableDatabase,
+      REDIS_URL: "redis://user:do_not_print@127.0.0.1:1/0",
+      API_READINESS_TIMEOUT_MS: "500",
+    });
+    child = proc;
+    const base = `http://127.0.0.1:${port}`;
+    await waitForLive(base);
+    const ready = await fetch(`${base}/api/v1/health/ready`);
+    expect(ready.status).toBe(503);
+    const text = await ready.text();
+    expect(text).not.toContain("do_not_print");
+    expect(text).not.toContain("127.0.0.1:1");
+    expect((JSON.parse(text) as Body).data.checks).toContainEqual({
+      name: "redis",
+      status: "down",
+    });
   });
 
   it("refuses to start without DATABASE_URL", async () => {
