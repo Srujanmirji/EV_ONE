@@ -1,7 +1,8 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { Button, buttonClasses } from "./button";
 import { Checkbox, SelectField, TextField } from "./field";
+import { Gallery } from "./gallery";
 import { EmptyState, ErrorState, Skeleton } from "./states";
 
 afterEach(cleanup);
@@ -97,5 +98,49 @@ describe("states", () => {
     const status = screen.getByRole("status", { name: "Loading models" });
     expect(status.getAttribute("aria-busy")).toBe("true");
     expect(status.querySelectorAll('[aria-hidden="true"]')).toHaveLength(4);
+  });
+});
+
+describe("Gallery", () => {
+  const images = [1, 2, 3].map((n) => ({
+    src: `/kit/photo-${n}.svg`,
+    alt: `Example photo ${n}`,
+    width: 1600,
+    height: 900,
+  }));
+
+  it("shows an honest empty state instead of placeholders", () => {
+    render(
+      <Gallery
+        images={[]}
+        label="Photos of X"
+        emptyText="No licensed photos yet."
+      />,
+    );
+    expect(
+      screen.getByRole("figure", { name: "Photos of X" }).textContent,
+    ).toBe("No licensed photos yet.");
+    expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  it("moves between photos and announces the position", () => {
+    render(<Gallery images={images} label="Photos" />);
+    expect(screen.getByRole("img", { name: "Example photo 1" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next photo" }));
+    expect(screen.getByRole("img", { name: "Example photo 2" })).toBeTruthy();
+    expect(screen.getByText("Photo 2 of 3")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Previous photo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous photo" }));
+    expect(screen.getByText("Photo 3 of 3")).toBeTruthy();
+  });
+
+  it("supports arrow keys on thumbnails with one tab stop", () => {
+    render(<Gallery images={images} label="Photos" />);
+    const thumbs = screen.getAllByRole("button", { name: /Show photo/ });
+    expect(thumbs.map((t) => t.tabIndex)).toEqual([0, -1, -1]);
+    thumbs[0]!.focus();
+    fireEvent.keyDown(thumbs[0]!, { key: "ArrowLeft" });
+    expect(document.activeElement).toBe(thumbs[2]);
+    expect(thumbs[2]!.getAttribute("aria-current")).toBe("true");
   });
 });

@@ -1,5 +1,6 @@
 import type {
   ModelSummary,
+  VariantDetail,
   SpecSummary,
   SpecSourceView,
   VariantSpecs,
@@ -144,4 +145,27 @@ export function toSources(rows: SourceRow[]): SpecSourceView[] {
       effectiveAt: isoDate(r.effectiveAt),
       reviewedAt: r.reviewedAt.toISOString(),
     }));
+}
+
+export interface VariantDetailRow extends VariantRow {
+  model: {
+    slug: string;
+    name: string;
+    vehicleType: ModelSummary["vehicleType"];
+    brand: { slug: string; name: string };
+  };
+  sources: SourceRow[];
+}
+
+export function toVariantDetail(row: VariantDetailRow): VariantDetail {
+  return {
+    ...toVariantSummary(row),
+    model: {
+      slug: row.model.slug,
+      name: row.model.name,
+      vehicleType: row.model.vehicleType,
+      brand: row.model.brand,
+    },
+    sources: toSources(row.sources),
+  };
 }

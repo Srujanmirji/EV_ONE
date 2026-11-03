@@ -17,7 +17,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-IN">
-      <body className="flex min-h-svh flex-col">
+      {/* min-w-0 on children: flex items otherwise refuse to shrink below
+          their content (e.g. a wide table), widening the whole page. */}
+      <body className="flex min-h-svh flex-col [&>*]:min-w-0">
         <a
           href="#main"
           className="sr-only z-30 min-h-11 bg-paper px-6 py-3 text-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4"

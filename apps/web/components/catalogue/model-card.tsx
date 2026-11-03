@@ -1,5 +1,7 @@
 import type { ModelSummary } from "@evone/contracts";
 import { Card } from "@evone/ui";
+import Link from "next/link";
+import { modelHref } from "@/lib/catalogue";
 import {
   AVAILABILITY_LABEL,
   formatReviewDate,
@@ -20,7 +22,14 @@ export function ModelCard({ model }: { model: ModelSummary }) {
     <Card className="flex h-full flex-col gap-4">
       <div className="flex flex-col gap-1">
         <p className="text-sm text-secondary">{model.brand.name}</p>
-        <h2 className="font-display text-xl font-semibold">{model.name}</h2>
+        <h2 className="font-display text-xl font-semibold">
+          <Link
+            href={modelHref(model)}
+            className="underline-offset-4 hover:underline"
+          >
+            {model.name}
+          </Link>
+        </h2>
         <p className="flex flex-wrap gap-2 text-sm">
           <span className="rounded-full bg-mist px-3 py-1">
             {VEHICLE_TYPE_LABEL[model.vehicleType]}

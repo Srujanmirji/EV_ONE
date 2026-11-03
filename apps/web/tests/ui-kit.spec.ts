@@ -100,3 +100,27 @@ test("form shows linked errors, focuses the first invalid field, then succeeds",
   ).toBeVisible();
   await expect(city).not.toHaveAttribute("aria-invalid");
 });
+
+test("gallery moves by buttons and arrow keys and announces position", async ({
+  page,
+}) => {
+  await page.goto("/ui-kit");
+  const gallery = page.getByRole("region", { name: "Example gallery" });
+  await expect(
+    gallery.getByRole("img", { name: /Example image 1/ }),
+  ).toBeVisible();
+  await gallery.getByRole("button", { name: "Next photo" }).click();
+  await expect(gallery.getByText("Photo 2 of 3")).toBeVisible();
+  await expect(
+    gallery.getByRole("img", { name: /Example image 2/ }),
+  ).toBeVisible();
+  const thumbs = gallery.getByRole("button", { name: /Show photo/ });
+  await thumbs.nth(1).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(thumbs.nth(2)).toBeFocused();
+  await expect(thumbs.nth(2)).toHaveAttribute("aria-current", "true");
+  await expect(gallery.getByText("Photo 3 of 3")).toBeVisible();
+  await expect(
+    page.getByRole("figure", { name: "Example empty gallery" }),
+  ).toHaveText("No photos yet.");
+});
