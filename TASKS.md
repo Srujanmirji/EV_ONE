@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013, EV-018 and EV-021 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013, EV-018, EV-021 and EV-023 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -65,8 +65,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Catalogue tables with `spec_sources`; the database refuses to publish a stated spec without a reviewed https source (deferred triggers, 18 mutation-tested PostgreSQL integration tests). Fictional `DEMO` seed, never production. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41665429328). Deviations (computed coverage view instead of `data_status`; prices deferred; vehicle types to confirm) in `DATABASE.md`. [Evidence](04_Delivery/14_EV-021_catalogue_evidence.md).
 - [ ] **EV-022** · P0 · M · **Build catalogue editor forms and permissions**  
   Depends: `EV-021` · **Done when:** Editors create drafts, admin approves publish.
-- [ ] **EV-023** · P0 · M · **Implement catalogue read endpoints**  
+- [x] **EV-023** · P0 · M · **Implement catalogue read endpoints**
   Depends: `EV-021,EV-018` · **Done when:** Pagination, published-only and schema contract tests.
+  `GET /brands`, `/models` (keyset pagination on name+id), `/brands/{brandSlug}/models/{modelSlug}`, `/variants/{id}` with reviewed provenance; published-only and demo-hidden-in-production; contract test covers every documented status. Mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41668025897). Path and sort deviations in `API_CONTRACT.md`. [Evidence](04_Delivery/15_EV-023_catalogue_api_evidence.md).
 - [ ] **EV-024** · P0 · M · **Build EV catalogue listing UI**  
   Depends: `EV-015,EV-023` · **Done when:** Responsive filters and source-aware cards.
 - [ ] **EV-025** · P0 · M · **Build EV detail and variant page**  
