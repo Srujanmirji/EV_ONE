@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013, EV-018, EV-021 and EV-023 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-018, EV-021 and EV-023 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -34,8 +34,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-010** · P0 · S · **Set lint, typecheck, format and unit tooling**
   Depends: `EV-009` · **Done when:** CI fails invalid types and formatting.
   Vitest added; `pnpm verify:gates` proves typecheck, format, lint and unit tests reject broken probes, and Node 24.18.0 is now enforced at install. Passes locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41655114949). [Files, commands and evidence](04_Delivery/09_EV-010_tooling_evidence.md).
-- [ ] **EV-011** · P0 · M · **Create Next.js web app shell and routes**  
+- [x] **EV-011** · P0 · M · **Create Next.js web app shell and routes**
   Depends: `EV-009` · **Done when:** Nav/footer, basic SEO and responsive shell work.
+  Header with mobile menu, footer, honest "not available yet" page per sitemap section, title template/descriptions/canonicals, robots.txt and sitemap.xml with indexing off until ADR-002; one registry (`apps/web/lib/site.ts`). 52 browser checks at four widths, mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41669888052). Follows the planned sitemap; EV-004 sign-off still open. [Evidence](04_Delivery/16_EV-011_web_shell_evidence.md).
 - [x] **EV-012** · P0 · M · **Create NestJS API and health endpoints**
   Depends: `EV-009` · **Done when:** Startup config, liveness and readiness tests pass.
   `apps/api` (NestJS 12, ESM) with Zod-validated startup config and `/api/v1/health/{live,ready}`; 18 unit and 2 built-process tests pass locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41657126777). Readiness registry awaits EV-013/EV-014 checks. [Files, commands and evidence](04_Delivery/10_EV-012_api_health_evidence.md).
