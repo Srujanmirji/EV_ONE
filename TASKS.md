@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012 and EV-013 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013 and EV-018 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -50,8 +50,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Depends: `EV-005,EV-012` · **Done when:** Expired/invalid JWT rejected server-side.
 - [ ] **EV-017** · P0 · M · **Implement scoped RBAC and audit middleware**  
   Depends: `EV-016` · **Done when:** Cross-account and cross-dealer access blocked in tests.
-- [ ] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**  
+- [x] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**
   Depends: `EV-012` · **Done when:** OpenAPI and TS SDK generated from validated schemas.
+  `packages/contracts` (strict Zod → OpenAPI 3.1 `openapi.json`) and `packages/sdk` (generated types + `createEvoneClient`); `contract:check`, API route/schema contract test and SDK-driven API e2e all mutation-tested and passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41663040938). [Evidence](04_Delivery/13_EV-018_contracts_evidence.md).
 - [ ] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**  
   Depends: `EV-012` · **Done when:** PII redaction and test alert confirmed.
 - [ ] **EV-020** · P0 · S · **Configure R2 uploads and media validation**  
