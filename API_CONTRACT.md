@@ -49,11 +49,11 @@
 | GET | `/models?brandId=&vehicleType=` | public | published models |
 | GET | `/brands/{brandSlug}/models/{modelSlug}` | public | model with variants (model slugs are unique per brand; replaces the ambiguous `/models/{slug}`) |
 | GET | `/variants/{id}` | public | canonical spec + data provenance |
-| GET | `/compare?variantIds=id1,id2` | public | compare 2–3 variants |
+| GET | `/compare?variantIds=id1,id2` | public | compare 2–3 variants (implemented EV-026: distinct ids, requested order, 404 if any is unpublished) |
 | GET | `/model-prices?variantId=&regionCode=` | public | latest sourced price/date |
 | POST/PATCH | `/admin/catalogue/models` | editor/admin | publish/maintain model |
 
-**Implemented (EV-023):** `GET /brands`, `GET /models`, `GET /brands/{brandSlug}/models/{modelSlug}` and `GET /variants/{id}`. `/compare` is EV-026, and `/model-prices` waits for the prices table.
+**Implemented (EV-023, EV-026):** `GET /brands`, `GET /models`, `GET /brands/{brandSlug}/models/{modelSlug}`, `GET /variants/{id}` and `GET /compare`. `/model-prices` waits for the prices table.
 - **Published only.** Brand, model and variant must all be `PUBLISHED`. Anything else returns 404, the same as missing. `is_demo` rows are excluded when `NODE_ENV=production` and flagged `isDemo` elsewhere.
 - **`/brands`** lists only published brands that have at least one published model. It is not paginated: brands are a small, bounded set.
 - **`/models`** is ordered by `(name, id)`, not `(createdAt, id)`. Postgres timestamps keep microseconds that a JavaScript `Date` drops, so a timestamp cursor can skip or repeat rows; text and UUID compare exactly. `nextCursor` is opaque.

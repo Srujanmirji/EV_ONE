@@ -1,5 +1,6 @@
 import {
   BrandListResponse,
+  CompareResponse,
   ErrorEnvelope,
   ModelDetailResponse,
   ModelListResponse,
@@ -175,6 +176,63 @@ describe("variant provenance", () => {
     expect(
       (await api.get("/variants/3f1c2a9e-8b7d-4c6e-9a1b-2d3e4f5a6b7c")).status,
     ).toBe(404);
+  });
+});
+
+describe("GET /compare", () => {
+  it("returns 2–3 published variants in the requested order", async () => {
+    const brand = await publishedBrand();
+    const m = await model(brand.id);
+    const a = await variant(m.id);
+    const b = await variant(m.id);
+    const res = await api.get(`/compare?variantIds=${b.id},${a.id}`);
+    expect(res.status).toBe(200);
+    const body = await json(res, CompareResponse);
+    expect(body.data.map((v) => v.id)).toEqual([b.id, a.id]);
+    expect(body.data[0]?.sources.map((s) => s.fieldName).sort()).toEqual([
+      "BATTERY_KWH",
+      "CLAIMED_RANGE",
+    ]);
+  });
+
+  it("404s if any variant is unpublished, exactly like a missing one", async () => {
+    const brand = await publishedBrand();
+    const m = await model(brand.id);
+    const a = await variant(m.id);
+    const hidden = await variant(m.id, { publish: false });
+    const unpublished = await api.get(
+      `/compare?variantIds=${a.id},${hidden.id}`,
+    );
+    const missing = await api.get(
+      `/compare?variantIds=${a.id},3f1c2a9e-8b7d-4c6e-9a1b-2d3e4f5a6b7c`,
+    );
+    expect(unpublished.status).toBe(404);
+    expect(missing.status).toBe(404);
+    expect((await json(unpublished, ErrorEnvelope)).error.message).toBe(
+      (await json(missing, ErrorEnvelope)).error.message,
+    );
+  });
+
+  it.each([
+    ["one id", (a: string) => a],
+    [
+      "four ids",
+      (a: string) =>
+        [
+          a,
+          ...Array<string>(3).fill("3f1c2a9e-8b7d-4c6e-9a1b-2d3e4f5a6b7c"),
+        ].join(","),
+    ],
+    ["duplicates", (a: string) => `${a},${a.toUpperCase()}`],
+    ["a malformed id", (a: string) => `${a},nope`],
+  ])("rejects %s with VALIDATION_ERROR", async (_label, build) => {
+    const res = await api.get(
+      `/compare?variantIds=${build("6b1c2a9e-8b7d-4c6e-9a1b-2d3e4f5a6b7c")}`,
+    );
+    expect(res.status).toBe(400);
+    expect((await json(res, ErrorEnvelope)).error.code).toBe(
+      "VALIDATION_ERROR",
+    );
   });
 });
 

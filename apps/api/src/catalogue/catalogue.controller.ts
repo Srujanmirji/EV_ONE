@@ -1,5 +1,7 @@
 import {
   type BrandListResponse,
+  CompareQuery,
+  type CompareResponse,
   type ModelDetailResponse,
   ModelListQuery,
   type ModelListResponse,
@@ -21,7 +23,7 @@ import { requestIdOf } from "../common/request-id.js";
 import { parseRequest } from "../common/validation.js";
 import {
   toModelSummary,
-  toSources,
+  toVariantDetail,
   toVariantSummary,
 } from "./catalogue.mapper.js";
 import { CatalogueRepository } from "./catalogue.repository.js";
@@ -103,16 +105,25 @@ export class CatalogueController {
     const variant = await this.repo.findVariant(id);
     if (!variant) throw new NotFoundException("Variant not found");
     return {
-      data: {
-        ...toVariantSummary(variant),
-        model: {
-          slug: variant.model.slug,
-          name: variant.model.name,
-          vehicleType: variant.model.vehicleType,
-          brand: variant.model.brand,
-        },
-        sources: toSources(variant.sources),
-      },
+      data: toVariantDetail(variant),
+      meta: { requestId: requestIdOf(req) },
+    };
+  }
+
+  @Get("compare")
+  async compare(
+    @Query() query: unknown,
+    @Req() req: Request,
+  ): Promise<CompareResponse> {
+    const { variantIds } = parseRequest(CompareQuery, query);
+    const found = await this.repo.findVariants(variantIds);
+    const byId = new Map(found.map((v) => [v.id.toLowerCase(), v]));
+    const ordered = variantIds.map((id) => byId.get(id.toLowerCase()));
+    // All-or-nothing, and indistinguishable from "does not exist".
+    if (ordered.some((v) => v === undefined))
+      throw new NotFoundException("Variant not found");
+    return {
+      data: ordered.map((v) => toVariantDetail(v!)),
       meta: { requestId: requestIdOf(req) },
     };
   }

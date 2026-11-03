@@ -38,6 +38,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/compare": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** 2–3 published variants with specs and reviewed sources, in the requested order. 404 if any is not published. */
+    get: operations["compareVariants"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/health/live": {
     parameters: {
       query?: never;
@@ -129,6 +146,10 @@ export interface components {
     ClaimedRange: {
       km: number;
       standard: components["schemas"]["RangeStandard"];
+    };
+    CompareResponse: {
+      data: components["schemas"]["VariantDetail"][];
+      meta: components["schemas"]["Meta"];
     };
     /** @enum {string} */
     ErrorCode:
@@ -307,6 +328,7 @@ export type SchemaBrandListResponse =
 export type SchemaBrandRef = components["schemas"]["BrandRef"];
 export type SchemaBrandSummary = components["schemas"]["BrandSummary"];
 export type SchemaClaimedRange = components["schemas"]["ClaimedRange"];
+export type SchemaCompareResponse = components["schemas"]["CompareResponse"];
 export type SchemaErrorCode = components["schemas"]["ErrorCode"];
 export type SchemaErrorEnvelope = components["schemas"]["ErrorEnvelope"];
 export type SchemaLiveResponse = components["schemas"]["LiveResponse"];
@@ -389,6 +411,55 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ModelDetailResponse"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  compareVariants: {
+    parameters: {
+      query: {
+        variantIds: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Variants in requested order. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompareResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
         };
       };
       /** @description Not found or not published. */
