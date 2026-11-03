@@ -40,7 +40,7 @@ export default function HomePage() {
             <li key={section.href}>
               <Link
                 href={section.href}
-                className="flex h-full min-h-11 flex-col gap-2 rounded-3xl border border-line bg-paper p-6 transition-colors hover:border-ink motion-reduce:transition-none"
+                className="flex h-full min-h-11 flex-col gap-2 rounded-card border border-line bg-paper p-6 transition-colors hover:border-ink motion-reduce:transition-none"
               >
                 <span className="font-display text-lg font-semibold">
                   {section.label}

@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClasses } from "@evone/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -66,7 +67,7 @@ export function MobileNav() {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line px-4 text-sm font-semibold"
+        className={buttonClasses("secondary", "md", "min-w-11")}
       >
         {open ? "Close" : "Menu"}
       </button>
