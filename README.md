@@ -13,7 +13,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open `http://127.0.0.1:3000` for the web preview; the API runs at `http://127.0.0.1:4000/api/v1` (`/health/live`, `/health/ready`). No credentials or external services are required. For production-mode local verification:
+Open `http://127.0.0.1:3000` for the web preview; the API runs at `http://127.0.0.1:4000/api/v1` (`/health/live`, `/health/ready`). The API needs the local PostGIS database (`pnpm db:up`, then `pnpm db:migrate:deploy`; see `PROJECT_SETUP.md`). No provider credentials are required. For production-mode local verification:
 
 ```bash
 pnpm format:check
@@ -29,7 +29,7 @@ pnpm start
 
 `pnpm test:unit` runs Vitest (`*.test.ts` beside the code). `pnpm test:e2e` builds first through Turbo, then starts the built API on a free port (startup, readiness, graceful SIGTERM, invalid-config refusal) and an isolated web production server on port 3100 (preview and 404 recovery at four viewport widths in full Chromium). `pnpm test` runs both. `pnpm verify:gates` writes deliberately broken probe files and fails if typecheck, format, lint or unit tests accept them. CI also installs Chromium's Linux system dependencies. The suite fails if port 3100 is already occupied.
 
-Implemented workspace members: `apps/web`, `apps/api` and `packages/config`. The admin, mobile, worker, contracts, SDK and shared UI packages are introduced by their own tasks when used. Documentation stays at its existing paths. The original `MANIFEST_SHA256.txt` describes the supplied blueprint archive, not current edited files.
+Implemented workspace members: `apps/web`, `apps/api`, `packages/db` (Prisma + PostGIS migrations) and `packages/config`. The admin, mobile, worker, contracts, SDK and shared UI packages are introduced by their own tasks when used. Documentation stays at its existing paths. The original `MANIFEST_SHA256.txt` describes the supplied blueprint archive, not current edited files.
 
 ## Product promise
 EVONE helps Indian customers **buy and sell used EVs**, discover new EVs, shop compatible accessories, calculate EV savings, find charging stations, read EV news/reviews, and request loan/insurance quotations through approved partners.
