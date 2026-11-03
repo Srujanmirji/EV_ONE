@@ -56,8 +56,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**
   Depends: `EV-012` · **Done when:** OpenAPI and TS SDK generated from validated schemas.
   `packages/contracts` (strict Zod → OpenAPI 3.1 `openapi.json`) and `packages/sdk` (generated types + `createEvoneClient`); `contract:check`, API route/schema contract test and SDK-driven API e2e all mutation-tested and passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41663040938). [Evidence](04_Delivery/13_EV-018_contracts_evidence.md).
-- [ ] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**  
+- [~] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**
   Depends: `EV-012` · **Done when:** PII redaction and test alert confirmed.
+  **In progress.** PII redaction met: `@evone/observability` redacted JSON logs, request-id access/error logs, Sentry with `beforeSend` redaction (capture-transport and mutation-tested), worker dead-letter alerts; passing in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41697039761). **Blocked:** test alert needs a Sentry project — set `SENTRY_DSN`, run `pnpm --filter @evone/api sentry:test`, confirm. [Evidence](04_Delivery/22_EV-019_observability_evidence.md).
 - [ ] **EV-020** · P0 · S · **Configure R2 uploads and media validation**  
   Depends: `EV-012` · **Done when:** Presigned uploads, type/size checks and access controls.
 
