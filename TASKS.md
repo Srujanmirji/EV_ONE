@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013 and EV-018 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-012, EV-013, EV-018 and EV-021 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -60,8 +60,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 
 ## Catalogue (6 tasks)
 
-- [ ] **EV-021** · P0 · M · **Create brand/model/variant schema and seeds**  
+- [x] **EV-021** · P0 · M · **Create brand/model/variant schema and seeds**
   Depends: `EV-013` · **Done when:** Schema supports source-referenced real specs.
+  Catalogue tables with `spec_sources`; the database refuses to publish a stated spec without a reviewed https source (deferred triggers, 18 mutation-tested PostgreSQL integration tests). Fictional `DEMO` seed, never production. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41665429328). Deviations (computed coverage view instead of `data_status`; prices deferred; vehicle types to confirm) in `DATABASE.md`. [Evidence](04_Delivery/14_EV-021_catalogue_evidence.md).
 - [ ] **EV-022** · P0 · M · **Build catalogue editor forms and permissions**  
   Depends: `EV-021` · **Done when:** Editors create drafts, admin approves publish.
 - [ ] **EV-023** · P0 · M · **Implement catalogue read endpoints**  
