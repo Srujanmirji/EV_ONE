@@ -18,7 +18,14 @@
     "test": "turbo run test:unit test:e2e",
     "test:unit": "turbo run test:unit",
     "test:e2e": "turbo run test:e2e",
-    "verify:gates": "node scripts/verify-quality-gates.mjs"
+    "verify:gates": "node scripts/verify-quality-gates.mjs",
+    "db:up": "docker compose -f infra/docker/docker-compose.yml up -d --wait",
+    "db:down": "docker compose -f infra/docker/docker-compose.yml down",
+    "db:migrate:dev": "pnpm --filter @evone/db migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @evone/db migrate:deploy",
+    "db:migrate:status": "pnpm --filter @evone/db migrate:status",
+    "db:migrate:rollback": "pnpm --filter @evone/db migrate:rollback",
+    "db:migrate:verify": "pnpm --filter @evone/db migrate:verify"
   },
   "devDependencies": {
     "prettier": "3.9.10",

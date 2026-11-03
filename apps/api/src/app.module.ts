@@ -1,6 +1,7 @@
 import {
   type DynamicModule,
   Global,
+  Inject,
   Logger,
   Module,
   type OnApplicationShutdown,
@@ -13,19 +14,28 @@ import { READINESS_CHECKS, type ReadinessCheck } from "./health/readiness.js";
 export interface AppOptions {
   config: ApiConfig;
   readinessChecks?: ReadinessCheck[];
+  /** Run after the HTTP server stops, e.g. closing database pools. */
+  shutdownHooks?: (() => Promise<void>)[];
 }
+
+const SHUTDOWN_HOOKS = Symbol("SHUTDOWN_HOOKS");
 
 @Global()
 @Module({})
 class CoreModule {
-  static register({ config, readinessChecks = [] }: AppOptions): DynamicModule {
+  static register({
+    config,
+    readinessChecks = [],
+    shutdownHooks = [],
+  }: AppOptions): DynamicModule {
     return {
       module: CoreModule,
       providers: [
         { provide: API_CONFIG, useValue: config },
         { provide: READINESS_CHECKS, useValue: readinessChecks },
+        { provide: SHUTDOWN_HOOKS, useValue: shutdownHooks },
       ],
-      exports: [API_CONFIG, READINESS_CHECKS],
+      exports: [API_CONFIG, READINESS_CHECKS, SHUTDOWN_HOOKS],
     };
   }
 }
@@ -34,8 +44,18 @@ class CoreModule {
 export class AppModule implements OnApplicationShutdown {
   private readonly logger = new Logger("EVONE API");
 
+  constructor(
+    @Inject(SHUTDOWN_HOOKS)
+    private readonly shutdownHooks: (() => Promise<void>)[],
+  ) {}
+
   /** Runs after in-flight requests close; proves shutdown was graceful. */
-  onApplicationShutdown(signal?: string): void {
+  async onApplicationShutdown(signal?: string): Promise<void> {
+    const results = await Promise.allSettled(
+      this.shutdownHooks.map((hook) => hook()),
+    );
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed > 0) this.logger.error(`${failed} shutdown hook(s) failed`);
     this.logger.log(`Stopped gracefully${signal ? ` on ${signal}` : ""}`);
   }
 

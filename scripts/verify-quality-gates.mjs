@@ -21,9 +21,10 @@ const gates = [
     command: ["pnpm", ["format:check"]],
   },
 ];
-for (const [pkg, dir, srcDir] of [
-  ["@evone/web", "apps/web", "lib"],
-  ["@evone/api", "apps/api", "src"],
+for (const [pkg, dir, srcDir, hasUnit] of [
+  ["@evone/web", "apps/web", "lib", true],
+  ["@evone/api", "apps/api", "src", true],
+  ["@evone/db", "packages/db", "src", false],
 ]) {
   gates.push(
     {
@@ -38,13 +39,15 @@ for (const [pkg, dir, srcDir] of [
       content: lintProbe,
       command: ["pnpm", ["--filter", pkg, "lint"]],
     },
-    {
+  );
+  if (hasUnit) {
+    gates.push({
       name: `${pkg} test:unit rejects failing tests`,
       file: `${dir}/${srcDir}/__gate_probe_unit.test.ts`,
       content: unitProbe,
       command: ["pnpm", ["--filter", pkg, "test:unit"]],
-    },
-  );
+    });
+  }
 }
 
 let broken = 0;

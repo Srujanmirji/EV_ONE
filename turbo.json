@@ -3,21 +3,32 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**",
+        "dist/**",
+        "src/generated/**"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "lint": {},
-    "typecheck": {
-      "outputs": [".next/types/**"]
+    "lint": {
+      "dependsOn": ["^build"]
     },
-    "test:unit": {},
+    "typecheck": {
+      "outputs": [".next/types/**"],
+      "dependsOn": ["^build"]
+    },
+    "test:unit": {
+      "dependsOn": ["^build"]
+    },
     "test:e2e": {
       "dependsOn": ["build"],
       "cache": false,
-      "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI"]
+      "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI", "DATABASE_URL"]
     }
   }
 }

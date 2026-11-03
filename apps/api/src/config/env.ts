@@ -8,6 +8,10 @@ export const envSchema = z.object({
     .default("development"),
   API_HOST: z.string().min(1).default("127.0.0.1"),
   API_PORT: port.default(4000),
+  /** PostgreSQL connection string. Contains a password: never log it. */
+  DATABASE_URL: z
+    .string()
+    .regex(/^postgres(ql)?:\/\/\S+$/, "must be a postgres:// URL"),
   /** Upper bound for one readiness dependency check, in milliseconds. */
   API_READINESS_TIMEOUT_MS: z.coerce
     .number()
