@@ -29,6 +29,10 @@
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["PW_CHROMIUM_EXECUTABLE", "CI", "DATABASE_URL"]
+    },
+    "contract:generate": {
+      "dependsOn": ["build", "^contract:generate"],
+      "cache": false
     }
   }
 }

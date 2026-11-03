@@ -1,3 +1,5 @@
+import type { ReadinessReport as ContractReport } from "@evone/contracts";
+
 /**
  * A dependency the API needs before it can serve traffic (database, Redis,
  * ...). EV-013 and EV-014 register their checks under READINESS_CHECKS.
@@ -10,9 +12,5 @@ export interface ReadinessCheck {
 
 export const READINESS_CHECKS = Symbol("READINESS_CHECKS");
 
-export type CheckStatus = "up" | "down";
-
-export interface ReadinessReport {
-  status: "ready" | "not_ready";
-  checks: { name: string; status: CheckStatus }[];
-}
+/** The service's part of the contract report; the controller adds `draining`. */
+export type ReadinessReport = Omit<ContractReport, "draining">;

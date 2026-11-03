@@ -41,6 +41,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:unit
       - run: pnpm build
+      - name: Prove openapi.json and the SDK match the contracts
+        run: pnpm contract:check
       - name: Prove gates reject invalid input
         run: pnpm verify:gates
       # Fresh databases from template0: the image's default database ships

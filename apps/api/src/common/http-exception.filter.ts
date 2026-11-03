@@ -6,10 +6,12 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import type { ErrorEnvelope } from "./envelope.js";
+import type { ErrorEnvelope } from "@evone/contracts";
 import { requestIdOf } from "./request-id.js";
 
-const CODES: Record<number, string> = {
+type ErrorCode = ErrorEnvelope["error"]["code"];
+
+const CODES: Record<number, ErrorCode> = {
   400: "BAD_REQUEST",
   401: "UNAUTHENTICATED",
   403: "FORBIDDEN",
