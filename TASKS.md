@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021 and EV-023 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023 and EV-024 are verified locally and in hosted CI. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -70,8 +70,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-023** · P0 · M · **Implement catalogue read endpoints**
   Depends: `EV-021,EV-018` · **Done when:** Pagination, published-only and schema contract tests.
   `GET /brands`, `/models` (keyset pagination on name+id), `/brands/{brandSlug}/models/{modelSlug}`, `/variants/{id}` with reviewed provenance; published-only and demo-hidden-in-production; contract test covers every documented status. Mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41668025897). Path and sort deviations in `API_CONTRACT.md`. [Evidence](04_Delivery/15_EV-023_catalogue_api_evidence.md).
-- [ ] **EV-024** · P0 · M · **Build EV catalogue listing UI**  
+- [x] **EV-024** · P0 · M · **Build EV catalogue listing UI**
   Depends: `EV-015,EV-023` · **Done when:** Responsive filters and source-aware cards.
+  `/evs`: server-rendered via SDK; URL-persistent GET filters (sidebar, bottom sheet on mobile); cards with battery, range per test standard, "Not stated", demo label and reviewed-source count/date (additive API `specSummary`); loading/empty/invalid/unavailable states; 12-per-page pagination. Browser tests against real API + PostgreSQL at four widths with axe; mutation-tested; passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41676438270). [Evidence](04_Delivery/18_EV-024_catalogue_ui_evidence.md).
 - [ ] **EV-025** · P0 · M · **Build EV detail and variant page**  
   Depends: `EV-023` · **Done when:** Correct spec units, source-date, gallery and unknown states.
 - [ ] **EV-026** · P0 · S · **Build compare 2–3 EV variants**  
