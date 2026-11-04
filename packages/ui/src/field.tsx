@@ -101,7 +101,7 @@ export function TextField({
         aria-describedby={describedBy(ids, hint, error)}
         className={cn(
           control,
-          error ? "border-danger" : "border-line",
+          error ? "border-danger" : "border-control-border",
           className,
         )}
         {...props}
@@ -140,7 +140,7 @@ export function SelectField({
         className={cn(
           control,
           "appearance-auto",
-          error ? "border-danger" : "border-line",
+          error ? "border-danger" : "border-control-border",
           className,
         )}
         {...props}
