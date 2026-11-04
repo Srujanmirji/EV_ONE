@@ -1,6 +1,9 @@
 import type { INestApplication } from "@nestjs/common";
 import { ErrorEnvelope, routes } from "@evone/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import sharp from "sharp";
+import { mediaFixture } from "./media-fixture.js";
+import type { ApiConfig } from "../src/config/env.js";
 import { loadConfig } from "../src/config/env.js";
 import { authEnv, authToken } from "./auth-fixture.js";
 import { API_PREFIX, createApp } from "../src/create-app.js";
@@ -20,6 +23,8 @@ import {
 // a documented status with no request below, or a body that does not parse.
 
 let app: INestApplication;
+let config: ApiConfig;
+let storage: Awaited<ReturnType<typeof mediaFixture>>;
 let base: string;
 let dependencyUp = true;
 const dependency: ReadinessCheck = {
@@ -34,13 +39,16 @@ type ContractRequest =
 let requests: Record<string, Record<string, ContractRequest>> = {};
 
 beforeAll(async () => {
+  storage = await mediaFixture();
+  config = loadConfig({
+    ...storage.env,
+    ...authEnv,
+    NODE_ENV: "test",
+    DATABASE_URL: databaseUrl,
+    REDIS_URL: "redis://127.0.0.1:6379",
+  });
   app = await createApp({
-    config: loadConfig({
-      ...authEnv,
-      NODE_ENV: "test",
-      DATABASE_URL: databaseUrl,
-      REDIS_URL: "redis://127.0.0.1:6379",
-    }),
+    config,
     db,
     readinessChecks: [dependency],
   });
@@ -60,11 +68,105 @@ beforeAll(async () => {
   const authorizationHeader = {
     Authorization: `Bearer ${authToken({ sub: authorizationUser.authProviderId, exp: Math.floor(Date.now() / 1000) + 3600 })}`,
   };
+  const image = await sharp({
+    create: { width: 2, height: 2, channels: 3, background: "red" },
+  })
+    .png()
+    .toBuffer();
+  const pending = await db.mediaAsset.create({
+    data: {
+      ownerId: authorizationUser.id,
+      contentType: "image/png",
+      sizeBytes: image.length,
+      expiresAt: new Date(Date.now() + 300000),
+    },
+  });
+  const ready = await db.mediaAsset.create({
+    data: {
+      ownerId: authorizationUser.id,
+      contentType: "image/png",
+      sizeBytes: image.length,
+      expiresAt: new Date(Date.now() + 300000),
+      status: "READY",
+      objectKey: "ready/synthetic-contract.webp",
+    },
+  });
+  storage.objects.set(
+    `/local-media/quarantine/${authorizationUser.id}/${pending.id}`,
+    { body: image, type: "image/png" },
+  );
+  const noGrantHeader = {
+    Authorization: `Bearer ${authToken({ sub: `no_grant_${run}`, exp: Math.floor(Date.now() / 1000) + 3600 })}`,
+  };
   const brand = await publishedBrand();
   const m = await model(brand.id);
   const v = await variant(m.id);
   const v2 = await variant(m.id);
   requests = {
+    presignMediaUpload: {
+      200: {
+        path: "/media/presign",
+        body: { contentType: "image/png", sizeBytes: image.length },
+        headers: authorizationHeader,
+      },
+      400: { path: "/media/presign", body: {}, headers: authorizationHeader },
+      401: { path: "/media/presign", body: {} },
+      403: {
+        path: "/media/presign",
+        body: { contentType: "image/png", sizeBytes: 1 },
+        headers: noGrantHeader,
+      },
+      503: {
+        path: "/media/presign",
+        body: { contentType: "image/png", sizeBytes: 1 },
+        headers: authorizationHeader,
+      },
+    },
+    completeMediaUpload: {
+      200: {
+        path: `/media/${pending.id}/complete`,
+        body: {},
+        headers: authorizationHeader,
+      },
+      400: {
+        path: "/media/not-a-uuid/complete",
+        body: {},
+        headers: authorizationHeader,
+      },
+      401: { path: `/media/${pending.id}/complete`, body: {} },
+      403: {
+        path: `/media/${pending.id}/complete`,
+        body: {},
+        headers: noGrantHeader,
+      },
+      404: {
+        path: "/media/7f088e6e-32fd-4086-af08-0aef72dabef2/complete",
+        body: {},
+        headers: authorizationHeader,
+      },
+      503: {
+        path: `/media/${pending.id}/complete`,
+        body: {},
+        headers: authorizationHeader,
+      },
+    },
+    getMediaReadUrl: {
+      200: {
+        path: `/media/${ready.id}/read-url`,
+        headers: authorizationHeader,
+      },
+      400: { path: "/media/not-a-uuid/read-url", headers: authorizationHeader },
+      401: `/media/${ready.id}/read-url`,
+      403: { path: `/media/${ready.id}/read-url`, headers: noGrantHeader },
+      404: {
+        path: "/media/7f088e6e-32fd-4086-af08-0aef72dabef2/read-url",
+        headers: authorizationHeader,
+      },
+      503: {
+        path: `/media/${ready.id}/read-url`,
+        headers: authorizationHeader,
+      },
+    },
     checkResourceAccess: {
       200: {
         path: `/auth/access/account/${authorizationUser.id}`,
@@ -128,6 +230,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app.close();
+  await storage.close();
   await cleanup();
   await db.$disconnect();
 });
@@ -182,6 +285,9 @@ describe("API contract", () => {
         const selected = requests[route.operationId]![status]!;
         const request =
           typeof selected === "string" ? { path: selected } : selected;
+        const originalMedia = config.media;
+        if (route.tag === "media" && status === "503")
+          config.media = { mode: "disabled" };
         const res = await fetch(`${base}${request.path}`, {
           method: route.method.toUpperCase(),
           headers: {
@@ -196,6 +302,7 @@ describe("API contract", () => {
               }
             : {}),
         });
+        config.media = originalMedia;
         dependencyUp = true;
         expect(res.status).toBe(Number(status));
         const body: unknown = await res.json();

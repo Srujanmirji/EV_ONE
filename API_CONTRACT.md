@@ -242,4 +242,18 @@ Clients use `createEvoneClient({ origin })` from `@evone/sdk`. Types are compile
 
 All outcomes inherit no-store from the authentication guard. Token roles, organization IDs and metadata never grant permissions. USER/ADMIN global grants authorize the actor's own account scope only; dealer roles require their exact database scope. These are scope-read probes, not permission to mutate arbitrary business resources. Future domain policies must resolve ownership from their own stored resources and audit actual mutations atomically.
 
-Production auth remains disabled under the approved local-only exception. No profile provisioning, role-management endpoint, dealer approval process or production rollout is implied. Live acceptance and PostgreSQL integration verification remain pending.
+Production auth remains disabled under the approved local-only exception. No profile provisioning, role-management endpoint, dealer approval process or production rollout is implied. Live acceptance remains pending; native PostgreSQL integration passed in PR #14 CI.
+
+## Implemented private media (EV-020, local only, in progress)
+
+All routes are below `/api/v1`, bearer-only and no-store. Media defaults disabled; enabling requires a development/test loopback API and local Clerk configuration. An app-owned ACTIVE user with an active, unexpired GLOBAL USER or ADMIN grant can operate only its own media. ADMIN has no cross-owner bypass; dealer grants alone do not authorize personal media. Input never accepts filenames, object keys, owner IDs or remote URLs.
+
+| Route | Request | 200 data |
+|---|---|---|
+| POST `/media/presign` | `{ contentType, sizeBytes }`, JPEG/PNG/WebP, 1–5242880 bytes | `{ id, uploadUrl, expiresAt, headers: { "Content-Type" } }` |
+| POST `/media/{id}/complete` | `{}` after uploading bytes | `{ id, status: "READY" }` |
+| GET `/media/{id}/read-url` | No body | `{ readUrl, expiresInSeconds: 60 }` |
+
+Upload the exact declared bytes with the supplied Content-Type before the five-minute expiry. Content-Length and Content-Type are SigV4 signed; a browser supplies Content-Length itself. Real R2 enforcement and browser CORS await a bucket. URLs are bearer capabilities: do not log/cache/share them. Original objects are quarantine-only and never served through the read route. Completion checks actual length/type, image magic, bounded decoding (16 million pixels), non-animation, re-encodes to WebP at most 1200×1200 and strips metadata. This is not a malware-scanner claim. Reads sign only the committed sanitized object; retries of READY completion do not process a replacement original.
+
+Responses: 400 validation/invalid image/expired or unready asset; 401 authentication; 403 unknown/suspended actor or missing grant; 404 missing/cross-owner resource (same result); 503 disabled mode, storage or DB/audit failure. DB/audit failures release no capability URL. Validation failures before policy evaluation produce no decision audit. Existing signed read URLs remain usable for up to 60 seconds after revocation; upload URLs may recreate private quarantine objects until expiry. Bucket lifecycle cleanup and public-access controls require live acceptance.
