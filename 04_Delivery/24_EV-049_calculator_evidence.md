@@ -1,6 +1,6 @@
 # EV-049 — Calculator UI evidence
 
-Date: 2026-11-04. Branch: `feat/EV-049-savings-calculator`, based on local EV-048 commit `890f25a`. Status: locally complete; hosted CI pending.
+Date: 2026-11-04. Branch: `feat/EV-049-savings-calculator`, based on local EV-048 commit `890f25a`. Status: implemented and pushed in PR #8; initial hosted CI exposed a focus race, corrected in a follow-up PR (hosted verification pending).
 
 ## Working flow
 
@@ -26,11 +26,15 @@ Loading, empty, field-invalid, unavailable and populated states work. Controlled
 
 Reviews found no remaining integration, numeric, React or TypeScript issues. All production code/validation deltas reviewed; temporary config was excluded and removed.
 
+## Hosted CI follow-up
+
+Initial hosted run [41767127772](https://github.com/Srujanmirji/EV_ONE/actions/runs/41767127772) passed earlier gates but failed the mobile invalid-field focus assertion. Focus scheduled inside the async action could run before React re-enabled the pending fieldset. Focus now runs in an effect after the completed response commits. The existing calculator suite passed **48 checks** (`--repeat-each=3`, all four widths) against the built app/API after this fix; web lint, typecheck, 37 unit tests and production build also pass. React review found no issues. No assertion was weakened.
+
 ## Local browser fixture
 
 Docker/PostgreSQL are unavailable on this host. The local browser run used the **real built Next.js app and real built Nest calculator route/engine**, with `createApp` supplying an unused DB object and no readiness checks on loopback port 4100. Calculator requests do not use database persistence. Next ran on 3100 with `API_BASE_URL=http://127.0.0.1:4100`. A temporary `playwright.calculator-local.config.ts` inherited all four normal viewport projects, disabled automatic servers and used two workers. It was removed after verification; fixture source lived in `/tmp/evone-calculator-qa-api.mjs`. No production flags/bypasses were added.
 
-Normal CI uses the existing real migrated PostgreSQL/Redis setup and picks up `tests/calculator.spec.ts` automatically. Full database/browser regressions and hosted CI for these changes remain unrun locally; no live deployment claim is made.
+Normal CI uses the existing real migrated PostgreSQL/Redis setup and picks up `tests/calculator.spec.ts` automatically. Full database/browser regressions remain unrun locally; no live deployment claim is made.
 
 ## Acceptance / polish details
 
@@ -58,4 +62,4 @@ Local artifacts (ignored by git) from the confirmation run:
 
 EV-050 homepage savings teaser remains open. Tariff mixing, charging losses/TCO/finance are outside this base calculator. EV-019 still awaits a live Sentry alert; EV-020 access controls need auth/RBAC.
 
-This UI branch depends on local EV-048 and open EV-019/EV-014 branches; none of these new calculator changes are pushed. Revert EV-049 as a unit to restore its placeholder; preserve the independent EV-048 API. No stored data/migrations are affected.
+PR #8 was merged into its EV-048 base branch externally. The focus follow-up targets that branch, which contains the calculator; main does not yet contain the full stack. Revert EV-049 as a unit to restore its placeholder; preserve the independent EV-048 API. No stored data/migrations are affected.

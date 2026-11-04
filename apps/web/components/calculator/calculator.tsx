@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Button, EmptyState, ErrorState, Skeleton, TextField } from "@evone/ui";
 import { calculateSavingsAction } from "@/app/calculator/actions";
 import {
@@ -24,24 +24,25 @@ export function SavingsCalculator() {
       } catch {
         next = { kind: "unavailable" };
       }
-      requestAnimationFrame(() => {
-        const first =
-          next.kind === "invalid"
-            ? savingsFields.find((field) => next.fields[field.key])
-            : undefined;
-        if (first) {
-          const input = document.getElementById(`calc-${first.key}`);
-          input?.focus({ preventScroll: true });
-          input?.scrollIntoView({ block: "center" });
-        } else {
-          results.current?.focus({ preventScroll: true });
-          results.current?.scrollIntoView({ block: "start" });
-        }
-      });
       return next;
     },
     { kind: "empty" },
   );
+  useEffect(() => {
+    if (pending || state.kind === "empty") return;
+    const first =
+      state.kind === "invalid"
+        ? savingsFields.find((field) => state.fields[field.key])
+        : undefined;
+    if (first) {
+      const input = document.getElementById(`calc-${first.key}`);
+      input?.focus({ preventScroll: true });
+      input?.scrollIntoView({ block: "center" });
+    } else {
+      results.current?.focus({ preventScroll: true });
+      results.current?.scrollIntoView({ block: "start" });
+    }
+  }, [state, pending]);
   const errors = state.kind === "invalid" && !dirty ? state.fields : {};
 
   return (
