@@ -1,4 +1,5 @@
 import { Queue, Worker, UnrecoverableError, type Job } from "bullmq";
+import { reportError, logEvent } from "../observability/telemetry.js";
 import { z } from "zod";
 import { redisUrl } from "./config.js";
 
@@ -35,7 +36,7 @@ export function createFoundationQueue(url: string) {
       removeOnFail: { count: 100 },
     },
   });
-  queue.on("error", () => console.error("EVONE queue connection error"));
+  queue.on("error", () => reportError("queue.connection_failed"));
   return queue;
 }
 
@@ -58,12 +59,14 @@ export function createFoundationWorker(
     concurrency: 1,
   });
   // Never log Redis errors or job payloads: they may contain credentials/PII.
-  worker.on("error", () => console.error("EVONE worker connection error"));
-  worker.on("failed", (job) =>
-    console.error(
-      `EVONE worker job failed; attempts=${job?.attemptsMade ?? 0}`,
-    ),
-  );
-  worker.on("completed", () => console.log("EVONE worker job completed"));
+  worker.on("error", () => reportError("worker.connection_failed"));
+  worker.on("failed", (job) => {
+    const payload = probe.safeParse(job?.data);
+    reportError("worker.job_failed", {
+      attempts: job?.attemptsMade ?? 0,
+      ...(payload.success ? { eventId: payload.data.eventId } : {}),
+    });
+  });
+  worker.on("completed", () => logEvent("info", "worker.job_completed"));
   return worker;
 }

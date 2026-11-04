@@ -1,6 +1,6 @@
 # EVONE — Startup & Engineering Blueprint
 
-**Status:** 13/87 tasks complete; EV-014 locally verified, hosted CI pending · **Date:** 2026-11-04 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
+**Status:** 13/87 tasks complete; EV-014 passed CI; EV-019 local implementation, live alert pending · **Date:** 2026-11-04 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
 
 > **Purpose:** source of truth for a web-first electric-vehicle ecosystem. The workspace contains the web shell, read-only EV catalogue/comparison, API/database/contracts and a foundation queue worker. Marketplace, checkout and other business journeys remain pending.
 
@@ -80,3 +80,8 @@ See [`06_Reference/02_decision_register.md`](06_Reference/02_decision_register.m
 
 ## Definition of done
 A feature counts as done only when the user journey works end to end with loading/empty/error states, access control, database persistence, tests, basic telemetry and acceptance criteria. Mocked visuals alone are **not** done.
+
+## Backend observability (EV-019, in progress)
+API and worker logs are JSON with fixed event names and approved metadata only. HTTP completion/error records use the same UUID as `X-Request-ID` and the response envelope, and log the matched route template instead of user URLs. Headers, queries, bodies, raw exception messages/stacks and job payloads are excluded.
+
+External telemetry stays disabled while `SENTRY_DSN` is absent. When an approved project is available, set its DSN in the API/worker environment and run `pnpm --filter @evone/api telemetry:smoke` after building. This sends one synthetic event and exits nonzero on rejected/network delivery; a live issue and alert receipt must still be verified before completing EV-019. Local tests use the real SDK against a loopback receiver. See `PROJECT_SETUP.md` and `04_Delivery/22_EV-019_observability_evidence.md`.

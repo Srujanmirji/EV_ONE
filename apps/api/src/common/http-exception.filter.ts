@@ -7,6 +7,8 @@ import {
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import type { ErrorEnvelope } from "@evone/contracts";
+import { requestFields } from "../observability/http.js";
+import { reportError } from "../observability/telemetry.js";
 import { requestIdOf } from "./request-id.js";
 import { RequestValidationError } from "./validation.js";
 
@@ -39,6 +41,8 @@ export class EnvelopeExceptionFilter implements ExceptionFilter {
     const status = isHttp
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
+    if (status >= 500)
+      reportError("http.failed", { ...requestFields(req), status });
     const code = CODES[status] ?? (status >= 500 ? "INTERNAL_ERROR" : "ERROR");
     const message =
       isHttp && status < 500

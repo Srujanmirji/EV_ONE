@@ -57,6 +57,32 @@ The queue defaults to three attempts with exponential backoff (100ms base), reta
 
 Local Compose uses Redis 8.10.3 with AOF persistence and `noeviction`; CI uses disposable Redis. Managed production Redis must use TLS (`rediss://`), private networking/access controls, persistence and no eviction. A probe is idempotent because it has no side effects; business outbox/idempotency/consent checks are added with business jobs. Producers must check Redis readiness before enqueueing: BullMQ can wait indefinitely for its first connection, even with its offline queue disabled. API readiness rejects immediately until connected, then verifies a real queue read.
 
+## EV-019 observability (local implementation; live acceptance pending)
+
+API/worker processes emit one JSON record per event. `http.completed`/`http.aborted` include status, duration, matched route template and request UUID; `http.failed` uses the same UUID. An invalid inbound ID is replaced. Correlation is passed explicitly per request, so concurrent requests cannot overwrite each other's IDs. No auth identity exists yet, so no user/role fields are emitted.
+
+Logs and Sentry events use a strict allowlist: request/event UUIDs, method, matched route, numeric status/duration/attempt/failure counts. Config variable **names** appear only in startup logs. Headers, concrete paths/query strings, bodies, user/contact data, connection details, raw errors/stacks and SDK breadcrumbs/context are excluded. This limits diagnostics to event category and correlation metadata. Nest's default logger/automatic Sentry integrations are disabled to keep raw exception data out of alternate log paths; fatal process handlers emit sanitized records and exit 1.
+
+`SENTRY_DSN` is optional, private to backend processes and absent by default. To configure later, place the approved project's HTTPS DSN in `apps/api/.env` or the deployment secret environment (never in source, chat, browser variables or logs). `NODE_ENV` labels events as development/test/production. HTTP DSNs are accepted only on loopback for local transport tests. No real project is configured by this task.
+
+```bash
+pnpm build
+# With SENTRY_DSN configured securely:
+pnpm --filter @evone/api telemetry:smoke
+```
+
+The smoke command sends only `telemetry.test`. Exit 0 means the SDK request received a successful HTTP ingestion response; it does **not** prove an issue was stored or an alert delivered. Rejected responses, network errors and flush timeouts fail the command and emit `telemetry.delivery_failed` without endpoint details. API/worker failures continue to log when telemetry is unavailable; this observability dependency does not change API readiness. Shutdown drains resources, captures cleanup failures and flushes Sentry with a two-second bound.
+
+Live acceptance remaining: create/select the EVONE Sentry project, approve its retention/access and alert destination, configure the DSN, run the smoke command, confirm the issue and actual alert receipt, then attach evidence and complete EV-019. Until then, leave its task in progress.
+
+Local checks requiring neither a database nor a Sentry account:
+
+```bash
+pnpm --filter @evone/api test:unit
+pnpm --filter @evone/api build
+pnpm --filter @evone/api exec vitest run --config vitest.e2e.config.ts test/telemetry.e2e.test.ts
+```
+
 ## Stage 1 — later setup prerequisites
 - GitHub repo private for initial work, team access and required review.
 - Node LTS, pnpm, Docker, Postgres/PostGIS, Redis, provider sandbox accounts.
