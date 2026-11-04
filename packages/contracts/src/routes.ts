@@ -10,6 +10,7 @@ import {
   VariantDetailResponse,
   VariantPathParams,
 } from "./catalogue.js";
+import { SavingsRequest, SavingsResponse } from "./savings.js";
 import { ErrorEnvelope } from "./common.js";
 import { LiveResponse, ReadinessResponse } from "./health.js";
 
@@ -29,6 +30,8 @@ export interface RouteContract {
   query?: z.ZodObject;
   /** Validated path parameters, named as in `path`. */
   params?: z.ZodObject;
+  /** Validated JSON request body. */
+  body?: z.ZodObject;
   responses: Record<number, RouteResponse>;
 }
 
@@ -46,6 +49,22 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  {
+    operationId: "calculateEvSavings",
+    method: "post",
+    path: "/calculators/ev-savings",
+    summary:
+      "Energy-only savings estimate, exact arithmetic with final paise rounding.",
+    tag: "calculators",
+    body: SavingsRequest,
+    responses: {
+      200: {
+        description: "Costs, savings and optional simple payback estimate.",
+        schema: SavingsResponse,
+      },
+      400: badRequest,
+    },
+  },
   {
     operationId: "getLiveness",
     method: "get",

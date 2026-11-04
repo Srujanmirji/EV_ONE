@@ -41,6 +41,8 @@
 ## UX-13 — Savings `/calculator`
 **Goal:** understand estimated fuel/energy costs. Editable monthly km, fuel rate, ICE mileage, EV kWh/km, tariff/mix; result chart, monthly/yearly savings, optional purchase delta/break-even. Place assumptions above CTA, no guaranteed outcomes, keyboard and mobile form validation.
 
+**Implemented EV-049:** explicit unit labels, single blended tariff, optional signed purchase premium in rupees; real API chart/results with non-guarantee/exclusion text, loading/empty/error recovery and retained inputs. Editing clears stale output; focus moves to invalid fields or the result region below the sticky header. [Direction](08_EV-049_calculator_direction.md).
+
 ## UX-14 — Charging map `/charging`
 **Goal:** find compatible charger. Map and result list split desktop, map/list toggle mobile, connector/power/location filters, permission prompt, attribution, last-updated/unknown status. Retry/backoff provider errors.
 

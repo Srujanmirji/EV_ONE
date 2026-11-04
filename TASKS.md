@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. EV-014 is verified locally; hosted CI is pending. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. EV-014 also passed hosted CI ([run](https://github.com/Srujanmirji/EV_ONE/actions/runs/41700672277)); EV-019 is in progress with local verification only. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -45,7 +45,7 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   `packages/db` (Prisma 7.10.1 per accepted ADR-012) with PostGIS baseline, reviewed `down.sql`, confirm-guarded rollback and `db:migrate:verify` (repeat deploy, drift, catalog-checked rollback, redeploy) passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41660702823). Strategy in `DATABASE.md`; production host PostGIS/PITR unverified. [Evidence](04_Delivery/12_EV-013_database_evidence.md).
 - [x] **EV-014** · P0 · S · **Provision Redis+BullMQ worker**
   Depends: `EV-012` · **Done when:** Queued test event handled with retries.
-  Separate NestJS worker entry in `apps/api` (shared build), BullMQ 6.5.4, Redis 8.10.3 local/CI services, validated private configuration and Redis API readiness. Real Redis tests prove transient retry recovery, three-attempt exhaustion, payload rejection and graceful drain; built-process tests prove job processing and SIGTERM. Locally verified; hosted CI pending. [Evidence and limits](04_Delivery/21_EV-014_worker_evidence.md).
+  Separate NestJS worker entry in `apps/api` (shared build), BullMQ 6.5.4, Redis 8.10.3 local/CI services, validated private configuration and Redis API readiness. Real Redis tests prove transient retry recovery, three-attempt exhaustion, payload rejection and graceful drain; built-process tests prove job processing and SIGTERM. Locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41700672277) verified. [Evidence and limits](04_Delivery/21_EV-014_worker_evidence.md).
 - [x] **EV-015** · P0 · M · **Build global design tokens and components**
   Depends: `EV-011` · **Done when:** Tokens, buttons, inputs, cards, modals, empty/error states.
   `@evone/ui`: UI_UX.md tokens, Button, TextField/SelectField/Checkbox, Card, native-dialog Modal, EmptyState/ErrorState/Skeleton; shell migrated; `/ui-kit` reference (noindex). axe WCAG 2.2 AA clean on every page at four widths; two real a11y defects fixed; mutation-tested. Muted text kept at `#596170` because the spec's `#747B87` fails AA. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41672655002). [Evidence](04_Delivery/17_EV-015_ui_evidence.md).
@@ -56,8 +56,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**
   Depends: `EV-012` · **Done when:** OpenAPI and TS SDK generated from validated schemas.
   `packages/contracts` (strict Zod → OpenAPI 3.1 `openapi.json`) and `packages/sdk` (generated types + `createEvoneClient`); `contract:check`, API route/schema contract test and SDK-driven API e2e all mutation-tested and passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41663040938). [Evidence](04_Delivery/13_EV-018_contracts_evidence.md).
-- [ ] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**  
+- [~] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**
   Depends: `EV-012` · **Done when:** PII redaction and test alert confirmed.
+  Local implementation: JSON logs with an allowlist, correlated HTTP request IDs, optional privacy-filtered Sentry SDK reporting for API/worker errors, fatal-process capture and a smoke command. Local ingestion, rejection, network failure, cleanup and privacy tests pass. User confirmed no Sentry project exists and authorized local implementation/testing; **leave in progress until a hosted issue and alert receipt are confirmed**. [Evidence and remaining acceptance](04_Delivery/22_EV-019_observability_evidence.md).
 - [ ] **EV-020** · P0 · S · **Configure R2 uploads and media validation**  
   Depends: `EV-012` · **Done when:** Presigned uploads, type/size checks and access controls.
 
@@ -131,10 +132,12 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 
 ## Savings (3 tasks)
 
-- [ ] **EV-048** · P0 · S · **Implement exact EV energy savings formula**  
+- [x] **EV-048** · P0 · S · **Implement exact EV energy savings formula**
   Depends: `EV-018` · **Done when:** Golden tests and realistic validation bounds pass.
-- [ ] **EV-049** · P0 · M · **Build calculator UI/results/chart**  
+  BigInt rational engine with strict shared input schema, one-time half-away paise rounding, independently computed annual costs/savings and unrounded payback. Stateless POST endpoint, OpenAPI JSON-body support and generated SDK. Locally verified: golden/negative/zero/tiny-savings tests, boundary contracts and real SDK→HTTP validation. Hosted CI pending. [Evidence](04_Delivery/23_EV-048_savings_evidence.md).
+- [x] **EV-049** · P0 · M · **Build calculator UI/results/chart**
   Depends: `EV-048,EV-015` · **Done when:** Units, caveats and inputs accessible on mobile.
+  Working `/calculator`: server-action/SDK integration, explicit units and optional rupee premium, cost chart, monthly/yearly amounts, loading/empty/error/negative/zero states, preserved values and keyboard focus. Illustrative example is labeled. 40 local browser checks pass at 375/768/1280/1920, axe clean in tested states; polish fixed focus/header overlap and shared control-boundary contrast. Hosted CI pending. [Evidence](04_Delivery/24_EV-049_calculator_evidence.md).
 - [ ] **EV-050** · P0 · S · **Build homepage savings teaser**  
   Depends: `EV-049` · **Done when:** No fake guarantee; links to calculator.
 
@@ -247,10 +250,10 @@ All relevant P0 tasks EV-001 through EV-078 must pass for release, subject to ex
 
 ## Current progress
 - Total: **87 tasks** across 16 phases.
-- Completed: **13 / 87** (14.9% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026. EV-014 is locally verified; its hosted CI run is pending.
-- Foundation: **8 / 12**; catalogue: **5 / 6**; all other phases: **0 complete**.
-- Remaining: **74 tasks**. Task count is not an estimate of remaining effort.
-- Next engineering task: **EV-019** (observability). Other dependency-ready tasks: EV-020, EV-048. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
+- Completed: **15 / 87** (17.2% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026, EV-048–EV-049. EV-014 passed hosted CI; EV-019 remains in progress and is not counted complete.
+- Foundation: **8 / 12**; catalogue: **5 / 6**; savings: **2 / 3**; all other phases: **0 complete**.
+- Remaining: **72 tasks**. Task count is not an estimate of remaining effort.
+- In progress: **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). Next: **EV-050** (homepage savings teaser). EV-020 access-control acceptance needs auth/RBAC (EV-016/EV-017), so it is not ready for completion. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
 - Discovery EV-001–EV-008 remains open; EV-004 was not completed by the scaffold exception.
 
 ## When something changes
