@@ -38,6 +38,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/calculators/ev-savings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Energy-only savings estimate, exact arithmetic with final paise rounding. */
+    post: operations["calculateEvSavings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/compare": {
     parameters: {
       query?: never;
@@ -252,6 +269,28 @@ export interface components {
       data: components["schemas"]["ReadinessReport"];
       meta: components["schemas"]["Meta"];
     };
+    SavingsRequest: {
+      monthlyKm: number;
+      fuelPriceInrPerLitre: number;
+      iceKmPerLitre: number;
+      evKwhPerKm: number;
+      electricityInrPerKwh: number;
+      purchasePriceDeltaPaise?: number;
+    };
+    SavingsResponse: {
+      data: components["schemas"]["SavingsResult"];
+      meta: components["schemas"]["Meta"];
+    };
+    SavingsResult: {
+      iceMonthlyCostPaise: number;
+      evMonthlyCostPaise: number;
+      iceAnnualCostPaise: number;
+      evAnnualCostPaise: number;
+      monthlyEnergySavingsPaise: number;
+      annualEnergySavingsPaise: number;
+      estimatedPaybackMonths: number | null;
+      exclusions: ["maintenance", "depreciation", "charging losses", "finance"];
+    };
     /** @enum {string} */
     SourceKind: "OEM" | "REGULATOR" | "PRESS" | "DEALER" | "OTHER";
     /** @enum {string} */
@@ -351,6 +390,9 @@ export type SchemaReadinessCheckResult =
 export type SchemaReadinessReport = components["schemas"]["ReadinessReport"];
 export type SchemaReadinessResponse =
   components["schemas"]["ReadinessResponse"];
+export type SchemaSavingsRequest = components["schemas"]["SavingsRequest"];
+export type SchemaSavingsResponse = components["schemas"]["SavingsResponse"];
+export type SchemaSavingsResult = components["schemas"]["SavingsResult"];
 export type SchemaSourceKind = components["schemas"]["SourceKind"];
 export type SchemaSpecField = components["schemas"]["SpecField"];
 export type SchemaSpecSourceView = components["schemas"]["SpecSourceView"];
@@ -415,6 +457,48 @@ export interface operations {
       };
       /** @description Not found or not published. */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  calculateEvSavings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SavingsRequest"];
+      };
+    };
+    responses: {
+      /** @description Costs, savings and optional simple payback estimate. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SavingsResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
         headers: {
           [name: string]: unknown;
         };

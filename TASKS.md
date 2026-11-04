@@ -132,8 +132,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 
 ## Savings (3 tasks)
 
-- [ ] **EV-048** · P0 · S · **Implement exact EV energy savings formula**  
+- [x] **EV-048** · P0 · S · **Implement exact EV energy savings formula**
   Depends: `EV-018` · **Done when:** Golden tests and realistic validation bounds pass.
+  BigInt rational engine with strict shared input schema, one-time half-away paise rounding, independently computed annual costs/savings and unrounded payback. Stateless POST endpoint, OpenAPI JSON-body support and generated SDK. Locally verified: golden/negative/zero/tiny-savings tests, boundary contracts and real SDK→HTTP validation. Hosted CI pending. [Evidence](04_Delivery/23_EV-048_savings_evidence.md).
 - [ ] **EV-049** · P0 · M · **Build calculator UI/results/chart**  
   Depends: `EV-048,EV-015` · **Done when:** Units, caveats and inputs accessible on mobile.
 - [ ] **EV-050** · P0 · S · **Build homepage savings teaser**  
@@ -248,10 +249,10 @@ All relevant P0 tasks EV-001 through EV-078 must pass for release, subject to ex
 
 ## Current progress
 - Total: **87 tasks** across 16 phases.
-- Completed: **13 / 87** (14.9% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026. EV-014 passed hosted CI; EV-019 remains in progress and is not counted complete.
-- Foundation: **8 / 12**; catalogue: **5 / 6**; all other phases: **0 complete**.
-- Remaining: **74 tasks**. Task count is not an estimate of remaining effort.
-- In progress: **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). Other dependency-ready tasks: EV-020, EV-048. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
+- Completed: **14 / 87** (16.1% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026, EV-048. EV-014 passed hosted CI; EV-019 remains in progress and is not counted complete.
+- Foundation: **8 / 12**; catalogue: **5 / 6**; savings: **1 / 3**; all other phases: **0 complete**.
+- Remaining: **73 tasks**. Task count is not an estimate of remaining effort.
+- In progress: **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). Next: **EV-049** (calculator UI). EV-020 access-control acceptance needs auth/RBAC (EV-016/EV-017), so it is not ready for completion. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
 - Discovery EV-001–EV-008 remains open; EV-004 was not completed by the scaffold exception.
 
 ## When something changes

@@ -45,3 +45,9 @@ Reject negative principal/rate, `n≤0`; set upper reasonable bounds and disclos
 7. Zero-interest EMI yields P/n; standard interest matches independent finance calculator to stated precision.
 8. Invalid unit text or division by zero rejected.
 9. Rounding from ₹ to paise consistent; no floating-point accumulation errors.
+
+## EV-048 implementation boundary
+
+The pure engine and `POST /calculators/ev-savings` implement the base energy equations with the existing single effective electricity tariff contract. Input bounds and six-decimal precision are enforced by shared Zod schemas. Values are converted to millionths and computed with BigInt rational arithmetic, then each output rounds once to paise (halves away from zero). Annual costs and savings use unrounded monthly values. Payback uses exact savings and returns null if its integer month count is unsafe to represent. A zero premium means no upfront premium to recover; a negative premium is cheaper up front, not a negative payback.
+
+Home/public mixing and charging-loss/maintenance/financing parameters remain outside this base endpoint. Callers supply an effective tariff; outputs list exclusions. Full validation bounds and rounding semantics are in `API_CONTRACT.md`. Calculator UI is EV-049; homepage teaser is EV-050.
