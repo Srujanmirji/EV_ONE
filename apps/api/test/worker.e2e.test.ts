@@ -53,12 +53,12 @@ it("starts the built Nest worker, processes a real job, and stops on SIGTERM", a
     await expect(job.waitUntilFinished(events, 10000)).resolves.toEqual({
       eventId,
     });
-    expect(output()).toContain("EVONE worker ready");
+    expect(output()).toContain("worker.ready");
     const exited = once(proc, "exit");
     proc.kill("SIGTERM");
     const [code, signal] = (await exited) as [number | null, string | null];
     expect(code === 0 || signal === "SIGTERM").toBe(true);
-    expect(output()).toContain("EVONE worker stopped gracefully");
+    expect(output()).toContain("worker.stopped");
   } finally {
     if (jobId) await (await queue.getJob(jobId))?.remove();
     await events.close();
@@ -71,6 +71,6 @@ it("rejects invalid Redis configuration without printing secrets", async () => {
   const { proc, output } = start(secret);
   const [code] = (await once(proc, "exit")) as [number | null];
   expect(code).toBe(1);
-  expect(output()).toContain("EVONE worker failed to start");
+  expect(output()).toContain("worker.start_failed");
   expect(output()).not.toContain("secret_should_not_be_logged");
 });

@@ -110,7 +110,7 @@ describe("built API process", () => {
       string | null,
     ];
     expect(code === 0 || signal === "SIGTERM").toBe(true);
-    expect(output().stdout).toContain("Stopped gracefully on SIGTERM");
+    expect(output().stdout).toContain('"event":"api.stopped"');
   });
 
   it("stays live but not ready when the database is unreachable", async () => {
@@ -175,7 +175,10 @@ describe("built API process", () => {
     const [code] = (await once(proc, "exit")) as [number | null];
     expect(code).toBe(1);
     const { stdout, stderr } = output();
-    expect(stderr).toContain("Invalid API configuration");
+    expect(JSON.parse(stderr) as unknown).toMatchObject({
+      event: "api.start_failed",
+      configKeys: ["API_PORT"],
+    });
     expect(stderr).toContain("API_PORT");
     expect(stdout + stderr).not.toContain(secretLooking);
   });

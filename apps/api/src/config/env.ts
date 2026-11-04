@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sentryDsn } from "../observability/config.js";
 import { redisUrl } from "../queue/config.js";
 
 const port = z.coerce.number().int().min(1).max(65535);
@@ -10,6 +11,7 @@ export const envSchema = z.object({
   API_HOST: z.string().min(1).default("127.0.0.1"),
   API_PORT: port.default(4000),
   REDIS_URL: redisUrl,
+  SENTRY_DSN: sentryDsn.optional(),
   /** PostgreSQL connection string. Contains a password: never log it. */
   DATABASE_URL: z
     .string()

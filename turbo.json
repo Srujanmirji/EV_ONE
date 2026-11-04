@@ -21,7 +21,8 @@
         "API_PORT",
         "API_READINESS_TIMEOUT_MS",
         "API_BASE_URL",
-        "PUBLIC_WEB_URL"
+        "PUBLIC_WEB_URL",
+        "SENTRY_DSN"
       ]
     },
     "lint": {
