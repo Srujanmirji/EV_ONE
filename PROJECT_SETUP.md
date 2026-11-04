@@ -186,3 +186,21 @@ Malformed/missing auth configuration, non-loopback binding or production mode ca
 Call the protected endpoint through the generated SDK with `Authorization: Bearer <token>` kept in memory. Success returns only `authenticated: true` and request metadata, with `no-store`; invalid/expired/missing tokens get a generic 401 and bearer challenge. Do not paste real tokens into chat, terminal command history, fixtures or logs. This status probe grants no account/role/dealer permissions. Public endpoints remain accessible with auth disabled.
 
 `pnpm --filter @evone/api test:unit` exercises real Nest/HTTP/SDK requests with ephemeral signatures and an unused database object. The new database-backed contract fixtures cover 200/401 in normal integration CI. Built-process tests refuse production/non-loopback/invalid-PEM startup. See `04_Delivery/27_EV-016_local_auth_evidence.md` for local commands and unrun checks. No UI or database migrations changed.
+
+
+## EV-017 — Local scoped permissions and decision audit (in progress)
+
+Apply the new migration only to a disposable local/staging database using the existing reviewed migration workflow. All new users start suspended; authentication alone does not provision an app user or grant access. There is no automatic role bootstrap or role-management endpoint. Actual development identities and scoped grants must come from a trusted owner-controlled provisioning process when that work is introduced; do not treat signed token metadata as authorization.
+
+`GET /api/v1/auth/access/account/{userUuid}` and `/api/v1/auth/access/dealer/{scopeUuid}` use the EV-016 local bearer configuration, then read the app-owned user/grants and persist an audit outcome. No token or identity is printed in the response. Production still refuses local auth mode.
+
+| Scope probe | Grant required | Boundary |
+|---|---|---|
+| Account | Active global USER or ADMIN | Exact mapped user's own UUID; no wildcard ADMIN bypass |
+| Dealer | Active DEALER_STAFF or DEALER_OWNER | Exact granted dealer scope UUID |
+
+Suspended identities and expired/inactive grants are denied. Each request rereads database state; transactionally written audit evidence must succeed before access is returned. Denied checks also persist evidence. This foundation covers scope reads; later feature mutations need per-action/ownership policies. No dealer verification or EV-066 membership flow is claimed.
+
+Run unit checks now with `pnpm test:unit`. Real database checks use `pnpm db:migrate:verify` on an empty disposable verification DB, `pnpm db:migrate:deploy`, then `pnpm test:integration` with the normal migrated PostgreSQL/Redis environment. The new schema uses Prisma's supported partial-index preview feature and requires drift/rollback confirmation in CI. Retained synthetic audit rows are intentional; tests must never point at a production database. Audit UPDATE/DELETE/TRUNCATE tests always roll back their transaction even if protection fails.
+
+This host lacks Docker/native PostgreSQL tools. Supplemental checks using Prisma’s already-installed PGlite dependency passed 14 SQL assertions and six API integration tests. The attempted full database suite hit socket-adapter error recovery failures, so native PostgreSQL/PostGIS migration, rollback, drift and full integration checks remain pending. Do not mark EV-017 complete or enable production auth until the remaining checks pass. See `04_Delivery/28_EV-017_local_rbac_evidence.md`.

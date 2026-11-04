@@ -96,3 +96,6 @@ Clerk was selected for a local development spike. An isolated `/auth-spike` scaf
 
 
 EV-016 now adds a local-only API bearer guard and protected status probe under an explicit owner-approved prerequisite exception. It defaults off and refuses production enablement; public endpoints remain public. Neither EV-005 nor EV-016 is complete until live provider acceptance is verified. See `04_Delivery/27_EV-016_local_auth_evidence.md`.
+
+
+EV-017 adds a local scoped-permission and decision-audit foundation under a separate owner-approved exception. Database grants enforce own-account/exact-dealer scope, and audit storage must succeed before an allow response. Production auth remains disabled; SQL integration and live acceptance are pending, so progress stays **16/87**. See `04_Delivery/28_EV-017_local_rbac_evidence.md`.

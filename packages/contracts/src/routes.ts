@@ -10,7 +10,11 @@ import {
   VariantDetailResponse,
   VariantPathParams,
 } from "./catalogue.js";
-import { SessionResponse } from "./identity.js";
+import {
+  AccessPathParams,
+  AccessResponse,
+  SessionResponse,
+} from "./identity.js";
 import { SavingsRequest, SavingsResponse } from "./savings.js";
 import { ErrorEnvelope } from "./common.js";
 import { LiveResponse, ReadinessResponse } from "./health.js";
@@ -51,6 +55,32 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  {
+    operationId: "checkResourceAccess",
+    method: "get",
+    path: "/auth/access/{scope}/{scopeId}",
+    tag: "identity",
+    summary:
+      "Local-only scoped authorization probe; no business permissions are granted.",
+    params: AccessPathParams,
+    bearerAuth: true,
+    responses: {
+      200: {
+        description: "Authorized for this exact scope.",
+        schema: AccessResponse,
+      },
+      400: badRequest,
+      401: {
+        description: "Missing or invalid authentication.",
+        schema: ErrorEnvelope,
+      },
+      403: {
+        description:
+          "Unknown/suspended actor, missing grant or scope mismatch.",
+        schema: ErrorEnvelope,
+      },
+    },
+  },
   {
     operationId: "getAuthSession",
     method: "get",

@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  "/auth/access/{scope}/{scopeId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only scoped authorization probe; no business permissions are granted. */
+    get: operations["checkResourceAccess"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/session": {
     parameters: {
       query?: never;
@@ -161,6 +178,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AccessResponse: {
+      data: {
+        /** @constant */
+        authorized: true;
+      };
+      meta: components["schemas"]["Meta"];
+    };
     BrandListResponse: {
       data: components["schemas"]["BrandSummary"][];
       meta: components["schemas"]["Meta"];
@@ -386,6 +410,7 @@ export interface components {
   headers: never;
   pathItems: never;
 }
+export type SchemaAccessResponse = components["schemas"]["AccessResponse"];
 export type SchemaBrandListResponse =
   components["schemas"]["BrandListResponse"];
 export type SchemaBrandRef = components["schemas"]["BrandRef"];
@@ -430,6 +455,65 @@ export type SchemaVariantSummary = components["schemas"]["VariantSummary"];
 export type SchemaVehicleType = components["schemas"]["VehicleType"];
 export type $defs = Record<string, never>;
 export interface operations {
+  checkResourceAccess: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scope: "account" | "dealer";
+        scopeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorized for this exact scope. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AccessResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Missing or invalid authentication. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Unknown/suspended actor, missing grant or scope mismatch. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
   getAuthSession: {
     parameters: {
       query?: never;
