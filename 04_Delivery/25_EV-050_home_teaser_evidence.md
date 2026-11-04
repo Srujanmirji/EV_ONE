@@ -1,6 +1,6 @@
 # EV-050 — Homepage savings teaser evidence
 
-Date: 2026-11-04. Branch: `codex/EV-050-home-savings-teaser`, based on verified focus-fix commit `17b9ad3` (PR #9). Status: locally complete; hosted CI result will be recorded in the pull request.
+Date: 2026-11-04. Branch: `codex/EV-050-home-savings-teaser`, based on verified focus-fix commit `17b9ad3` (PR #9). Status: locally and in hosted CI verified; commit `e9f31d4`, [PR #10](https://github.com/Srujanmirji/EV_ONE/pull/10). [PR CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41769516354) and [push CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41769498239) passed: 153 unit, 63 integration, 13 process and 212 browser checks (four expected skips).
 
 ## Acceptance
 
@@ -38,6 +38,6 @@ React, TypeScript and integration reviews found no actionable issues. Only a lig
 
 ## Remaining limits / rollback
 
-No new hosted CI or deployment verification for EV-050; no database/API suites rerun for this static change. EV-049's verified baseline has 153 unit, 63 integration, 13 process and 208 browser checks passing in CI (four expected skips). This branch depends on its unmerged focus follow-up. Main does not yet contain the complete savings stack.
+Deployment remains unverified. Database/API suites were not rerun locally for this static change; hosted CI ran and passed the full suite. EV-049's verified baseline has 153 unit, 63 integration, 13 process and 208 browser checks passing in CI (four expected skips). PR #10 was merged externally into its focus-fix base branch. Main does not yet contain the complete savings stack.
 
 No full screen-reader certification. Live Sentry alert receipt remains pending under EV-019. The next prerequisite is EV-005 auth vendor/model approval; auth/RBAC and licensed/approved providers block the other implementation paths. Reverting this task removes only the teaser/test/docs and leaves the calculator intact.

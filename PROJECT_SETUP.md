@@ -130,3 +130,38 @@ Set `API_BASE_URL=http://127.0.0.1:4000` in the web environment and run the API/
 The form's optional purchase premium is **rupees** with up to two decimals; it is validated and converted to integer paise server-side. Six-decimal precision applies to other inputs. No inputs/results are saved in browser storage, database or request logs. Errors preserve controlled field values. No tariff defaults, vehicle prices or guarantee of savings is implied. A single effective home/public electricity tariff is entered; no automatic tariff-mix calculation or charging-loss assumption is added.
 
 Run unit tests with `pnpm test:unit`; the normal CI/database setup runs new calculator browser tests with `pnpm --filter @evone/web exec playwright test tests/calculator.spec.ts`. They cover keyboard-only calculation, input errors, negative/zero results, loading, transport failure/retry, stale-result clearing and axe at four viewport widths. Evidence and local fixture details: `04_Delivery/24_EV-049_calculator_evidence.md`.
+
+## EV-005 — Isolated Clerk development spike
+
+Owner selected Clerk for a development spike on 2026-11-04 and confirmed no instance exists yet. The local verification tests need no account, credentials, database or internet. Real provider sign-in remains unverified; EV-005 stays in progress, and EV-016/RBAC are not unlocked by this scaffold.
+
+Run `pnpm --filter @evone/web test:unit`. The suite uses ephemeral RSA keys and a loopback JWKS server with the actual Clerk SDK. Component tests reuse the repository's React Testing Library/jsdom versions and mock provider hooks; they do not prove real sign-in. `@clerk/nextjs` 7.9.24 and `@clerk/backend` 3.26.6 are pinned; declared peer ranges support the pinned Next.js/React/Node stack. The existing openapi-typescript TypeScript-5 peer warning remains; no new Clerk peer conflict was found.
+
+To view the unconfigured state without sending provider requests:
+
+```bash
+AUTH_SPIKE_ENABLED=true pnpm --filter @evone/web dev
+```
+
+Visit `http://127.0.0.1:3000/auth-spike`. In production/test mode the page and POST verification route return 404 even if the flag is true. It has no public navigation link, sitemap entry or global Clerk middleware/provider.
+
+When an owner-managed **development** instance is available, configure email verification first and place values only in ignored `apps/web/.env.local`:
+
+| Variable | Requirement |
+|---|---|
+| `AUTH_SPIKE_ENABLED` | `true`, development server only |
+| `AUTH_SPIKE_CLERK_PUBLISHABLE_KEY` | `pk_test_…` for the same instance as issuer |
+| `AUTH_SPIKE_CLERK_ISSUER` | Exact `https://<instance>.clerk.accounts.dev` origin |
+| `AUTH_SPIKE_AUDIENCE` | `evone-api-development`, matching the issued JWT |
+| `AUTH_SPIKE_ORIGIN` | Exact browser origin; localhost/127.0.0.1/IPv6 loopback only, with port |
+| `AUTH_SPIKE_CLERK_JWT_KEY` | Dashboard RSA-2048 SPKI **public** PEM key, quoted with real newlines as required by the dotenv format; never a private key |
+
+No Clerk secret key is required by this networkless probe. Do not run account-provisioning CLI commands or enable paid plans as part of local setup. Do not place keys/tokens in chat, committed files, test reports or screenshots.
+
+Create a development JWT template named `evone-api`, with audience `evone-api-development` and a short lifetime (for example 60 seconds). Inspect actual claim presence locally: `iss`, `aud`, `sub`, expiry and `azp` must match the configured instance, audience and browser origin. Do not print or commit the token. Missing audience is intentionally rejected rather than silently accepting a default session token. See [Clerk templates](https://clerk.com/docs/guides/sessions/jwt-templates).
+
+The page contains the real SDK SignIn/SignUp hash flows. A signed-in session can request the scoped template token and check it through same-origin `POST /auth-spike/verify`. Only `{ verified: boolean }` is returned with `Cache-Control: no-store`; no identity/claims/token is displayed or logged. Sign-out uses the SDK. The template token stays in memory for that request; it is not stored by EVONE in localStorage, URLs or the database. The probe uses browser-to-server bearer verification only; the production Server Action/Nest integration remains EV-016.
+
+The verifier pins RS256, issuer, audience, authorized party and the configured public key. It explicitly requires a nonempty subject, matching audience and valid NumericDates because the tested SDK allows missing audience/empty subject and has permissive behaviour for extreme timestamps. SDK signature validation is retained. The public key is **pinned**, so rotation requires updating it; remote JWKS tests demonstrate SDK mechanics, not automatic rotation in this probe. Offline tokens may remain valid until expiry after logout; no immediate revocation guarantee is made.
+
+Before marking EV-005 complete, verify real development sign-up/sign-in/reload/sign-out, stale-session behaviour, email delivery/recovery, actual cookie flags, redirects/origins, CSRF/cache isolation, claims and rotation/revocation limits. Keep MFA, pricing, region/subprocessors and retention/export review explicit before production. Neither a mock session nor local JWT tests meet the live sign-in acceptance criterion.
