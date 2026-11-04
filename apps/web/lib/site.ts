@@ -87,7 +87,8 @@ export const sections: SiteSection[] = [
     description:
       "Estimate what an electric vehicle could save you compared with petrol or diesel.",
     placement: "footer",
-    availability: "The calculator is not available yet.",
+    availability: "Estimate energy costs from the values you enter.",
+    live: true,
   },
   {
     href: "/finance",
