@@ -13,6 +13,7 @@ import {
 import { API_CONFIG } from "./config/config.token.js";
 import type { ApiConfig } from "./config/env.js";
 import type { DbClient } from "@evone/db";
+import { CalculatorsModule } from "./calculators/calculators.module.js";
 import { CatalogueModule } from "./catalogue/catalogue.module.js";
 import { DB_CLIENT } from "./database/database.token.js";
 import { HealthModule } from "./health/health.module.js";
@@ -71,7 +72,12 @@ export class AppModule implements OnApplicationShutdown {
   static register(options: AppOptions): DynamicModule {
     return {
       module: AppModule,
-      imports: [CoreModule.register(options), HealthModule, CatalogueModule],
+      imports: [
+        CoreModule.register(options),
+        HealthModule,
+        CatalogueModule,
+        CalculatorsModule,
+      ],
     };
   }
 }

@@ -80,6 +80,14 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         summary: route.summary,
         tags: [route.tag],
         ...(parameters.length > 0 ? { parameters } : {}),
+        ...(route.body
+          ? {
+              requestBody: {
+                required: true,
+                content: { "application/json": { schema: refFor(route.body) } },
+              },
+            }
+          : {}),
         responses,
       },
     };

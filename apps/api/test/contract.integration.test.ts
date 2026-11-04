@@ -27,7 +27,8 @@ const dependency: ReadinessCheck = {
 };
 
 /** One concrete request per documented (operationId, status). */
-let requests: Record<string, Record<string, string>> = {};
+type ContractRequest = string | { path: string; body: unknown };
+let requests: Record<string, Record<string, ContractRequest>> = {};
 
 beforeAll(async () => {
   app = await createApp({
@@ -47,6 +48,19 @@ beforeAll(async () => {
   const v = await variant(m.id);
   const v2 = await variant(m.id);
   requests = {
+    calculateEvSavings: {
+      200: {
+        path: "/calculators/ev-savings",
+        body: {
+          monthlyKm: 1000,
+          fuelPriceInrPerLitre: 100,
+          iceKmPerLitre: 15,
+          evKwhPerKm: 0.15,
+          electricityInrPerKwh: 8,
+        },
+      },
+      400: { path: "/calculators/ev-savings", body: {} },
+    },
     getLiveness: { 200: "/health/live" },
     getReadiness: { 200: "/health/ready", 503: "/health/ready" },
     listBrands: { 200: "/brands" },
@@ -124,12 +138,18 @@ describe("API contract", () => {
         dependencyUp = !(
           route.operationId === "getReadiness" && status === "503"
         );
-        const res = await fetch(
-          `${base}${requests[route.operationId]![status]}`,
-          {
-            method: route.method.toUpperCase(),
-          },
-        );
+        const selected = requests[route.operationId]![status]!;
+        const request =
+          typeof selected === "string" ? { path: selected } : selected;
+        const res = await fetch(`${base}${request.path}`, {
+          method: route.method.toUpperCase(),
+          ...("body" in request
+            ? {
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(request.body),
+              }
+            : {}),
+        });
         dependencyUp = true;
         expect(res.status).toBe(Number(status));
         const body: unknown = await res.json();

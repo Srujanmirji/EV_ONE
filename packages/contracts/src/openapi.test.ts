@@ -37,6 +37,22 @@ describe("OpenAPI document", () => {
     }
   });
 
+  it("documents the savings JSON body as required", () => {
+    const operation = buildOpenApiDocument() as {
+      paths: Record<string, { post?: { requestBody: unknown } }>;
+    };
+    expect(
+      operation.paths["/calculators/ev-savings"]?.post?.requestBody,
+    ).toEqual({
+      required: true,
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/SavingsRequest" },
+        },
+      },
+    });
+  });
+
   it("resolves every $ref to a component", () => {
     const refs = collectRefs(doc);
     expect(refs.length).toBeGreaterThan(0);
@@ -48,6 +64,7 @@ describe("OpenAPI document", () => {
 
   it("registers every schema a route exposes", () => {
     for (const route of routes) {
+      if (route.body) expect(schemaRegistry.get(route.body)).toBeDefined();
       for (const response of Object.values(route.responses)) {
         expect(schemaRegistry.get(response.schema)).toBeDefined();
       }
