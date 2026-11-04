@@ -1,3 +1,11 @@
+import {
+  MediaUploadRequest,
+  MediaUploadResponse,
+  MediaCompleteRequest,
+  MediaCompleteResponse,
+  MediaReadResponse,
+  MediaPathParams,
+} from "./media.js";
 import type { z } from "zod";
 import {
   BrandListResponse,
@@ -55,6 +63,53 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  ...[
+    {
+      operationId: "presignMediaUpload",
+      method: "post" as const,
+      path: "/media/presign",
+      body: MediaUploadRequest,
+      schema: MediaUploadResponse,
+    },
+    {
+      operationId: "completeMediaUpload",
+      method: "post" as const,
+      path: "/media/{id}/complete",
+      body: MediaCompleteRequest,
+      params: MediaPathParams,
+      schema: MediaCompleteResponse,
+    },
+    {
+      operationId: "getMediaReadUrl",
+      method: "get" as const,
+      path: "/media/{id}/read-url",
+      params: MediaPathParams,
+      schema: MediaReadResponse,
+    },
+  ].map(({ schema, ...route }): RouteContract => {
+    const responses: Record<number, RouteResponse> = {
+      200: { description: "Private media operation succeeded.", schema },
+      400: badRequest,
+      401: { description: "Authentication required.", schema: ErrorEnvelope },
+      403: {
+        description: "Active personal upload grant required.",
+        schema: ErrorEnvelope,
+      },
+      503: {
+        description: "Media disabled or dependency unavailable.",
+        schema: ErrorEnvelope,
+      },
+    };
+    if (route.params) responses[404] = notFound;
+    return {
+      ...route,
+      tag: "media",
+      summary: "Local-only private media; production disabled.",
+      bearerAuth: true,
+      responses,
+    };
+  }),
+
   {
     operationId: "checkResourceAccess",
     method: "get",

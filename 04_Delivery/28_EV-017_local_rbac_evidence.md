@@ -1,6 +1,6 @@
 # EV-017 — Local scoped authorization and audit evidence
 
-Date: 2026-11-04. Branch: `codex/EV-017-local-rbac-audit`, based on EV-016 commit `3a3bc1c`. Status: local foundation implemented; **EV-017 remains in progress**. Production auth is disabled. Native PostgreSQL/PostGIS migration, drift/rollback, full integration CI and live provider acceptance remain pending.
+Date: 2026-11-04. Branch: `codex/EV-017-local-rbac-audit`, based on EV-016 commit `3a3bc1c`. Status: local foundation implemented; **EV-017 remains in progress**. Production auth is disabled. Native PostgreSQL/PostGIS migration, drift/rollback and full integration CI passed on PR #14; live provider acceptance remains pending.
 
 ## Authorized scope
 
@@ -65,3 +65,7 @@ New/changed API files are the authorization service, permission guard, controlle
 No production deployment, real Clerk/web→API flow, native migration/drift/rollback, full database/browser/process regression or new hosted CI was verified for this task. No role lifecycle/provisioning UI, role-management API, audit viewer, grant/status mutation auditing or protected business mutation policy is claimed. Future feature work must add those controls when introducing the corresponding operations.
 
 EV-005, EV-016 and EV-017 stay in progress; completed progress remains **16/87**. No permission is granted to later dependency-blocked tasks. Keep `AUTH_MODE=disabled` for production. Rollback must preserve real audit data; the destructive down migration is for disposable development verification only.
+
+## Hosted verification follow-up
+
+[PR #14 CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41839062086) passed at exact head `9bdfc821f9274fb78492310c38e75ea0befda0e4`: native PostgreSQL migration deploy/no-op/drift/rollback/reapply, 263 unit, 86 integration (29 DB plus 57 API/queue), 16 process and 216 browser checks, with four expected skips. This resolves the native database verification pending in the historical local-check notes above. Production auth remains disabled and real Clerk acceptance remains pending, so EV-017 is not complete.

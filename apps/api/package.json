@@ -17,6 +17,8 @@
     "telemetry:smoke": "node --env-file-if-exists=.env dist/observability/smoke.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1161.0",
+    "@aws-sdk/s3-request-presigner": "3.1161.0",
     "@clerk/backend": "3.26.6",
     "@evone/contracts": "workspace:*",
     "@evone/db": "workspace:*",
@@ -27,6 +29,7 @@
     "bullmq": "6.5.4",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
+    "sharp": "0.35.5",
     "zod": "4.6.7"
   },
   "devDependencies": {
