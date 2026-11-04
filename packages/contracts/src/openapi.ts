@@ -79,6 +79,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         operationId: route.operationId,
         summary: route.summary,
         tags: [route.tag],
+        ...(route.bearerAuth ? { security: [{ clerkBearer: [] }] } : {}),
         ...(parameters.length > 0 ? { parameters } : {}),
         ...(route.body
           ? {
@@ -103,6 +104,11 @@ export function buildOpenApiDocument(): Record<string, unknown> {
     },
     servers: [{ url: API_BASE_PATH }],
     paths,
-    components: { schemas },
+    components: {
+      schemas,
+      securitySchemes: {
+        clerkBearer: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+      },
+    },
   };
 }

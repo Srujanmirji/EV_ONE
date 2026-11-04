@@ -8,6 +8,8 @@ describe("loadConfig", () => {
   it("applies safe local defaults", () => {
     expect(loadConfig({ REDIS_URL, DATABASE_URL })).toEqual({
       NODE_ENV: "development",
+      auth: { mode: "disabled" },
+      media: { mode: "disabled" },
       API_HOST: "127.0.0.1",
       API_PORT: 4000,
       API_READINESS_TIMEOUT_MS: 2000,

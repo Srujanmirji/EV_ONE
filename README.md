@@ -93,3 +93,11 @@ External telemetry stays disabled while `SENTRY_DSN` is absent. When an approved
 ## Authentication development spike (EV-005, in progress)
 
 Clerk was selected for a local development spike. An isolated `/auth-spike` scaffold and token probe are disabled outside development and require explicit opt-in; missing instance configuration shows an honest unavailable state without provider requests. Local tests exercise the actual SDK with ephemeral JWT/JWKS fixtures and mocked session transitions. Real sign-in/cookies/logout remain unverified because no development instance is available. See `PROJECT_SETUP.md` and `04_Delivery/26_EV-005_auth_decision.md`; production authentication and RBAC remain EV-016/017.
+
+
+EV-016 now adds a local-only API bearer guard and protected status probe under an explicit owner-approved prerequisite exception. It defaults off and refuses production enablement; public endpoints remain public. Neither EV-005 nor EV-016 is complete until live provider acceptance is verified. See `04_Delivery/27_EV-016_local_auth_evidence.md`.
+
+
+EV-017 adds a local scoped-permission and decision-audit foundation under a separate owner-approved exception. Database grants enforce own-account/exact-dealer scope, and audit storage must succeed before an allow response. Production auth remains disabled; native database/full CI passed on PR #14, while live acceptance remains pending, so progress stays **16/87**. See `04_Delivery/28_EV-017_local_rbac_evidence.md`.
+
+EV-020 adds a local-only private media foundation: owner-authorized signed uploads, bounded image validation, sanitized WebP output and temporary private reads. No R2 bucket exists yet; production media/auth remain disabled and completion awaits native CI and live provider evidence. See `04_Delivery/29_EV-020_local_media_evidence.md`.

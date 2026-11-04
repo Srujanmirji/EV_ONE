@@ -1,6 +1,6 @@
 # EV-005 — Authentication decision and spike plan
 
-Date: 2026-11-04. Branch: `codex/EV-005-auth-decision`. Status: owner selected Clerk for a development spike and authorized local implementation/testing with no instance. Runnable local spike implemented; real sign-in evidence pending. No production auth guards or RBAC.
+Date: 2026-11-04. Branch: `codex/EV-005-auth-decision`. Status: owner selected Clerk for a development spike and authorized local implementation/testing with no instance. Runnable local spike implemented; real sign-in evidence pending. [PR #11](https://github.com/Srujanmirji/EV_ONE/pull/11), commit `b1e6a47`, passed [PR CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41772247625) and [push CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41772223687): 201 unit, 63 integration, 13 process and 216 browser checks (four expected skips). No production auth guards or RBAC.
 
 ## Recorded development decision
 
@@ -71,6 +71,6 @@ The temporary browser config inherited the normal four projects, two workers and
 
 Read-only security/integration review approved the boundaries. TypeScript review found the date bypass and React review found stale-session/busy-label issues; fixes and regressions were reviewed and approved. Source-level production auth behaviour remains unchanged outside the isolated routes. No broader decorative redesign or extra theme was introduced.
 
-Remaining: no live application, real sign-in/delivery/cookie/logout/CSRF/provider-UI verification, new hosted CI or deployment verification. Production guard/RBAC and database migrations are out of scope. Keep EV-005 in progress and total completed tasks at 16/87. Setup and pending acceptance are in `PROJECT_SETUP.md`.
+Remaining: no live application, real sign-in/delivery/cookie/logout/CSRF/provider-UI verification, deployment verification. Production guard/RBAC and database migrations are out of scope. Keep EV-005 in progress and total completed tasks at 16/87. Setup and pending acceptance are in `PROJECT_SETUP.md`.
 
 Next.js `dev` generated `apps/web/AGENTS.md`; its maintained instruction block is retained, and the bundled route-handler, notFound and Server/Client Component guidance was consulted.

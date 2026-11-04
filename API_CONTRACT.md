@@ -11,7 +11,15 @@
 - `X-Request-ID` returned for troubleshooting; API logs redact PII.
 - `429` includes `Retry-After`; `401` unauthenticated, `403` forbidden, `404` not found/visibility safe, `409` version conflict, `422` domain validation.
 
-### Response envelopes
+#### Implemented local authentication boundary (EV-016, in progress)
+
+`GET /auth/session` returns `{ data: { authenticated: true }, meta: { requestId } }` only after a valid Clerk bearer token in the approved local mode. It does not expose the subject, profile, claims, roles or permissions. Missing/disabled/invalid authentication returns 401 `UNAUTHENTICATED`, `WWW-Authenticate: Bearer` and the normal envelope. Both success and failure use `Cache-Control: no-store`.
+
+OpenAPI declares an HTTP bearer/JWT security scheme for this route only; public catalogue, health and savings endpoints retain public access. Cookies/query parameters do not authenticate API requests; duplicate Authorization headers are rejected. The guard attaches only a frozen, verified subject/issuer actor to the server request for future resource authorization. No role is derived from caller claims.
+
+`AUTH_MODE` defaults to `disabled`. The sole enabled mode, `clerk-local`, requires development/test, a loopback API bind, a development Clerk issuer, exact audience/authorized party and a pinned RSA-2048 public key. Production configuration rejects this mode before listening. Key rotation is manual in this local stage; no immediate revocation promise or production JWKS flow is implemented. The protected status endpoint is not the future `/me` profile route. EV-005/EV-016 remain in progress; EV-017 owns scoped authorization.
+
+## Response envelopes
 ```json
 {
   "data": {"id": "uuid", "status": "PUBLISHED"},
@@ -218,3 +226,34 @@ CI enforces all of this:
 - The API end-to-end tests call the built server through `@evone/sdk`.
 
 Clients use `createEvoneClient({ origin })` from `@evone/sdk`. Types are compile-time only; responses are not re-validated at runtime.
+
+
+## Implemented local authorization probe (EV-017, in progress)
+
+`GET /auth/access/{scope}/{scopeId}` requires the existing local Clerk bearer guard followed by app-owned authorization. `scope` is `account` or `dealer`; `scopeId` is a UUID, normalized to canonical lowercase for comparisons. Successful responses contain only `{ data: { authorized: true }, meta: { requestId } }`, without identity/grants/audit data.
+
+| Condition | Result |
+|---|---|
+| Missing/invalid token or disabled auth | 401 UNAUTHENTICATED |
+| Invalid scope/UUID | 400 VALIDATION_ERROR after authentication, no decision audit |
+| Unknown/suspended user, absent/revoked/expired grant, cross-account/dealer scope | 403 FORBIDDEN, generic “Access denied”, committed denial audit |
+| Exact authorized scope | 200, committed allow audit |
+| DB/audit failure | Generic 500; no allow response |
+
+All outcomes inherit no-store from the authentication guard. Token roles, organization IDs and metadata never grant permissions. USER/ADMIN global grants authorize the actor's own account scope only; dealer roles require their exact database scope. These are scope-read probes, not permission to mutate arbitrary business resources. Future domain policies must resolve ownership from their own stored resources and audit actual mutations atomically.
+
+Production auth remains disabled under the approved local-only exception. No profile provisioning, role-management endpoint, dealer approval process or production rollout is implied. Live acceptance remains pending; native PostgreSQL integration passed in PR #14 CI.
+
+## Implemented private media (EV-020, local only, in progress)
+
+All routes are below `/api/v1`, bearer-only and no-store. Media defaults disabled; enabling requires a development/test loopback API and local Clerk configuration. An app-owned ACTIVE user with an active, unexpired GLOBAL USER or ADMIN grant can operate only its own media. ADMIN has no cross-owner bypass; dealer grants alone do not authorize personal media. Input never accepts filenames, object keys, owner IDs or remote URLs.
+
+| Route | Request | 200 data |
+|---|---|---|
+| POST `/media/presign` | `{ contentType, sizeBytes }`, JPEG/PNG/WebP, 1–5242880 bytes | `{ id, uploadUrl, expiresAt, headers: { "Content-Type" } }` |
+| POST `/media/{id}/complete` | `{}` after uploading bytes | `{ id, status: "READY" }` |
+| GET `/media/{id}/read-url` | No body | `{ readUrl, expiresInSeconds: 60 }` |
+
+Upload the exact declared bytes with the supplied Content-Type before the five-minute expiry. Content-Length and Content-Type are SigV4 signed; a browser supplies Content-Length itself. Real R2 enforcement and browser CORS await a bucket. URLs are bearer capabilities: do not log/cache/share them. Original objects are quarantine-only and never served through the read route. Completion checks actual length/type, image magic, bounded decoding (16 million pixels), non-animation, re-encodes to WebP at most 1200×1200 and strips metadata. This is not a malware-scanner claim. Reads sign only the committed sanitized object; retries of READY completion do not process a replacement original.
+
+Responses: 400 validation/invalid image/expired or unready asset; 401 authentication; 403 unknown/suspended actor or missing grant; 404 missing/cross-owner resource (same result); 503 disabled mode, storage or DB/audit failure. DB/audit failures release no capability URL. Validation failures before policy evaluation produce no decision audit. Existing signed read URLs remain usable for up to 60 seconds after revocation; upload URLs may recreate private quarantine objects until expiry. Bucket lifecycle cleanup and public-access controls require live acceptance.

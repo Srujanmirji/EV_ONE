@@ -8,6 +8,8 @@ import { z } from "zod";
 import { telemetryConfigSchema } from "./config.js";
 
 const events = z.enum([
+  "media.cleanup_failed",
+  "media.operation_failed",
   "process.uncaught_exception",
   "process.unhandled_rejection",
   "api.started",
@@ -53,6 +55,16 @@ const fieldsSchema = z.object({
         "REDIS_URL",
         "API_READINESS_TIMEOUT_MS",
         "SENTRY_DSN",
+        "MEDIA_MODE",
+        "MEDIA_ENDPOINT",
+        "MEDIA_BUCKET",
+        "MEDIA_ACCESS_KEY_ID",
+        "MEDIA_SECRET_ACCESS_KEY",
+        "AUTH_MODE",
+        "AUTH_ISSUER",
+        "AUTH_AUDIENCE",
+        "AUTH_AUTHORIZED_PARTY",
+        "AUTH_JWT_KEY",
       ]),
     )
     .optional(),

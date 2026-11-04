@@ -98,3 +98,11 @@ DB forward-compatible migration → API/worker → web/admin → feature flag �
 
 ## Scaling and cost levers
 Cache public read-heavy catalogue metadata at edge; images use CDN. Use provider quotas and budgets/alerts for maps, R2 egress and SMS. Keep DB search until measured traffic proves need for search service. Avoid unnecessary GPU/AI costs.
+
+### EV-020 local media setup
+
+`MEDIA_MODE=disabled` is the default. `r2-local` requires development/test, a loopback API bind, `AUTH_MODE=clerk-local` and all five media environment values documented in `apps/api/.env.example`. The endpoint is restricted to the account R2 HTTPS origin or a local HTTP fixture origin. Credentials must remain in ignored local environment files; never include signed URLs in logs or evidence. No bucket has been provisioned.
+
+Use a private development bucket with public/custom-domain access disabled. Before live acceptance, verify bucket-scoped credentials, CORS permitting the exact local browser origin/PUT Content-Type, signed length/type enforcement, expiry and denial of anonymous/direct reads. Add quarantine expiry lifecycle and a reviewed orphan-object cleanup policy. Listing/gallery attachment and publishing remain separate tasks. `test/media-fixture.ts` supplies disposable in-memory objects for automated tests; it does not validate R2 signatures or cloud ACLs.
+
+The local flow is presign → PUT exact bytes with returned headers → complete with `{}` → request a temporary read URL. An ACTIVE synthetic app user/global USER grant must be provisioned only in a disposable development database; there is no public provisioning endpoint. All originals stay private, completion decodes/re-encodes supported images and read URLs target only the committed WebP key. Production auth/media remain disabled.

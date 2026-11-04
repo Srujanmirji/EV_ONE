@@ -65,6 +65,32 @@ describe("privacy at log and transport boundaries", () => {
     expect(safeFields({ route: "/path?token=secret" })).toEqual({});
   });
 
+  it("retains auth configuration names while excluding values", () => {
+    expect(
+      safeFields({
+        configKeys: [
+          "AUTH_MODE",
+          "AUTH_ISSUER",
+          "AUTH_AUDIENCE",
+          "AUTH_AUTHORIZED_PARTY",
+          "AUTH_JWT_KEY",
+        ],
+        AUTH_JWT_KEY: "synthetic-do-not-log",
+      }),
+    ).toEqual({
+      configKeys: [
+        "AUTH_MODE",
+        "AUTH_ISSUER",
+        "AUTH_AUDIENCE",
+        "AUTH_AUTHORIZED_PARTY",
+        "AUTH_JWT_KEY",
+      ],
+    });
+    expect(
+      safeFields({ configKeys: ["AUTH_JWT_KEY=synthetic-do-not-log"] }),
+    ).toEqual({});
+  });
+
   it("writes one JSON record without payload fields", () => {
     const out = vi.spyOn(console, "log").mockImplementation(() => {});
     logEvent("info", "http.completed", { requestId, status: 200 });

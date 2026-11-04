@@ -1,3 +1,11 @@
+import {
+  MediaUploadRequest,
+  MediaUploadResponse,
+  MediaCompleteRequest,
+  MediaCompleteResponse,
+  MediaReadResponse,
+  MediaPathParams,
+} from "./media.js";
 import type { z } from "zod";
 import {
   BrandListResponse,
@@ -10,6 +18,11 @@ import {
   VariantDetailResponse,
   VariantPathParams,
 } from "./catalogue.js";
+import {
+  AccessPathParams,
+  AccessResponse,
+  SessionResponse,
+} from "./identity.js";
 import { SavingsRequest, SavingsResponse } from "./savings.js";
 import { ErrorEnvelope } from "./common.js";
 import { LiveResponse, ReadinessResponse } from "./health.js";
@@ -32,6 +45,7 @@ export interface RouteContract {
   params?: z.ZodObject;
   /** Validated JSON request body. */
   body?: z.ZodObject;
+  bearerAuth?: true;
   responses: Record<number, RouteResponse>;
 }
 
@@ -49,6 +63,99 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  ...[
+    {
+      operationId: "presignMediaUpload",
+      method: "post" as const,
+      path: "/media/presign",
+      body: MediaUploadRequest,
+      schema: MediaUploadResponse,
+    },
+    {
+      operationId: "completeMediaUpload",
+      method: "post" as const,
+      path: "/media/{id}/complete",
+      body: MediaCompleteRequest,
+      params: MediaPathParams,
+      schema: MediaCompleteResponse,
+    },
+    {
+      operationId: "getMediaReadUrl",
+      method: "get" as const,
+      path: "/media/{id}/read-url",
+      params: MediaPathParams,
+      schema: MediaReadResponse,
+    },
+  ].map(({ schema, ...route }): RouteContract => {
+    const responses: Record<number, RouteResponse> = {
+      200: { description: "Private media operation succeeded.", schema },
+      400: badRequest,
+      401: { description: "Authentication required.", schema: ErrorEnvelope },
+      403: {
+        description: "Active personal upload grant required.",
+        schema: ErrorEnvelope,
+      },
+      503: {
+        description: "Media disabled or dependency unavailable.",
+        schema: ErrorEnvelope,
+      },
+    };
+    if (route.params) responses[404] = notFound;
+    return {
+      ...route,
+      tag: "media",
+      summary: "Local-only private media; production disabled.",
+      bearerAuth: true,
+      responses,
+    };
+  }),
+
+  {
+    operationId: "checkResourceAccess",
+    method: "get",
+    path: "/auth/access/{scope}/{scopeId}",
+    tag: "identity",
+    summary:
+      "Local-only scoped authorization probe; no business permissions are granted.",
+    params: AccessPathParams,
+    bearerAuth: true,
+    responses: {
+      200: {
+        description: "Authorized for this exact scope.",
+        schema: AccessResponse,
+      },
+      400: badRequest,
+      401: {
+        description: "Missing or invalid authentication.",
+        schema: ErrorEnvelope,
+      },
+      403: {
+        description:
+          "Unknown/suspended actor, missing grant or scope mismatch.",
+        schema: ErrorEnvelope,
+      },
+    },
+  },
+  {
+    operationId: "getAuthSession",
+    method: "get",
+    path: "/auth/session",
+    tag: "identity",
+    summary:
+      "Local-only authenticated session probe; production auth remains disabled.",
+    bearerAuth: true,
+    responses: {
+      200: {
+        description: "Bearer verified; no profile or permissions granted.",
+        schema: SessionResponse,
+      },
+      401: {
+        description:
+          "Authentication disabled, missing or invalid bearer token.",
+        schema: ErrorEnvelope,
+      },
+    },
+  },
   {
     operationId: "calculateEvSavings",
     method: "post",

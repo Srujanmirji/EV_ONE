@@ -19,7 +19,7 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Depends: `-` · **Done when:** Desktop/mobile homepage and core screens signed off.
 - [~] **EV-005** · P0 · S · **Agree authentication vendor and implementation model**
   Depends: `-` · **Done when:** JWT verification and sign-in flows spike completed.
-  Owner selected Clerk for the development spike and authorized local implementation/testing with no instance. Isolated dev-only SDK sign-in scaffold and pinned-key token probe implemented; local JWT/JWKS, negative/configuration, session-change and UI tests pass. **Remain in progress until real development sign-in/cookies/logout and actual claims are verified.** No production guards/RBAC added. [Decision packet](04_Delivery/26_EV-005_auth_decision.md).
+  Owner selected Clerk for the development spike and authorized local implementation/testing with no instance. Isolated dev-only SDK sign-in scaffold and pinned-key token probe implemented; local JWT/JWKS, negative/configuration, session-change and UI tests pass. [Hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41772247625): 201 unit, 63 integration, 13 process and 216 browser checks (four expected skips). **Remain in progress until real development sign-in/cookies/logout and actual claims are verified.** No production guards/RBAC added. [Decision packet](04_Delivery/26_EV-005_auth_decision.md).
 - [ ] **EV-006** · P0 · M · **Validate charging data provider and map terms**  
   Depends: `-` · **Done when:** Coverage, pricing, caching and attribution permitted in writing.
 - [ ] **EV-007** · P0 · M · **Get legal assessment of finance/insurance lead model**  
@@ -50,18 +50,21 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 - [x] **EV-015** · P0 · M · **Build global design tokens and components**
   Depends: `EV-011` · **Done when:** Tokens, buttons, inputs, cards, modals, empty/error states.
   `@evone/ui`: UI_UX.md tokens, Button, TextField/SelectField/Checkbox, Card, native-dialog Modal, EmptyState/ErrorState/Skeleton; shell migrated; `/ui-kit` reference (noindex). axe WCAG 2.2 AA clean on every page at four widths; two real a11y defects fixed; mutation-tested. Muted text kept at `#596170` because the spec's `#747B87` fails AA. Passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41672655002). [Evidence](04_Delivery/17_EV-015_ui_evidence.md).
-- [ ] **EV-016** · P0 · M · **Integrate managed auth with API**  
+- [~] **EV-016** · P0 · M · **Integrate managed auth with API**
   Depends: `EV-005,EV-012` · **Done when:** Expired/invalid JWT rejected server-side.
-- [ ] **EV-017** · P0 · M · **Implement scoped RBAC and audit middleware**  
+  **Owner-approved local-only prerequisite exception (2026-11-04):** implement/test while EV-005 live sign-in is pending; production auth stays disabled, neither task marked complete. Local Clerk guard and status-only `/auth/session` added with strict claims, bearer-only/no-store responses, public-route preservation and startup refusal for production/non-loopback enablement. [Hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41774522945): 245 unit, 65 integration, 16 process and 216 browser checks (four expected skips). Live provider acceptance remains pending. [Evidence](04_Delivery/27_EV-016_local_auth_evidence.md).
+- [~] **EV-017** · P0 · M · **Implement scoped RBAC and audit middleware**
   Depends: `EV-016` · **Done when:** Cross-account and cross-dealer access blocked in tests.
+  **Owner-approved local-only exception (2026-11-04):** proceed with scoped RBAC/audit while production auth stays disabled and live acceptance remains pending. Minimal identity/grant schema, transactional allow/deny audit, scope-read guard and typed endpoint implemented. [Hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41839062086): native PostgreSQL migration/drift/rollback, 263 unit, 86 integration, 16 process and 216 browser checks (four expected skips). Live provider acceptance remains pending, so this task stays in progress. [Evidence](04_Delivery/28_EV-017_local_rbac_evidence.md).
 - [x] **EV-018** · P0 · M · **Create contracts and SDK generation pipeline**
   Depends: `EV-012` · **Done when:** OpenAPI and TS SDK generated from validated schemas.
   `packages/contracts` (strict Zod → OpenAPI 3.1 `openapi.json`) and `packages/sdk` (generated types + `createEvoneClient`); `contract:check`, API route/schema contract test and SDK-driven API e2e all mutation-tested and passing locally and in [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41663040938). [Evidence](04_Delivery/13_EV-018_contracts_evidence.md).
 - [~] **EV-019** · P0 · S · **Set up Sentry, structured logging, request IDs**
   Depends: `EV-012` · **Done when:** PII redaction and test alert confirmed.
   Local implementation: JSON logs with an allowlist, correlated HTTP request IDs, optional privacy-filtered Sentry SDK reporting for API/worker errors, fatal-process capture and a smoke command. Local ingestion, rejection, network failure, cleanup and privacy tests pass. User confirmed no Sentry project exists and authorized local implementation/testing; **leave in progress until a hosted issue and alert receipt are confirmed**. [Evidence and remaining acceptance](04_Delivery/22_EV-019_observability_evidence.md).
-- [ ] **EV-020** · P0 · S · **Configure R2 uploads and media validation**  
+- [~] **EV-020** · P0 · S · **Configure R2 uploads and media validation**
   Depends: `EV-012` · **Done when:** Presigned uploads, type/size checks and access controls.
+  **Owner authorized local implementation/testing with no R2 bucket (2026-11-04).** Private presign/complete/read routes, active owner grants, bounded image decoding/re-encoding, transactional media/audit storage and generated SDK implemented. Production media/auth remain disabled. Local fixture checks pass; native PostgreSQL CI, real bucket privacy/signatures/CORS and live auth acceptance remain pending. No public publishing or malware-scan certification. [Evidence](04_Delivery/29_EV-020_local_media_evidence.md).
 
 ## Catalogue (6 tasks)
 
@@ -255,7 +258,7 @@ All relevant P0 tasks EV-001 through EV-078 must pass for release, subject to ex
 - Completed: **16 / 87** (18.4% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026, EV-048–EV-050. EV-014 passed hosted CI; EV-019 remains in progress and is not counted complete.
 - Foundation: **8 / 12**; catalogue: **5 / 6**; savings: **3 / 3**; all other phases: **0 complete**.
 - Remaining: **71 tasks**. Task count is not an estimate of remaining effort.
-- In progress: **EV-005** (Clerk development spike selected and locally tested; real provider sign-in acceptance pending) and **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). Next prerequisite: finish **EV-005** live development-instance acceptance, then EV-016. Other engineering paths require unresolved auth/RBAC or licensing/legal prerequisites; no provider integration is authorized by completing the teaser. EV-020 access-control acceptance needs auth/RBAC (EV-016/EV-017), so it is not ready for completion. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
+- In progress: **EV-005** (Clerk development spike selected and locally tested; real provider sign-in acceptance pending) and **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). **EV-016** is also in progress under the owner-approved local-only exception; production enablement and real-provider acceptance remain pending for both. **EV-017** is also in progress under its separately approved local-only exception; Native PostgreSQL CI passed; live acceptance remains pending. **EV-020** is in progress under the owner-authorized local-only implementation/testing with no bucket. No exception is granted to other later tasks. Other engineering paths require unresolved auth/RBAC or licensing/legal prerequisites; no provider integration is authorized by completing the teaser. EV-020 access-control acceptance needs auth/RBAC (EV-016/EV-017), so it is not ready for completion. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
 - Discovery EV-001–EV-008 remains open; EV-004 was not completed by the scaffold exception.
 
 ## When something changes

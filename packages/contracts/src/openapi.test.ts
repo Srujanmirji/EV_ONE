@@ -53,6 +53,45 @@ describe("OpenAPI document", () => {
     });
   });
 
+  it("requires bearer security only on the protected identity route", () => {
+    const generated = buildOpenApiDocument() as {
+      paths: Record<string, Record<string, { security?: unknown }>>;
+      components: { securitySchemes: unknown };
+    };
+    expect(generated.paths["/auth/session"]?.get?.security).toEqual([
+      { clerkBearer: [] },
+    ]);
+    expect(generated.paths["/models"]?.get?.security).toBeUndefined();
+    expect(generated.components.securitySchemes).toEqual({
+      clerkBearer: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+    });
+  });
+
+  it("generates required account/dealer scope path parameters", () => {
+    const generated = buildOpenApiDocument() as {
+      paths: Record<string, { get?: { parameters?: unknown[] } }>;
+    };
+    expect(
+      generated.paths["/auth/access/{scope}/{scopeId}"]?.get?.parameters,
+    ).toEqual([
+      {
+        name: "scope",
+        in: "path",
+        required: true,
+        schema: { type: "string", enum: ["account", "dealer"] },
+      },
+      {
+        name: "scopeId",
+        in: "path",
+        required: true,
+        schema: expect.objectContaining({
+          type: "string",
+          format: "uuid",
+        }) as unknown,
+      },
+    ]);
+  });
+
   it("resolves every $ref to a component", () => {
     const refs = collectRefs(doc);
     expect(refs.length).toBeGreaterThan(0);

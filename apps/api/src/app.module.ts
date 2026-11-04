@@ -16,6 +16,8 @@ import type { DbClient } from "@evone/db";
 import { CalculatorsModule } from "./calculators/calculators.module.js";
 import { CatalogueModule } from "./catalogue/catalogue.module.js";
 import { DB_CLIENT } from "./database/database.token.js";
+import { MediaModule } from "./media/media.module.js";
+import { IdentityModule } from "./identity/identity.module.js";
 import { HealthModule } from "./health/health.module.js";
 import { READINESS_CHECKS, type ReadinessCheck } from "./health/readiness.js";
 
@@ -75,6 +77,8 @@ export class AppModule implements OnApplicationShutdown {
       imports: [
         CoreModule.register(options),
         HealthModule,
+        IdentityModule,
+        MediaModule,
         CatalogueModule,
         CalculatorsModule,
       ],
