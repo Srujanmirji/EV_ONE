@@ -1,6 +1,6 @@
 # EV-049 — Calculator UI evidence
 
-Date: 2026-11-04. Branch: `feat/EV-049-savings-calculator`, based on local EV-048 commit `890f25a`. Status: implemented and pushed in PR #8; initial hosted CI exposed a focus race, corrected in a follow-up PR (hosted verification pending).
+Date: 2026-11-04. Branch: `feat/EV-049-savings-calculator`, based on local EV-048 commit `890f25a`. Status: implemented and pushed in PR #8; initial hosted CI exposed a focus race, corrected in [PR #9](https://github.com/Srujanmirji/EV_ONE/pull/9), whose push and PR CI passed.
 
 ## Working flow
 
@@ -28,7 +28,7 @@ Reviews found no remaining integration, numeric, React or TypeScript issues. All
 
 ## Hosted CI follow-up
 
-Initial hosted run [41767127772](https://github.com/Srujanmirji/EV_ONE/actions/runs/41767127772) passed earlier gates but failed the mobile invalid-field focus assertion. Focus scheduled inside the async action could run before React re-enabled the pending fieldset. Focus now runs in an effect after the completed response commits. The existing calculator suite passed **48 checks** (`--repeat-each=3`, all four widths) against the built app/API after this fix; web lint, typecheck, 37 unit tests and production build also pass. React review found no issues. No assertion was weakened.
+Initial hosted run [41767127772](https://github.com/Srujanmirji/EV_ONE/actions/runs/41767127772) passed earlier gates but failed the mobile invalid-field focus assertion. Focus scheduled inside the async action could run before React re-enabled the pending fieldset. Focus now runs in an effect after the completed response commits. The existing calculator suite passed **48 checks** (`--repeat-each=3`, all four widths) against the built app/API after this fix; web lint, typecheck, 37 unit tests and production build also pass. React review found no issues. No assertion was weakened. [Hosted PR verification](https://github.com/Srujanmirji/EV_ONE/actions/runs/41768218016) passed: 153 unit, 63 integration, 13 process and 208 browser checks (four expected skips).
 
 ## Local browser fixture
 

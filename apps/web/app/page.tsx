@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonClasses } from "@evone/ui";
 import { sections } from "@/lib/site";
 
 export default function HomePage() {
@@ -53,6 +54,39 @@ export default function HomePage() {
           ))}
         </ul>
       </section>
+      <div className="mx-auto w-full max-w-content px-4 pb-14 sm:px-8 sm:pb-24">
+        <section
+          aria-labelledby="savings-heading"
+          className="grid gap-8 rounded-card bg-graphite p-6 text-paper sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16"
+        >
+          <div>
+            <h2
+              id="savings-heading"
+              className="max-w-2xl font-display text-3xl font-semibold text-balance sm:text-4xl"
+            >
+              What could your driving cost on electricity?
+            </h2>
+            <p className="mt-4 max-w-prose text-base text-titanium">
+              Compare petrol or diesel with electricity using your own driving,
+              efficiency and energy prices.
+            </p>
+            <p className="mt-3 max-w-prose text-sm text-titanium">
+              An estimate, not a guarantee. Excludes maintenance, depreciation,
+              charging losses and finance.
+            </p>
+          </div>
+          <Link
+            href="/calculator"
+            className={buttonClasses(
+              "secondary",
+              "lg",
+              "justify-self-start focus-visible:outline-paper",
+            )}
+          >
+            Estimate my energy costs
+          </Link>
+        </section>
+      </div>
     </main>
   );
 }

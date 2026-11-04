@@ -5,6 +5,8 @@
 ## UX-01 — Homepage `/`
 **Goal:** immediately understand EVONE and discover used EVs. **Order:** cinematic hero/search → seven simple navigation shortcuts → featured listings → new EVs → dark savings teaser → accessories → charging → journal → compact finance → final CTA/footer. **Primary CTA:** Explore Used EVs. **Mobile:** hero headline, relevant image crop, stacked search, horizontal shortcuts if necessary but all accessible. **States:** missing live inventory shows truthful “Coming soon” and city waitlist instead of fabricated cards.
 
+**EV-050 implementation:** one compact graphite savings teaser follows the current preview navigation. “Estimate my energy costs” opens `/calculator` without preset inputs. Copy limits the estimate to energy costs and lists exclusions; no amounts, guarantees or mockup claims. The complete cinematic homepage remains EV-062.
+
 ## UX-02 — Used listings `/used-evs`
 **Goal:** find relevant vehicles. Sticky header, title/results count, prominent filters (left desktop, sheet mobile), search/sort, three-column result cards, verified labels only from evidence, URL query persistence. **States:** loading skeleton, no-results with reset, server error with retry; location permission denied falls back to city selector.
 
