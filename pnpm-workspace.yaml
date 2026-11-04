@@ -20,6 +20,10 @@ minimumReleaseAgeExclude:
   - "@tailwindcss/postcss@4.3.4"
   - tailwindcss@4.3.4
   - bullmq@6.5.4
+  - "@clerk/backend@3.26.6"
+  - "@clerk/nextjs@7.9.24"
+  - "@clerk/react@6.18.5"
+  - "@clerk/shared@4.44.0"
 
 allowBuilds:
   msgpackr-extract: false

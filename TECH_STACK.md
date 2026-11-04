@@ -16,7 +16,7 @@
 | Cache/queue | Redis + BullMQ | retries, notifications and short-lived cache |
 | Initial search | PostgreSQL FTS/trigram | avoid early separate search cluster |
 | Object storage | Cloudflare R2 | signed media flows and image CDN |
-| Authentication | managed provider (candidate: Clerk; decision pending) | API JWT/JWKS verification; cost/regulatory review |
+| Authentication | Clerk selected for EV-005 development spike; production acceptance pending | API JWT/JWKS verification; cost/regulatory review |
 | Payments | Razorpay for first-party accessory checkout | server order/webhook verification, refunds |
 | Maps & chargers | Google Maps/Places or licensed CPO partner | availability optional, legal caching constraints |
 | Email | Resend or suitable India-compliant service | template/outbox, retry |
