@@ -140,6 +140,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/media/{id}/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only private media; production disabled. */
+    post: operations["completeMediaUpload"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/media/{id}/read-url": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only private media; production disabled. */
+    get: operations["getMediaReadUrl"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/media/presign": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only private media; production disabled. */
+    post: operations["presignMediaUpload"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/models": {
     parameters: {
       query?: never;
@@ -239,6 +290,45 @@ export interface components {
     LiveStatus: {
       /** @constant */
       status: "ok";
+    };
+    MediaCompleteRequest: Record<string, never>;
+    MediaCompleteResponse: {
+      data: {
+        /** Format: uuid */
+        id: string;
+        /** @constant */
+        status: "READY";
+      };
+      meta: components["schemas"]["Meta"];
+    };
+    MediaReadResponse: {
+      data: {
+        /** Format: uri */
+        readUrl: string;
+        /** @constant */
+        expiresInSeconds: 60;
+      };
+      meta: components["schemas"]["Meta"];
+    };
+    MediaUploadRequest: {
+      /** @enum {string} */
+      contentType: "image/jpeg" | "image/png" | "image/webp";
+      sizeBytes: number;
+    };
+    MediaUploadResponse: {
+      data: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uri */
+        uploadUrl: string;
+        /** Format: date-time */
+        expiresAt: string;
+        headers: {
+          /** @enum {string} */
+          "Content-Type": "image/jpeg" | "image/png" | "image/webp";
+        };
+      };
+      meta: components["schemas"]["Meta"];
     };
     Meta: {
       /** Format: uuid */
@@ -421,6 +511,16 @@ export type SchemaErrorCode = components["schemas"]["ErrorCode"];
 export type SchemaErrorEnvelope = components["schemas"]["ErrorEnvelope"];
 export type SchemaLiveResponse = components["schemas"]["LiveResponse"];
 export type SchemaLiveStatus = components["schemas"]["LiveStatus"];
+export type SchemaMediaCompleteRequest =
+  components["schemas"]["MediaCompleteRequest"];
+export type SchemaMediaCompleteResponse =
+  components["schemas"]["MediaCompleteResponse"];
+export type SchemaMediaReadResponse =
+  components["schemas"]["MediaReadResponse"];
+export type SchemaMediaUploadRequest =
+  components["schemas"]["MediaUploadRequest"];
+export type SchemaMediaUploadResponse =
+  components["schemas"]["MediaUploadResponse"];
 export type SchemaMeta = components["schemas"]["Meta"];
 export type SchemaModelAvailability =
   components["schemas"]["ModelAvailability"];
@@ -767,6 +867,231 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ReadinessResponse"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  completeMediaUpload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MediaCompleteRequest"];
+      };
+    };
+    responses: {
+      /** @description Private media operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MediaCompleteResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active personal upload grant required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Media disabled or dependency unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getMediaReadUrl: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Private media operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MediaReadResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active personal upload grant required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Media disabled or dependency unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  presignMediaUpload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MediaUploadRequest"];
+      };
+    };
+    responses: {
+      /** @description Private media operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MediaUploadResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active personal upload grant required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Media disabled or dependency unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
         };
       };
       /** @description Error in the contract error envelope. */
