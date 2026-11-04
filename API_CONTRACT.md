@@ -226,3 +226,20 @@ CI enforces all of this:
 - The API end-to-end tests call the built server through `@evone/sdk`.
 
 Clients use `createEvoneClient({ origin })` from `@evone/sdk`. Types are compile-time only; responses are not re-validated at runtime.
+
+
+## Implemented local authorization probe (EV-017, in progress)
+
+`GET /auth/access/{scope}/{scopeId}` requires the existing local Clerk bearer guard followed by app-owned authorization. `scope` is `account` or `dealer`; `scopeId` is a UUID, normalized to canonical lowercase for comparisons. Successful responses contain only `{ data: { authorized: true }, meta: { requestId } }`, without identity/grants/audit data.
+
+| Condition | Result |
+|---|---|
+| Missing/invalid token or disabled auth | 401 UNAUTHENTICATED |
+| Invalid scope/UUID | 400 VALIDATION_ERROR after authentication, no decision audit |
+| Unknown/suspended user, absent/revoked/expired grant, cross-account/dealer scope | 403 FORBIDDEN, generic “Access denied”, committed denial audit |
+| Exact authorized scope | 200, committed allow audit |
+| DB/audit failure | Generic 500; no allow response |
+
+All outcomes inherit no-store from the authentication guard. Token roles, organization IDs and metadata never grant permissions. USER/ADMIN global grants authorize the actor's own account scope only; dealer roles require their exact database scope. These are scope-read probes, not permission to mutate arbitrary business resources. Future domain policies must resolve ownership from their own stored resources and audit actual mutations atomically.
+
+Production auth remains disabled under the approved local-only exception. No profile provisioning, role-management endpoint, dealer approval process or production rollout is implied. Live acceptance and PostgreSQL integration verification remain pending.
