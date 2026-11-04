@@ -11,3 +11,4 @@ export {
   type RouteResponse,
 } from "./routes.js";
 export { schemaRegistry } from "./registry.js";
+export * from "./media.js";

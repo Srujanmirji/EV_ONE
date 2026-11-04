@@ -176,6 +176,9 @@ enum AccessScope {
 }
 
 enum AuditAction {
+  MEDIA_UPLOAD
+  MEDIA_COMPLETE
+  MEDIA_READ
   ACCESS_CHECK
 }
 
@@ -193,6 +196,7 @@ model User {
   updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   roles          RoleAssignment[]
   auditEvents    AuditEvent[]
+  mediaAssets    MediaAsset[]
 
   @@unique([authIssuer, authProviderId])
   @@map("users")
@@ -221,6 +225,7 @@ model AuditEvent {
   actorUserId String?      @map("actor_user_id") @db.Uuid
   scope       AccessScope
   scopeId     String       @map("scope_id") @db.Uuid
+  resourceId  String?      @map("resource_id") @db.Uuid
   action      AuditAction  @default(ACCESS_CHECK)
   outcome     AuditOutcome
   requestId   String       @map("request_id") @db.Uuid
@@ -229,4 +234,27 @@ model AuditEvent {
 
   @@index([actorUserId, createdAt])
   @@map("audit_events")
+}
+
+// Private media only. Public/listing attachment policy belongs to EV-028.
+enum MediaStatus {
+  PENDING
+  READY
+  REJECTED
+}
+
+model MediaAsset {
+  id          String      @id @default(uuid()) @db.Uuid
+  ownerId     String      @map("owner_id") @db.Uuid
+  contentType String      @map("content_type") @db.VarChar(32)
+  sizeBytes   Int         @map("size_bytes")
+  objectKey   String?     @map("object_key") @db.VarChar(160)
+  status      MediaStatus @default(PENDING)
+  expiresAt   DateTime    @map("expires_at") @db.Timestamptz(6)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+
+  @@index([ownerId, status])
+  @@map("media_assets")
 }

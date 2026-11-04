@@ -1,3 +1,4 @@
+import { mediaEnvSchema, type MediaConfig } from "../media/config.js";
 import { z } from "zod";
 import { authEnvSchema, type AuthConfig } from "../identity/config.js";
 import { sentryDsn } from "../observability/config.js";
@@ -26,7 +27,10 @@ export const envSchema = z.object({
     .default(2000),
 });
 
-export type ApiConfig = z.infer<typeof envSchema> & { auth: AuthConfig };
+export type ApiConfig = z.infer<typeof envSchema> & {
+  auth: AuthConfig;
+  media: MediaConfig;
+};
 
 /**
  * Raised when startup configuration is invalid. The message names the
@@ -53,11 +57,18 @@ export function loadConfig(env: NodeJS.ProcessEnv): ApiConfig {
     NODE_ENV: env.NODE_ENV ?? "development",
     API_HOST: env.API_HOST ?? "127.0.0.1",
   });
-  if (result.success && auth.success)
-    return { ...result.data, auth: auth.data };
+  const media = mediaEnvSchema.safeParse({
+    ...env,
+    MEDIA_MODE: env.MEDIA_MODE ?? "disabled",
+    NODE_ENV: env.NODE_ENV ?? "development",
+    API_HOST: env.API_HOST ?? "127.0.0.1",
+  });
+  if (result.success && auth.success && media.success)
+    return { ...result.data, auth: auth.data, media: media.data };
   const issues = [
     ...(result.error?.issues ?? []),
     ...(auth.error?.issues ?? []),
+    ...(media.error?.issues ?? []),
   ];
   const keys = [...new Set(issues.map((i) => String(i.path[0])))];
   const details = issues.map(
