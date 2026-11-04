@@ -53,6 +53,11 @@ const fieldsSchema = z.object({
         "REDIS_URL",
         "API_READINESS_TIMEOUT_MS",
         "SENTRY_DSN",
+        "AUTH_MODE",
+        "AUTH_ISSUER",
+        "AUTH_AUDIENCE",
+        "AUTH_AUTHORIZED_PARTY",
+        "AUTH_JWT_KEY",
       ]),
     )
     .optional(),

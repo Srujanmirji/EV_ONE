@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import { createEvoneClient } from "@evone/sdk";
+import { authEnv } from "./auth-fixture.js";
 import { afterEach, describe, expect, it } from "vitest";
 
 const entry = fileURLToPath(new URL("../dist/main.js", import.meta.url));
@@ -72,6 +73,35 @@ afterEach(() => {
 });
 
 describe("built API process", () => {
+  it.each([
+    { NODE_ENV: "production", API_HOST: "127.0.0.1" },
+    { NODE_ENV: "test", API_HOST: "0.0.0.0" },
+    {
+      NODE_ENV: "test",
+      API_HOST: "127.0.0.1",
+      AUTH_JWT_KEY: "synthetic-not-a-public-key",
+    },
+  ])(
+    "refuses unsafe local Clerk startup configuration %j",
+    async (override) => {
+      const { proc, output } = run({
+        ...authEnv,
+        DATABASE_URL: unreachableDatabase,
+        ...override,
+      });
+      child = proc;
+      const [code] = (await once(proc, "exit")) as [number | null];
+      expect(code).toBe(1);
+      expect(output().stdout).not.toContain('"event":"api.started"');
+      expect(output().stderr).toContain("api.start_failed");
+      if ("AUTH_JWT_KEY" in override) {
+        expect(output().stderr).toContain("AUTH_JWT_KEY");
+        expect(output().stderr).not.toContain(override.AUTH_JWT_KEY);
+      }
+      expect(JSON.stringify(output())).not.toContain(authEnv.AUTH_JWT_KEY);
+    },
+  );
+
   it("starts, answers liveness and readiness, and shuts down gracefully on SIGTERM", async () => {
     const port = await freePort();
     const { proc, output } = run({
