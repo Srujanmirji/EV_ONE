@@ -9,6 +9,7 @@ import {
   cleanup,
   databaseUrl,
   db,
+  run,
   model,
   publishedBrand,
   variant,
@@ -46,11 +47,39 @@ beforeAll(async () => {
   await app.listen(0, "127.0.0.1");
   base = `${await app.getUrl()}/${API_PREFIX}`;
 
+  const authorizationUser = await db.user.create({
+    data: {
+      authIssuer: authEnv.AUTH_ISSUER,
+      authProviderId: `contract_${run}`,
+      status: "ACTIVE",
+    },
+  });
+  await db.roleAssignment.create({
+    data: { userId: authorizationUser.id, role: "USER", scopeType: "GLOBAL" },
+  });
+  const authorizationHeader = {
+    Authorization: `Bearer ${authToken({ sub: authorizationUser.authProviderId, exp: Math.floor(Date.now() / 1000) + 3600 })}`,
+  };
   const brand = await publishedBrand();
   const m = await model(brand.id);
   const v = await variant(m.id);
   const v2 = await variant(m.id);
   requests = {
+    checkResourceAccess: {
+      200: {
+        path: `/auth/access/account/${authorizationUser.id}`,
+        headers: authorizationHeader,
+      },
+      400: {
+        path: "/auth/access/account/not-a-uuid",
+        headers: authorizationHeader,
+      },
+      401: `/auth/access/account/${authorizationUser.id}`,
+      403: {
+        path: "/auth/access/account/7f088e6e-32fd-4086-af08-0aef72dabef2",
+        headers: authorizationHeader,
+      },
+    },
     getAuthSession: {
       200: {
         path: "/auth/session",

@@ -74,6 +74,15 @@ Revisit trigger: Real development-instance evidence, provider compatibility/cost
 Date: 2026-11-04 | Status: owner approved
 Context: EV-005 has a verified local Clerk spike but no development instance. The owner explicitly selected “Proceed with local-only EV-016 exception”.
 Decision: Implement and test the API bearer guard, strict token validation and a protected status-only endpoint locally before EV-005 live acceptance. Production refuses enabled local auth, and neither EV-005 nor EV-016 is marked complete without remaining acceptance evidence.
-Consequences: No accounts, role assignments, DB writes, global auth middleware, new service or production auth enablement. EV-017/RBAC is outside this exception. Live sign-in/claims, revocation/rotation and web/API flow remain unverified.
+Consequences: No accounts, role assignments, DB writes, global auth middleware, new service or production auth enablement. EV-017/RBAC is outside this EV-016 exception; a separate EV-017 exception is recorded below. Live sign-in/claims, revocation/rotation and web/API flow remain unverified.
 Evidence: `04_Delivery/27_EV-016_local_auth_evidence.md`.
 Revisit trigger: Real development instance and verified provider/web/API flow, or a proposed production rollout.
+
+
+### EV-017 — Local-only RBAC/audit prerequisite exception
+Date: 2026-11-04 | Status: owner approved
+Context: The owner explicitly instructed: “Proceed with local-only EV-017, keep production auth disabled and live acceptance pending”. EV-005 and EV-016 still await real Clerk acceptance.
+Decision: Add app-owned identity mappings and scoped grants, an audited scope-read probe and local/database integration tests. Keep production auth disabled and task completion pending unverified acceptance. No provisioning API, grant-management API, production rollout or business-domain mutation policy is included.
+Consequences: New identity/grant/audit tables and Prisma's partialIndexes preview feature (supported by pinned 7.10.1) are required. All new tables start empty; no existing catalogue data is backfilled or changed. Dealer scopes are opaque grant UUIDs, not approved dealer profiles or the EV-066 membership lifecycle. Normal audit DML/TRUNCATE is blocked; database owners remain an operational trust boundary.
+Evidence: `04_Delivery/28_EV-017_local_rbac_evidence.md`. Real PostgreSQL migration/drift/rollback and live-provider acceptance remain pending. This exception does not authorize later tasks.
+Revisit trigger: Passing database CI, real auth acceptance, or introduction of protected business mutations/production deployment.
