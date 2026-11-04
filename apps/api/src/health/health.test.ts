@@ -22,6 +22,7 @@ async function start(
 ) {
   app = await createApp({
     config: loadConfig({
+      REDIS_URL: "redis://127.0.0.1:6379",
       NODE_ENV: "test",
       API_READINESS_TIMEOUT_MS: timeoutMs,
       DATABASE_URL: "postgresql://unused@127.0.0.1:1/unused",

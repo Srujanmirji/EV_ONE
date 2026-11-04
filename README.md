@@ -1,8 +1,8 @@
 # EVONE — Startup & Engineering Blueprint
 
-**Status:** EV-009 foundation verified locally and in CI · **Date:** 2026-11-03 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
+**Status:** 13/87 tasks complete; EV-014 locally verified, hosted CI pending · **Date:** 2026-11-04 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
 
-> **Purpose:** source of truth for a web-first electric-vehicle ecosystem. The initial workspace now contains a minimal web preview, not completed business features or a legal/compliance certification.
+> **Purpose:** source of truth for a web-first electric-vehicle ecosystem. The workspace contains the web shell, read-only EV catalogue/comparison, API/database/contracts and a foundation queue worker. Marketplace, checkout and other business journeys remain pending.
 
 ## Run the foundation
 
@@ -13,7 +13,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open `http://127.0.0.1:3000` for the web preview; the API runs at `http://127.0.0.1:4000/api/v1` (`/health/live`, `/health/ready`). The API needs the local PostGIS database (`pnpm db:up`, then `pnpm db:migrate:deploy`; see `PROJECT_SETUP.md`). No provider credentials are required. For production-mode local verification:
+Open `http://127.0.0.1:3000` for the web preview; the API runs at `http://127.0.0.1:4000/api/v1` (`/health/live`, `/health/ready`). The API needs local Redis (`REDIS_URL`) and the PostGIS database (`pnpm db:up`, then `pnpm db:migrate:deploy`; see `PROJECT_SETUP.md`). No provider credentials are required. For production-mode local verification:
 
 ```bash
 pnpm format:check
@@ -27,9 +27,9 @@ pnpm test:e2e
 pnpm start
 ```
 
-`pnpm test:unit` runs Vitest (`*.test.ts` beside the code). `pnpm test:e2e` builds first through Turbo, then starts the built API on a free port (startup, readiness, graceful SIGTERM, invalid-config refusal) and an isolated web production server on port 3100 (home, every section page, header navigation, the mobile menu, robots.txt/sitemap.xml and 404 recovery at four viewport widths in full Chromium). `pnpm test` runs both; `pnpm test:integration` runs the database and API suites against a migrated database. `pnpm verify:gates` writes deliberately broken probe files and fails if typecheck, format, lint or unit tests accept them. CI also installs Chromium's Linux system dependencies. The suite fails if port 3100 is already occupied.
+`pnpm test:unit` runs Vitest (`*.test.ts` beside the code). `pnpm test:e2e` builds first through Turbo, then starts the built API on a free port (startup, readiness, graceful SIGTERM, invalid-config refusal) and an isolated web production server on port 3100 (home, every section page, header navigation, the mobile menu, robots.txt/sitemap.xml and 404 recovery at four viewport widths in full Chromium). `pnpm test` runs both; `pnpm test:integration` runs database/API tests against a migrated database plus queue tests against Redis. Both `DATABASE_URL` and `REDIS_URL` must be exported for integration/E2E tests; see `PROJECT_SETUP.md`. `pnpm verify:gates` writes deliberately broken probe files and fails if typecheck, format, lint or unit tests accept them. CI also installs Chromium's Linux system dependencies. The suite fails if port 3100 is already occupied.
 
-Implemented workspace members: `apps/web`, `apps/api`, `packages/db` (Prisma + PostGIS migrations), `packages/contracts` (Zod schemas → OpenAPI 3.1), `packages/sdk` (generated typed client) and `packages/config`. The admin, mobile, worker, contracts, SDK and shared UI packages are introduced by their own tasks when used. Documentation stays at its existing paths. The original `MANIFEST_SHA256.txt` describes the supplied blueprint archive, not current edited files.
+Implemented workspace members: `apps/web`, `apps/api`, `packages/db` (Prisma + PostGIS migrations), `packages/contracts` (Zod schemas → OpenAPI 3.1), `packages/sdk` (generated typed client), `packages/ui` and `packages/config`. The worker is a separate NestJS process in `apps/api` using `pnpm --filter @evone/api worker:start` after build. Admin and mobile remain future tasks. Documentation stays at its existing paths. The original `MANIFEST_SHA256.txt` describes the supplied blueprint archive, not current edited files.
 
 ## Product promise
 EVONE helps Indian customers **buy and sell used EVs**, discover new EVs, shop compatible accessories, calculate EV savings, find charging stations, read EV news/reviews, and request loan/insurance quotations through approved partners.

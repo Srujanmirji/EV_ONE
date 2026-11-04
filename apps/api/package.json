@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "worker:dev": "node --env-file-if-exists=.env --watch --import @swc-node/register/esm-register src/worker.ts",
+    "worker:start": "node --env-file-if-exists=.env dist/worker.js"
   },
   "dependencies": {
     "@evone/contracts": "workspace:*",
@@ -19,6 +21,7 @@
     "@nestjs/common": "12.3.2",
     "@nestjs/core": "12.3.2",
     "@nestjs/platform-express": "12.3.2",
+    "bullmq": "6.5.4",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
     "zod": "4.6.7"
