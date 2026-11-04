@@ -142,6 +142,8 @@ Server returns `DRAFT`, not `PUBLISHED`. Submit and moderation are separate acti
   "data": {
     "iceMonthlyCostPaise": 666667,
     "evMonthlyCostPaise": 120000,
+    "iceAnnualCostPaise": 8000000,
+    "evAnnualCostPaise": 1440000,
     "monthlyEnergySavingsPaise": 546667,
     "annualEnergySavingsPaise": 6560000,
     "estimatedPaybackMonths": 37,
@@ -149,7 +151,14 @@ Server returns `DRAFT`, not `PUBLISHED`. Submit and moderation are separate acti
   }
 }
 ```
-`annualEnergySavingsPaise` rounds from exact internal arithmetic, not multiplied from already-rounded monthly display where possible; example is illustrative. The implementation must define and test rounding precision; annual savings must be calculated from unrounded monthly arithmetic and rounded once.
+**Implemented EV-048:** `POST /calculators/ev-savings` is public and stateless. It returns 200 in the normal `{ data, meta }` envelope, or 400 `VALIDATION_ERROR` with field errors. No auth, persistence, vehicle data or provider prices are needed. Request JSON is strict; numeric strings and unknown fields are rejected.
+
+Validation: `monthlyKm` 0–20,000; fuel ₹/L 1–500; ICE km/L 1–100; EV kWh/km 0.01–1; electricity ₹/kWh 0–100. Each supports at most six decimal places. Optional `purchasePriceDeltaPaise` is an integer from −1,000,000,000 to 1,000,000,000 (EV price minus ICE price). Bounds are estimate-input safeguards, not observed market prices. The electricity input is the user's blended tariff; tariff mixing/charging-loss inputs are not accepted by this endpoint.
+
+Arithmetic uses exact integer fractions from validated decimal inputs. Each money result is independently rounded once to nearest integer paise, with half-paise rounded away from zero. Annual costs/savings multiply exact monthly values by 12 before rounding, never rounded monthly displays. Consequently, separately rounded cost differences may differ from rounded exact savings by a paise.
+
+Simple payback uses unrounded positive monthly energy savings and ceiling to whole months. Zero premium returns 0 (no extra purchase cost to recover, not a promise of savings); negative or absent premium, nonpositive savings for a positive premium, or an unrepresentable month count returns `null`. Negative premiums mean the EV is cheaper up front. A payback above `Number.MAX_SAFE_INTEGER` months is unrepresentable, not capped. Maintenance, depreciation, charging losses and finance remain excluded. All examples are illustrative; no saving is guaranteed.
+
 
 ## Charging
 | Method | Path | Access | Purpose |

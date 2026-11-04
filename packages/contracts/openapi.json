@@ -99,6 +99,55 @@
         }
       }
     },
+    "/calculators/ev-savings": {
+      "post": {
+        "operationId": "calculateEvSavings",
+        "summary": "Energy-only savings estimate, exact arithmetic with final paise rounding.",
+        "tags": ["calculators"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Costs, savings and optional simple payback estimate.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters (VALIDATION_ERROR).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/compare": {
       "get": {
         "operationId": "compareVariants",
@@ -791,6 +840,149 @@
           }
         },
         "required": ["data", "meta"],
+        "additionalProperties": false
+      },
+      "SavingsRequest": {
+        "type": "object",
+        "properties": {
+          "monthlyKm": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 20000,
+            "multipleOf": 0.000001
+          },
+          "fuelPriceInrPerLitre": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 500,
+            "multipleOf": 0.000001
+          },
+          "iceKmPerLitre": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "multipleOf": 0.000001
+          },
+          "evKwhPerKm": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 1,
+            "multipleOf": 0.000001
+          },
+          "electricityInrPerKwh": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "multipleOf": 0.000001
+          },
+          "purchasePriceDeltaPaise": {
+            "type": "integer",
+            "minimum": -1000000000,
+            "maximum": 1000000000
+          }
+        },
+        "required": [
+          "monthlyKm",
+          "fuelPriceInrPerLitre",
+          "iceKmPerLitre",
+          "evKwhPerKm",
+          "electricityInrPerKwh"
+        ],
+        "additionalProperties": false
+      },
+      "SavingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SavingsResult"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
+        "additionalProperties": false
+      },
+      "SavingsResult": {
+        "type": "object",
+        "properties": {
+          "iceMonthlyCostPaise": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "evMonthlyCostPaise": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "iceAnnualCostPaise": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "evAnnualCostPaise": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "monthlyEnergySavingsPaise": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "annualEnergySavingsPaise": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "estimatedPaybackMonths": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exclusions": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string",
+                "const": "maintenance"
+              },
+              {
+                "type": "string",
+                "const": "depreciation"
+              },
+              {
+                "type": "string",
+                "const": "charging losses"
+              },
+              {
+                "type": "string",
+                "const": "finance"
+              }
+            ],
+            "items": false,
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "iceMonthlyCostPaise",
+          "evMonthlyCostPaise",
+          "iceAnnualCostPaise",
+          "evAnnualCostPaise",
+          "monthlyEnergySavingsPaise",
+          "annualEnergySavingsPaise",
+          "estimatedPaybackMonths",
+          "exclusions"
+        ],
         "additionalProperties": false
       },
       "SourceKind": {
