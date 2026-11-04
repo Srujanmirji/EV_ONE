@@ -10,6 +10,7 @@ import {
   VariantDetailResponse,
   VariantPathParams,
 } from "./catalogue.js";
+import { SessionResponse } from "./identity.js";
 import { SavingsRequest, SavingsResponse } from "./savings.js";
 import { ErrorEnvelope } from "./common.js";
 import { LiveResponse, ReadinessResponse } from "./health.js";
@@ -32,6 +33,7 @@ export interface RouteContract {
   params?: z.ZodObject;
   /** Validated JSON request body. */
   body?: z.ZodObject;
+  bearerAuth?: true;
   responses: Record<number, RouteResponse>;
 }
 
@@ -49,6 +51,26 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  {
+    operationId: "getAuthSession",
+    method: "get",
+    path: "/auth/session",
+    tag: "identity",
+    summary:
+      "Local-only authenticated session probe; production auth remains disabled.",
+    bearerAuth: true,
+    responses: {
+      200: {
+        description: "Bearer verified; no profile or permissions granted.",
+        schema: SessionResponse,
+      },
+      401: {
+        description:
+          "Authentication disabled, missing or invalid bearer token.",
+        schema: ErrorEnvelope,
+      },
+    },
+  },
   {
     operationId: "calculateEvSavings",
     method: "post",
