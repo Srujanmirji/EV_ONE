@@ -17,7 +17,8 @@ Tesla-level cinematic product hierarchy plus Apple-inspired **restrained** trans
 | Muted text | `#747B87` | secondary labels |
 | Glass light | `rgba(255,255,255,.18)` | **hero only** frosted search/nav |
 | Border light | `rgba(255,255,255,.35)` | dark hero glass border |
-| Border standard | `#E4E7EC` | list and form borders |
+| Border standard | `#E4E7EC` | decorative list/card borders |
+| Control border | `#747B87` | input/select boundaries (4.26:1 on white); never body text |
 
 Typography: `Manrope` headings, `Inter` body. Desktop max width 1280px, responsive grid 12 cols, 24px gutters; section spacing 96–128px desktop and 56–72px mobile. Buttons radius 999px; cards 16–20px. Glass blur 16–24px only where background has enough contrast. Strong keyboard focus rings; never disable contrast for beauty.
 
@@ -56,3 +57,5 @@ Meet WCAG 2.2 AA wherever feasible; keyboard support, 44×44px touch-target inte
 
 ## Stitch workflow
 Generate homepage, then approved used-vehicle listing/detail flow, then catalogue, commerce, calculators/charging, editorial/finance, account and dashboards. Use [`02_UI_UX/04_stitch_prompts.md`](02_UI_UX/04_stitch_prompts.md); attach `assets/approved_ui_reference.png` to every new Stitch project generation for consistency.
+
+EV-049 implements UX-13 using the established tokens/components. See `02_UI_UX/08_EV-049_calculator_direction.md` for inherited visual direction, responsive composition and accessibility decisions.

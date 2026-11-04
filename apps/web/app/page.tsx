@@ -32,8 +32,8 @@ export default function HomePage() {
           What EVONE will cover
         </h2>
         <p className="mt-3 max-w-prose text-secondary">
-          Each area is being built and opens when it is ready. Nothing below is
-          available to use yet.
+          Explore the EV catalogue and estimate energy costs today. Marketplace
+          and other ownership services are still being built.
         </p>
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {sections.map((section) => (

@@ -122,3 +122,11 @@ Development/demo stage may use fabricated EV listing entries **only if visibly t
 
 ## What's not included in this zip
 The complete runnable Next.js/NestJS application, API keys, licensed stock imagery, regulator approvals, partner agreements, and verified real inventory. This ZIP is the thorough handoff/specification and execution backlog for building that software.
+
+## EV-049 calculator
+
+Set `API_BASE_URL=http://127.0.0.1:4000` in the web environment and run the API/web as above. Open `/calculator`, enter values or use the labeled illustrative example, then Calculate estimate. The Server Action calls `POST /api/v1/calculators/ev-savings` through the generated SDK with a five-second timeout and validates the response. The API needs no data for this pure endpoint. Production API readiness still depends on its configured database/Redis services.
+
+The form's optional purchase premium is **rupees** with up to two decimals; it is validated and converted to integer paise server-side. Six-decimal precision applies to other inputs. No inputs/results are saved in browser storage, database or request logs. Errors preserve controlled field values. No tariff defaults, vehicle prices or guarantee of savings is implied. A single effective home/public electricity tariff is entered; no automatic tariff-mix calculation or charging-loss assumption is added.
+
+Run unit tests with `pnpm test:unit`; the normal CI/database setup runs new calculator browser tests with `pnpm --filter @evone/web exec playwright test tests/calculator.spec.ts`. They cover keyboard-only calculation, input errors, negative/zero results, loading, transport failure/retry, stale-result clearing and axe at four viewport widths. Evidence and local fixture details: `04_Delivery/24_EV-049_calculator_evidence.md`.
