@@ -8,7 +8,7 @@ generator client {
   output              = "../src/generated"
   moduleFormat        = "esm"
   importFileExtension = "js"
-  previewFeatures     = ["postgresqlExtensions"]
+  previewFeatures     = ["postgresqlExtensions", "partialIndexes"]
 }
 
 datasource db {
@@ -148,4 +148,85 @@ model SpecSource {
 
   @@index([variantId, fieldName])
   @@map("spec_sources")
+}
+
+// ── Identity and scoped authorization (EV-017, local-only) ────────────────
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AppRole {
+  USER
+  DEALER_STAFF
+  DEALER_OWNER
+  EDITOR
+  MODERATOR
+  ADMIN
+}
+
+enum RoleScope {
+  GLOBAL
+  DEALER
+}
+
+enum AccessScope {
+  ACCOUNT
+  DEALER
+}
+
+enum AuditAction {
+  ACCESS_CHECK
+}
+
+enum AuditOutcome {
+  ALLOWED
+  DENIED
+}
+
+model User {
+  id             String           @id @default(uuid()) @db.Uuid
+  authIssuer     String           @map("auth_issuer") @db.VarChar(512)
+  authProviderId String           @map("auth_provider_id") @db.VarChar(256)
+  status         UserStatus       @default(SUSPENDED)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  roles          RoleAssignment[]
+  auditEvents    AuditEvent[]
+
+  @@unique([authIssuer, authProviderId])
+  @@map("users")
+}
+
+model RoleAssignment {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  role      AppRole
+  scopeType RoleScope @map("scope_type")
+  scopeId   String?   @map("scope_id") @db.Uuid
+  active    Boolean   @default(true)
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, role], where: raw("scope_id IS NULL"), map: "role_assignments_global_key")
+  @@unique([userId, role, scopeId], where: raw("scope_id IS NOT NULL"), map: "role_assignments_dealer_key")
+  @@index([userId])
+  @@map("role_assignments")
+}
+
+model AuditEvent {
+  id          String       @id @default(uuid()) @db.Uuid
+  actorUserId String?      @map("actor_user_id") @db.Uuid
+  scope       AccessScope
+  scopeId     String       @map("scope_id") @db.Uuid
+  action      AuditAction  @default(ACCESS_CHECK)
+  outcome     AuditOutcome
+  requestId   String       @map("request_id") @db.Uuid
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  actor       User?        @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([actorUserId, createdAt])
+  @@map("audit_events")
 }

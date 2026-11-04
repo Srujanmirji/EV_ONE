@@ -1,6 +1,6 @@
 # EV-016 — Local API authentication evidence
 
-Date: 2026-11-04. Branch: `codex/EV-016-local-clerk-auth`, based on EV-005 commit `b1e6a47`. Status: local implementation verified; **EV-016 remains in progress**. New hosted CI, real Clerk integration and production rollout are unverified.
+Date: 2026-11-04. Branch: `codex/EV-016-local-clerk-auth`, based on EV-005 commit `b1e6a47`. Status: local implementation verified; **EV-016 remains in progress**. [PR #12](https://github.com/Srujanmirji/EV_ONE/pull/12), commit `3a3bc1c`, passed [PR CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41774522945) and [push CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41774499776): 245 unit, 65 integration, 16 process and 216 browser checks (four expected skips). Real Clerk integration and production rollout remain unverified.
 
 ## Approved scope and dependency exception
 
@@ -46,7 +46,7 @@ Read-only security/integration review found no defects. TypeScript review found 
 
 ## Remaining acceptance and rollback
 
-Docker and `psql` are unavailable on this host. The full migrated PostgreSQL/Redis integration/contract suite and unrelated process/browser suites were not rerun locally; CI must run them. No new hosted CI or deployment verification has occurred for EV-016.
+Docker and `psql` are unavailable on this host. The full migrated PostgreSQL/Redis integration/contract suite and unrelated process/browser suites were not rerun locally; CI must run them. Hosted CI passed after this local snapshot; deployment remains unverified.
 
 A real development instance, actual template claims/SDK sessions, web→API flow, cookie/CSRF behaviour, provider key rotation/revocation and production approval remain pending. EV-005 and EV-016 stay `[~]`; completed progress remains **16/87**. No EV-017 scoped access control is implemented or unlocked by this work.
 
