@@ -1,6 +1,6 @@
 # EV-048 — Exact EV energy savings evidence
 
-Date: 2026-11-04. Branch: `feat/EV-048-savings-engine`, based on EV-019 commit `50c2eb5`. Status: locally complete; hosted CI pending.
+Date: 2026-11-04. Branch: `feat/EV-048-savings-engine`, based on EV-019 commit `50c2eb5`. Status: locally verified; [hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41767123619).
 
 ## Acceptance
 
@@ -29,7 +29,7 @@ Independent reviews found no calculation, validation, contract or TypeScript def
 ## Scope and remaining risks
 
 - No UI changes; responsive/loading/form/error UI is EV-049. Existing `/calculator` remains a coming-soon page until that task.
-- Full database-backed contract/browser suites were not rerun locally because Docker/PostgreSQL are unavailable. New hosted CI has not run. POST status/schema behavior is covered locally through SDK→HTTP tests; CI includes the generic route registry/schema suite.
+- Full database-backed contract/browser suites were not rerun locally because Docker/PostgreSQL are unavailable. Hosted CI passed: 143 unit, 63 database/API/queue integration, 13 process and 192 browser checks (four expected skips). POST status/schema behavior is covered locally through SDK→HTTP tests; CI includes the generic route registry/schema suite.
 - The pure engine expects its typed inputs to have passed `SavingsRequest`; the controller enforces this boundary. No new dependencies or migrations.
 - No home/public split parameters, charging-loss factor, maintenance/TCO/EMI or live tariffs. One effective tariff follows the existing API plan; negative/zero premiums have explicit documented semantics. Extremely large precise paybacks return null rather than a rounded unsafe JSON integer.
 - EV-020 remains unstarted: authenticated media access acceptance needs EV-016/EV-017. No public upload endpoint or R2 integration was added.

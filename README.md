@@ -1,6 +1,6 @@
 # EVONE — Startup & Engineering Blueprint
 
-**Status:** 15/87 tasks complete; EV-014 passed CI; EV-019 live alert pending; EV-048/EV-049 locally verified · **Date:** 2026-11-04 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
+**Status:** 16/87 tasks complete; EV-048/EV-049 passed CI; EV-019 live alert pending; EV-050 passed CI · **Date:** 2026-11-04 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
 
 > **Purpose:** source of truth for a web-first electric-vehicle ecosystem. The workspace contains the web shell, read-only EV catalogue/comparison, API/database/contracts and a foundation queue worker. The exact savings API and `/calculator` customer flow are implemented. Marketplace, checkout and other business journeys remain pending.
 
@@ -87,4 +87,9 @@ API and worker logs are JSON with fixed event names and approved metadata only. 
 External telemetry stays disabled while `SENTRY_DSN` is absent. When an approved project is available, set its DSN in the API/worker environment and run `pnpm --filter @evone/api telemetry:smoke` after building. This sends one synthetic event and exits nonzero on rejected/network delivery; a live issue and alert receipt must still be verified before completing EV-019. Local tests use the real SDK against a loopback receiver. See `PROJECT_SETUP.md` and `04_Delivery/22_EV-019_observability_evidence.md`.
 
 ## Savings calculator (EV-048/EV-049)
-`/calculator` accepts driving, fuel/EV efficiency and a blended electricity tariff, with an optional EV purchase premium in rupees. It requests the exact savings API through a Server Action; set `API_BASE_URL` in the web environment (see `apps/web/.env.example`). Empty inputs stay empty until entered; the example button is explicitly illustrative. Results include a cost comparison, monthly/yearly amounts, simple payback and exclusions. Inputs are retained on errors but not persisted; editing hides stale results until recalculated. Both tasks are locally verified; hosted CI for these changes remains pending.
+`/calculator` accepts driving, fuel/EV efficiency and a blended electricity tariff, with an optional EV purchase premium in rupees. It requests the exact savings API through a Server Action; set `API_BASE_URL` in the web environment (see `apps/web/.env.example`). Empty inputs stay empty until entered; the example button is explicitly illustrative. Results include a cost comparison, monthly/yearly amounts, simple payback and exclusions. Inputs are retained on errors but not persisted; editing hides stale results until recalculated. EV-048 and EV-049 passed hosted CI, including the calculator focus follow-up. The homepage now has a compact energy-cost teaser linking to the blank calculator with explicit exclusions and no savings guarantee (EV-050, locally and in hosted CI verified).
+
+
+## Authentication development spike (EV-005, in progress)
+
+Clerk was selected for a local development spike. An isolated `/auth-spike` scaffold and token probe are disabled outside development and require explicit opt-in; missing instance configuration shows an honest unavailable state without provider requests. Local tests exercise the actual SDK with ephemeral JWT/JWKS fixtures and mocked session transitions. Real sign-in/cookies/logout remain unverified because no development instance is available. See `PROJECT_SETUP.md` and `04_Delivery/26_EV-005_auth_decision.md`; production authentication and RBAC remain EV-016/017.

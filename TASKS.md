@@ -1,6 +1,6 @@
 # EVONE — Master Implementation Task File
 
-**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. EV-014 also passed hosted CI ([run](https://github.com/Srujanmirji/EV_ONE/actions/runs/41700672277)); EV-019 is in progress with local verification only. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
+**Status key:** `[ ]` not started, `[~]` in progress (use `- [x]` when complete). EV-009, EV-010, EV-011, EV-012, EV-013, EV-015, EV-018, EV-021, EV-023, EV-024, EV-025 and EV-026 are verified locally and in hosted CI. EV-014 also passed hosted CI ([run](https://github.com/Srujanmirji/EV_ONE/actions/runs/41700672277)); EV-048 and EV-049 also passed [hosted CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41768218016); EV-019 remains in progress pending a live Sentry alert. Effort is relative: S ≤ 1–2 dev days; M 3–5; L 6–10+ (estimates, not commitments).
 
 Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRACT.md`. Dependencies are hard unless owner records an approved exception.
 
@@ -17,8 +17,9 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Depends: `-` · **Done when:** Brand decision and trademark risk review recorded.
 - [ ] **EV-004** · P0 · M · **Approve final UI reference and sitemap**  
   Depends: `-` · **Done when:** Desktop/mobile homepage and core screens signed off.
-- [ ] **EV-005** · P0 · S · **Agree authentication vendor and implementation model**  
+- [~] **EV-005** · P0 · S · **Agree authentication vendor and implementation model**
   Depends: `-` · **Done when:** JWT verification and sign-in flows spike completed.
+  Owner selected Clerk for the development spike and authorized local implementation/testing with no instance. Isolated dev-only SDK sign-in scaffold and pinned-key token probe implemented; local JWT/JWKS, negative/configuration, session-change and UI tests pass. **Remain in progress until real development sign-in/cookies/logout and actual claims are verified.** No production guards/RBAC added. [Decision packet](04_Delivery/26_EV-005_auth_decision.md).
 - [ ] **EV-006** · P0 · M · **Validate charging data provider and map terms**  
   Depends: `-` · **Done when:** Coverage, pricing, caching and attribution permitted in writing.
 - [ ] **EV-007** · P0 · M · **Get legal assessment of finance/insurance lead model**  
@@ -134,12 +135,13 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
 
 - [x] **EV-048** · P0 · S · **Implement exact EV energy savings formula**
   Depends: `EV-018` · **Done when:** Golden tests and realistic validation bounds pass.
-  BigInt rational engine with strict shared input schema, one-time half-away paise rounding, independently computed annual costs/savings and unrounded payback. Stateless POST endpoint, OpenAPI JSON-body support and generated SDK. Locally verified: golden/negative/zero/tiny-savings tests, boundary contracts and real SDK→HTTP validation. Hosted CI pending. [Evidence](04_Delivery/23_EV-048_savings_evidence.md).
+  BigInt rational engine with strict shared input schema, one-time half-away paise rounding, independently computed annual costs/savings and unrounded payback. Stateless POST endpoint, OpenAPI JSON-body support and generated SDK. Locally verified: golden/negative/zero/tiny-savings tests, boundary contracts and real SDK→HTTP validation. [Hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41767123619). [Evidence](04_Delivery/23_EV-048_savings_evidence.md).
 - [x] **EV-049** · P0 · M · **Build calculator UI/results/chart**
   Depends: `EV-048,EV-015` · **Done when:** Units, caveats and inputs accessible on mobile.
-  Working `/calculator`: server-action/SDK integration, explicit units and optional rupee premium, cost chart, monthly/yearly amounts, loading/empty/error/negative/zero states, preserved values and keyboard focus. Illustrative example is labeled. 40 local browser checks pass at 375/768/1280/1920, axe clean in tested states; polish fixed focus/header overlap and shared control-boundary contrast. Hosted CI pending. [Evidence](04_Delivery/24_EV-049_calculator_evidence.md).
-- [ ] **EV-050** · P0 · S · **Build homepage savings teaser**  
+  Working `/calculator`: server-action/SDK integration, explicit units and optional rupee premium, cost chart, monthly/yearly amounts, loading/empty/error/negative/zero states, preserved values and keyboard focus. Illustrative example is labeled. 40 local browser checks pass at 375/768/1280/1920, axe clean in tested states; polish fixed focus/header overlap and shared control-boundary contrast. [Hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41768218016) after fixing a submission/focus race. [Evidence](04_Delivery/24_EV-049_calculator_evidence.md).
+- [x] **EV-050** · P0 · S · **Build homepage savings teaser**
   Depends: `EV-049` · **Done when:** No fake guarantee; links to calculator.
+  Compact graphite homepage teaser, explicit energy-only exclusions and no guaranteed savings; keyboard-accessible CTA opens the blank calculator. 16 browser checks pass at four widths, including homepage axe; build, lint, typecheck and web unit tests pass. Locally verified; [hosted CI passed](https://github.com/Srujanmirji/EV_ONE/actions/runs/41769516354): 153 unit, 63 integration, 13 process and 212 browser checks (four expected skips). [Evidence](04_Delivery/25_EV-050_home_teaser_evidence.md).
 
 ## Charging (4 tasks)
 
@@ -250,10 +252,10 @@ All relevant P0 tasks EV-001 through EV-078 must pass for release, subject to ex
 
 ## Current progress
 - Total: **87 tasks** across 16 phases.
-- Completed: **15 / 87** (17.2% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026, EV-048–EV-049. EV-014 passed hosted CI; EV-019 remains in progress and is not counted complete.
-- Foundation: **8 / 12**; catalogue: **5 / 6**; savings: **2 / 3**; all other phases: **0 complete**.
-- Remaining: **72 tasks**. Task count is not an estimate of remaining effort.
-- In progress: **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). Next: **EV-050** (homepage savings teaser). EV-020 access-control acceptance needs auth/RBAC (EV-016/EV-017), so it is not ready for completion. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
+- Completed: **16 / 87** (18.4% by task count): EV-009–EV-015, EV-018, EV-021, EV-023–EV-026, EV-048–EV-050. EV-014 passed hosted CI; EV-019 remains in progress and is not counted complete.
+- Foundation: **8 / 12**; catalogue: **5 / 6**; savings: **3 / 3**; all other phases: **0 complete**.
+- Remaining: **71 tasks**. Task count is not an estimate of remaining effort.
+- In progress: **EV-005** (Clerk development spike selected and locally tested; real provider sign-in acceptance pending) and **EV-019** (observability; local implementation/testing authorized; live Sentry project and alert confirmation pending). Next prerequisite: finish **EV-005** live development-instance acceptance, then EV-016. Other engineering paths require unresolved auth/RBAC or licensing/legal prerequisites; no provider integration is authorized by completing the teaser. EV-020 access-control acceptance needs auth/RBAC (EV-016/EV-017), so it is not ready for completion. EV-022 lists EV-021 only but its permission acceptance also requires auth/RBAC (EV-016/EV-017).
 - Discovery EV-001–EV-008 remains open; EV-004 was not completed by the scaffold exception.
 
 ## When something changes
