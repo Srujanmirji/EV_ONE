@@ -6,7 +6,7 @@ All undecided decisions have an owner/date and block relevant implementation. Th
 |---|---|---|---|---|
 | ADR-001 | Architecture | modular NestJS monolith, REST, Next.js web; owner approved 2026-11-03 | accepted; EV-009 exception recorded below | before scaffold |
 | ADR-002 | Brand | EVONE **working name**, reference image EVONE | founder legal/trademark check | before public launch |
-| ADR-003 | Auth vendor | managed auth, Clerk candidate | prototype and cost/privacy review | before EV-016 |
+| ADR-003 | Auth vendor | Clerk development spike approved 2026-11-04; production acceptance pending | live sign-in/cookie/claims checks; [decision packet](../04_Delivery/26_EV-005_auth_decision.md) | before EV-016 |
 | ADR-004 | MVP commerce merchant | first-party accessories | founder ops/tax/shipping review | before checkout |
 | ADR-005 | Vehicle transaction | contact-only for used EVs | product/legal | locked MVP |
 | ADR-006 | Charging source | licensed Places/CPO source; no assumed live coverage | provider/terms analysis | before EV-051 |
@@ -59,3 +59,12 @@ Why: Migrations, drift detection, repeat deploys, GiST index use and coordinate 
 Consequences: Geography columns must be nullable, because a required `Unsupported` column removes `create()` from the client. Spatial SQL lives in one charging repository, with integration tests against real PostGIS. Local databases are created from `template0` with only `postgis`, because extra extensions break `migrate dev`. Prisma 7 refuses agent-run `migrate reset` without explicit user consent; agents use fresh databases instead.
 Open gate: confirm PostGIS 3.x is available on the chosen production Postgres host before the first production migration.
 Revisit trigger: Prisma ships native PostGIS types or Prisma 8 goes stable; spatial queries spread beyond charging; host lacks PostGIS.
+
+
+### ADR-003 — Clerk development spike
+Date: 2026-11-04 | Status: accepted for development spike; production acceptance pending
+Context: The owner selected “Clerk development spike” and confirmed no development instance exists, authorizing local implementation/testing.
+Decision: Use pinned Clerk SDKs for an isolated, opt-in development-only sign-in scaffold and local token verification tests. No account provisioning, paid plans, production auth guard or RBAC is included.
+Evidence: `04_Delivery/26_EV-005_auth_decision.md`. Local tests use ephemeral synthetic keys and a loopback JWKS server, plus mocked UI sessions; no provider-issued identity is claimed.
+Consequences: EV-005 remains in progress until live sign-in/session/claims acceptance succeeds. EV-016/EV-017 remain pending; no dependency exception is granted. App-owned authorization stays in the EVONE API/database.
+Revisit trigger: Real development-instance evidence, provider compatibility/cost/privacy issues, or production approval review.
