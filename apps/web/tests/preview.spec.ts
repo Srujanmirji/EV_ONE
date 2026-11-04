@@ -72,3 +72,36 @@ test("unknown routes return 404 with a keyboard-accessible recovery link", async
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL("/");
 });
+
+test("homepage energy teaser explains scope and opens the blank calculator by keyboard", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const teaser = page.getByRole("region", {
+    name: "What could your driving cost on electricity?",
+  });
+  await expect(teaser).toContainText("An estimate, not a guarantee.");
+  await expect(teaser).toContainText(
+    "Excludes maintenance, depreciation, charging losses and finance.",
+  );
+  const calculate = teaser.getByRole("link", {
+    name: "Estimate my energy costs",
+  });
+  await expect(calculate).toHaveAttribute("href", "/calculator");
+  // Walk the actual tab order from the skip link through the page.
+  for (let stop = 0; stop < 25; stop++) {
+    await page.keyboard.press("Tab");
+    const focused = page.locator(":focus");
+    await expect(focused).toHaveCSS("outline-style", "solid");
+    if (await calculate.evaluate((el) => el === document.activeElement)) break;
+  }
+  await expect(calculate).toBeFocused();
+  await expect(calculate).toHaveCSS("outline-color", "rgb(255, 255, 255)");
+  expect((await calculate.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("/calculator");
+  await expect(page.getByLabel(/^Monthly driving/)).toHaveValue("");
+  await expect(
+    page.getByRole("region", { name: "Calculation results" }),
+  ).toContainText("Build your energy estimate");
+});
