@@ -17,6 +17,7 @@
     "telemetry:smoke": "node --env-file-if-exists=.env dist/observability/smoke.js"
   },
   "dependencies": {
+    "@clerk/backend": "3.26.6",
     "@evone/contracts": "workspace:*",
     "@evone/db": "workspace:*",
     "@nestjs/common": "12.3.2",

@@ -93,3 +93,6 @@ External telemetry stays disabled while `SENTRY_DSN` is absent. When an approved
 ## Authentication development spike (EV-005, in progress)
 
 Clerk was selected for a local development spike. An isolated `/auth-spike` scaffold and token probe are disabled outside development and require explicit opt-in; missing instance configuration shows an honest unavailable state without provider requests. Local tests exercise the actual SDK with ephemeral JWT/JWKS fixtures and mocked session transitions. Real sign-in/cookies/logout remain unverified because no development instance is available. See `PROJECT_SETUP.md` and `04_Delivery/26_EV-005_auth_decision.md`; production authentication and RBAC remain EV-016/017.
+
+
+EV-016 now adds a local-only API bearer guard and protected status probe under an explicit owner-approved prerequisite exception. It defaults off and refuses production enablement; public endpoints remain public. Neither EV-005 nor EV-016 is complete until live provider acceptance is verified. See `04_Delivery/27_EV-016_local_auth_evidence.md`.

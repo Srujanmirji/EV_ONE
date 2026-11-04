@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  "/auth/session": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only authenticated session probe; production auth remains disabled. */
+    get: operations["getAuthSession"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/brands": {
     parameters: {
       query?: never;
@@ -291,6 +308,13 @@ export interface components {
       estimatedPaybackMonths: number | null;
       exclusions: ["maintenance", "depreciation", "charging losses", "finance"];
     };
+    SessionResponse: {
+      data: {
+        /** @constant */
+        authenticated: true;
+      };
+      meta: components["schemas"]["Meta"];
+    };
     /** @enum {string} */
     SourceKind: "OEM" | "REGULATOR" | "PRESS" | "DEALER" | "OTHER";
     /** @enum {string} */
@@ -393,6 +417,7 @@ export type SchemaReadinessResponse =
 export type SchemaSavingsRequest = components["schemas"]["SavingsRequest"];
 export type SchemaSavingsResponse = components["schemas"]["SavingsResponse"];
 export type SchemaSavingsResult = components["schemas"]["SavingsResult"];
+export type SchemaSessionResponse = components["schemas"]["SessionResponse"];
 export type SchemaSourceKind = components["schemas"]["SourceKind"];
 export type SchemaSpecField = components["schemas"]["SpecField"];
 export type SchemaSpecSourceView = components["schemas"]["SpecSourceView"];
@@ -405,6 +430,44 @@ export type SchemaVariantSummary = components["schemas"]["VariantSummary"];
 export type SchemaVehicleType = components["schemas"]["VehicleType"];
 export type $defs = Record<string, never>;
 export interface operations {
+  getAuthSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Bearer verified; no profile or permissions granted. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+      /** @description Authentication disabled, missing or invalid bearer token. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
   listBrands: {
     parameters: {
       query?: never;

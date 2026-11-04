@@ -11,7 +11,15 @@
 - `X-Request-ID` returned for troubleshooting; API logs redact PII.
 - `429` includes `Retry-After`; `401` unauthenticated, `403` forbidden, `404` not found/visibility safe, `409` version conflict, `422` domain validation.
 
-### Response envelopes
+#### Implemented local authentication boundary (EV-016, in progress)
+
+`GET /auth/session` returns `{ data: { authenticated: true }, meta: { requestId } }` only after a valid Clerk bearer token in the approved local mode. It does not expose the subject, profile, claims, roles or permissions. Missing/disabled/invalid authentication returns 401 `UNAUTHENTICATED`, `WWW-Authenticate: Bearer` and the normal envelope. Both success and failure use `Cache-Control: no-store`.
+
+OpenAPI declares an HTTP bearer/JWT security scheme for this route only; public catalogue, health and savings endpoints retain public access. Cookies/query parameters do not authenticate API requests; duplicate Authorization headers are rejected. The guard attaches only a frozen, verified subject/issuer actor to the server request for future resource authorization. No role is derived from caller claims.
+
+`AUTH_MODE` defaults to `disabled`. The sole enabled mode, `clerk-local`, requires development/test, a loopback API bind, a development Clerk issuer, exact audience/authorized party and a pinned RSA-2048 public key. Production configuration rejects this mode before listening. Key rotation is manual in this local stage; no immediate revocation promise or production JWKS flow is implemented. The protected status endpoint is not the future `/me` profile route. EV-005/EV-016 remain in progress; EV-017 owns scoped authorization.
+
+## Response envelopes
 ```json
 {
   "data": {"id": "uuid", "status": "PUBLISHED"},

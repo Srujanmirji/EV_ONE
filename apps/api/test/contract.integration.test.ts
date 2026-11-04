@@ -2,6 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import { ErrorEnvelope, routes } from "@evone/contracts";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config/env.js";
+import { authEnv, authToken } from "./auth-fixture.js";
 import { API_PREFIX, createApp } from "../src/create-app.js";
 import type { ReadinessCheck } from "../src/health/readiness.js";
 import {
@@ -27,12 +28,14 @@ const dependency: ReadinessCheck = {
 };
 
 /** One concrete request per documented (operationId, status). */
-type ContractRequest = string | { path: string; body: unknown };
+type ContractRequest =
+  string | { path: string; body?: unknown; headers?: Record<string, string> };
 let requests: Record<string, Record<string, ContractRequest>> = {};
 
 beforeAll(async () => {
   app = await createApp({
     config: loadConfig({
+      ...authEnv,
       NODE_ENV: "test",
       DATABASE_URL: databaseUrl,
       REDIS_URL: "redis://127.0.0.1:6379",
@@ -48,6 +51,15 @@ beforeAll(async () => {
   const v = await variant(m.id);
   const v2 = await variant(m.id);
   requests = {
+    getAuthSession: {
+      200: {
+        path: "/auth/session",
+        headers: {
+          Authorization: `Bearer ${authToken({ exp: Math.floor(Date.now() / 1000) + 3600 })}`,
+        },
+      },
+      401: "/auth/session",
+    },
     calculateEvSavings: {
       200: {
         path: "/calculators/ev-savings",
@@ -143,9 +155,14 @@ describe("API contract", () => {
           typeof selected === "string" ? { path: selected } : selected;
         const res = await fetch(`${base}${request.path}`, {
           method: route.method.toUpperCase(),
+          headers: {
+            ...("body" in request
+              ? { "Content-Type": "application/json" }
+              : {}),
+            ...("headers" in request ? request.headers : {}),
+          },
           ...("body" in request
             ? {
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(request.body),
               }
             : {}),

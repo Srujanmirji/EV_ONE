@@ -165,3 +165,24 @@ The page contains the real SDK SignIn/SignUp hash flows. A signed-in session can
 The verifier pins RS256, issuer, audience, authorized party and the configured public key. It explicitly requires a nonempty subject, matching audience and valid NumericDates because the tested SDK allows missing audience/empty subject and has permissive behaviour for extreme timestamps. SDK signature validation is retained. The public key is **pinned**, so rotation requires updating it; remote JWKS tests demonstrate SDK mechanics, not automatic rotation in this probe. Offline tokens may remain valid until expiry after logout; no immediate revocation guarantee is made.
 
 Before marking EV-005 complete, verify real development sign-up/sign-in/reload/sign-out, stale-session behaviour, email delivery/recovery, actual cookie flags, redirects/origins, CSRF/cache isolation, claims and rotation/revocation limits. Keep MFA, pricing, region/subprocessors and retention/export review explicit before production. Neither a mock session nor local JWT tests meet the live sign-in acceptance criterion.
+
+
+## EV-016 — Local API bearer guard (in progress)
+
+Owner approved a local-only exception to EV-005's live-instance prerequisite. Production authentication remains disabled; this does not complete EV-005/EV-016 or authorize EV-017.
+
+The API defaults to `AUTH_MODE=disabled`; `/api/v1/auth/session` returns 401. To test with an eventual owner-managed development instance, use the EV-005 `evone-api` JWT template and configure ignored `apps/api/.env`:
+
+- `AUTH_MODE=clerk-local`
+- `NODE_ENV=development` (tests may use `test`)
+- `API_HOST=127.0.0.1` (localhost and IPv6 loopback are also accepted)
+- `AUTH_ISSUER`: exact development `https://<instance>.clerk.accounts.dev` origin, without a trailing slash/path.
+- `AUTH_AUDIENCE=evone-api-development`, matching the template's `aud`.
+- `AUTH_AUTHORIZED_PARTY=http://127.0.0.1:3000`, matching the token's `azp`, including port.
+- `AUTH_JWT_KEY`: the instance's RSA-2048 SPKI **public** PEM key, not a secret/private key.
+
+Malformed/missing auth configuration, non-loopback binding or production mode causes startup failure before a listener starts. Failure logs carry allowlisted variable names only. No secret key or online JWKS call is needed for this pinned-key local stage. A key change requires an explicit configuration update; offline tokens can outlive logout until expiry.
+
+Call the protected endpoint through the generated SDK with `Authorization: Bearer <token>` kept in memory. Success returns only `authenticated: true` and request metadata, with `no-store`; invalid/expired/missing tokens get a generic 401 and bearer challenge. Do not paste real tokens into chat, terminal command history, fixtures or logs. This status probe grants no account/role/dealer permissions. Public endpoints remain accessible with auth disabled.
+
+`pnpm --filter @evone/api test:unit` exercises real Nest/HTTP/SDK requests with ephemeral signatures and an unused database object. The new database-backed contract fixtures cover 200/401 in normal integration CI. Built-process tests refuse production/non-loopback/invalid-PEM startup. See `04_Delivery/27_EV-016_local_auth_evidence.md` for local commands and unrun checks. No UI or database migrations changed.

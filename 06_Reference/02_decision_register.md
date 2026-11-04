@@ -66,5 +66,14 @@ Date: 2026-11-04 | Status: accepted for development spike; production acceptance
 Context: The owner selected “Clerk development spike” and confirmed no development instance exists, authorizing local implementation/testing.
 Decision: Use pinned Clerk SDKs for an isolated, opt-in development-only sign-in scaffold and local token verification tests. No account provisioning, paid plans, production auth guard or RBAC is included.
 Evidence: `04_Delivery/26_EV-005_auth_decision.md`. Local tests use ephemeral synthetic keys and a loopback JWKS server, plus mocked UI sessions; no provider-issued identity is claimed.
-Consequences: EV-005 remains in progress until live sign-in/session/claims acceptance succeeds. EV-016/EV-017 remain pending; no dependency exception is granted. App-owned authorization stays in the EVONE API/database.
+Consequences: EV-005 remains in progress until live sign-in/session/claims acceptance succeeds. EV-017 remains pending. A later owner-approved exception permits EV-016 local work only, as recorded below. App-owned authorization stays in the EVONE API/database.
 Revisit trigger: Real development-instance evidence, provider compatibility/cost/privacy issues, or production approval review.
+
+
+### EV-016 — Local-only prerequisite exception
+Date: 2026-11-04 | Status: owner approved
+Context: EV-005 has a verified local Clerk spike but no development instance. The owner explicitly selected “Proceed with local-only EV-016 exception”.
+Decision: Implement and test the API bearer guard, strict token validation and a protected status-only endpoint locally before EV-005 live acceptance. Production refuses enabled local auth, and neither EV-005 nor EV-016 is marked complete without remaining acceptance evidence.
+Consequences: No accounts, role assignments, DB writes, global auth middleware, new service or production auth enablement. EV-017/RBAC is outside this exception. Live sign-in/claims, revocation/rotation and web/API flow remain unverified.
+Evidence: `04_Delivery/27_EV-016_local_auth_evidence.md`.
+Revisit trigger: Real development instance and verified provider/web/API flow, or a proposed production rollout.

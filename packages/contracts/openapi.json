@@ -11,6 +11,50 @@
     }
   ],
   "paths": {
+    "/auth/session": {
+      "get": {
+        "operationId": "getAuthSession",
+        "summary": "Local-only authenticated session probe; production auth remains disabled.",
+        "tags": ["identity"],
+        "security": [
+          {
+            "clerkBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bearer verified; no profile or permissions granted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication disabled, missing or invalid bearer token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/brands": {
       "get": {
         "operationId": "listBrands",
@@ -985,6 +1029,27 @@
         ],
         "additionalProperties": false
       },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "authenticated": {
+                "type": "boolean",
+                "const": true
+              }
+            },
+            "required": ["authenticated"],
+            "additionalProperties": false
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
+        "additionalProperties": false
+      },
       "SourceKind": {
         "type": "string",
         "enum": ["OEM", "REGULATOR", "PRESS", "DEALER", "OTHER"]
@@ -1263,6 +1328,13 @@
       "VehicleType": {
         "type": "string",
         "enum": ["SCOOTER", "MOTORCYCLE", "CAR", "THREE_WHEELER"]
+      }
+    },
+    "securitySchemes": {
+      "clerkBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

@@ -53,6 +53,20 @@ describe("OpenAPI document", () => {
     });
   });
 
+  it("requires bearer security only on the protected identity route", () => {
+    const generated = buildOpenApiDocument() as {
+      paths: Record<string, Record<string, { security?: unknown }>>;
+      components: { securitySchemes: unknown };
+    };
+    expect(generated.paths["/auth/session"]?.get?.security).toEqual([
+      { clerkBearer: [] },
+    ]);
+    expect(generated.paths["/models"]?.get?.security).toBeUndefined();
+    expect(generated.components.securitySchemes).toEqual({
+      clerkBearer: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+    });
+  });
+
   it("resolves every $ref to a component", () => {
     const refs = collectRefs(doc);
     expect(refs.length).toBeGreaterThan(0);
