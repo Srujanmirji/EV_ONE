@@ -27,3 +27,9 @@ P0: data leak, unauthorized access, incorrect charge/capture, widespread loss of
 
 ## Recovery
 Daily encrypted backup and periodic tested restore. Payment reconciliation job with safe idempotency, queued email retries, manual moderation fallback. Document incidents and learnings; avoid claiming published uptime SLA until measured and contracted.
+
+## Implemented backend observability (EV-019 local scope)
+
+The API and existing worker share an allowlisted JSON logger and optional Sentry Node SDK client. HTTP logs and 5xx reports carry the response request UUID and matched route template; worker failures carry only validated event UUIDs and attempt counts. No raw exception text, stack, header, query, body, job payload or SDK context is sent. Fatal process errors are reported without raw Node exception output. Telemetry delivery failures are logged locally; resource cleanup finishes before telemetry flush.
+
+There is no Sentry project yet (owner confirmed 2026-11-04). External reporting remains disabled without `SENTRY_DSN`; real-SDK loopback tests verify event delivery/privacy and rejected delivery. Live issue/alert confirmation is still required, so EV-019 remains in progress. No public error-test endpoint, browser SDK, tracing, replay, user tracking or alert rule has been added. Follow the setup and acceptance procedure in `PROJECT_SETUP.md`.

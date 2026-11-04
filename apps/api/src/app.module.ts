@@ -2,10 +2,14 @@ import {
   type DynamicModule,
   Global,
   Inject,
-  Logger,
   Module,
   type OnApplicationShutdown,
 } from "@nestjs/common";
+import {
+  logEvent,
+  reportError,
+  closeTelemetry,
+} from "./observability/telemetry.js";
 import { API_CONFIG } from "./config/config.token.js";
 import type { ApiConfig } from "./config/env.js";
 import type { DbClient } from "@evone/db";
@@ -48,21 +52,20 @@ class CoreModule {
 
 @Module({})
 export class AppModule implements OnApplicationShutdown {
-  private readonly logger = new Logger("EVONE API");
-
   constructor(
     @Inject(SHUTDOWN_HOOKS)
     private readonly shutdownHooks: (() => Promise<void>)[],
   ) {}
 
   /** Runs after in-flight requests close; proves shutdown was graceful. */
-  async onApplicationShutdown(signal?: string): Promise<void> {
+  async onApplicationShutdown(): Promise<void> {
     const results = await Promise.allSettled(
-      this.shutdownHooks.map((hook) => hook()),
+      this.shutdownHooks.map((hook) => Promise.resolve().then(hook)),
     );
     const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed > 0) this.logger.error(`${failed} shutdown hook(s) failed`);
-    this.logger.log(`Stopped gracefully${signal ? ` on ${signal}` : ""}`);
+    if (failed > 0) reportError("api.shutdown_failed", { failedHooks: failed });
+    logEvent("info", "api.stopped");
+    await closeTelemetry();
   }
 
   static register(options: AppOptions): DynamicModule {
