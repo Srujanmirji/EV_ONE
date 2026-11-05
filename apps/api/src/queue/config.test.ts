@@ -5,6 +5,30 @@ import { connectionOptions, processProbe, PROBE_EVENT } from "./foundation.js";
 const eventId = "c057fe2b-9b31-4b3b-8cac-e974f9a6ed68";
 
 describe("foundation configuration and handler", () => {
+  it("defaults worker health to a private listener and accepts an ephemeral test port", () => {
+    expect(loadWorkerConfig({ REDIS_URL: "redis://127.0.0.1:6379" })).toEqual({
+      REDIS_URL: "redis://127.0.0.1:6379",
+      WORKER_HEALTH_HOST: "127.0.0.1",
+      WORKER_HEALTH_PORT: 4010,
+    });
+    expect(
+      loadWorkerConfig({
+        REDIS_URL: "redis://127.0.0.1:6379",
+        WORKER_HEALTH_PORT: "0",
+      }).WORKER_HEALTH_PORT,
+    ).toBe(0);
+  });
+
+  it.each([
+    ["WORKER_HEALTH_PORT", "65536"],
+    ["WORKER_HEALTH_PORT", "-1"],
+    ["WORKER_HEALTH_PORT", "private-value"],
+    ["WORKER_HEALTH_HOST", "private-value"],
+  ])("rejects invalid %s without exposing its value", (key, value) => {
+    expect(() =>
+      loadWorkerConfig({ REDIS_URL: "redis://127.0.0.1:6379", [key]: value }),
+    ).toThrow(`Invalid worker configuration: ${key}`);
+  });
   it("passes IPv6 hosts without URL brackets to Redis", () => {
     expect(connectionOptions("redis://[::1]:6379/0").host).toBe("::1");
   });

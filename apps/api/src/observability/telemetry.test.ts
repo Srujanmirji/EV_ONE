@@ -143,23 +143,24 @@ describe("privacy at log and transport boundaries", () => {
     expect(await closeTelemetry()).toBe(true);
   });
 
-  it("sends a scrubbed alert through the real SDK to local ingestion", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    const received = await receiver();
-    expect(reportError("telemetry.test", { requestId })).toMatch(
-      /^[a-f0-9]{32}$/,
-    );
-    expect(await closeTelemetry()).toBe(true);
-    expect(received).toHaveLength(1);
-    const parts = received[0]!.split("\n");
-    const payload: unknown = JSON.parse(parts[2]!);
-    expect(payload).toMatchObject({
-      message: "telemetry.test",
-      environment: "test",
-      tags: { requestId },
-    });
-    expect(received[0]).not.toContain("127.0.0.1");
-  });
+  it.each(["telemetry.test", "worker.job_failed"] as const)(
+    "sends a scrubbed %s alert through the real SDK to local ingestion",
+    async (event) => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const received = await receiver();
+      expect(reportError(event, { requestId })).toMatch(/^[a-f0-9]{32}$/);
+      expect(await closeTelemetry()).toBe(true);
+      expect(received).toHaveLength(1);
+      const parts = received[0]!.split("\n");
+      const payload: unknown = JSON.parse(parts[2]!);
+      expect(payload).toMatchObject({
+        message: event,
+        environment: "test",
+        tags: { requestId },
+      });
+      expect(received[0]).not.toContain("127.0.0.1");
+    },
+  );
   it("treats rejected ingestion as failed delivery", async () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});
     await receiver(403);

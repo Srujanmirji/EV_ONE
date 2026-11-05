@@ -6,14 +6,26 @@ import {
   logEvent,
   reportError,
 } from "./observability/telemetry.js";
-import { Module, type OnApplicationShutdown } from "@nestjs/common";
+import { once } from "node:events";
+import {
+  Module,
+  type BeforeApplicationShutdown,
+  type OnApplicationShutdown,
+} from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { loadWorkerConfig } from "./queue/config.js";
 import { createFoundationWorker } from "./queue/foundation.js";
+import { createWorkerHealthServer } from "./queue/worker-health.js";
 
 @Module({})
-class WorkerModule implements OnApplicationShutdown {
-  readonly worker = createFoundationWorker(loadWorkerConfig(process.env));
+class WorkerModule implements BeforeApplicationShutdown, OnApplicationShutdown {
+  readonly config = loadWorkerConfig(process.env);
+  readonly worker = createFoundationWorker(this.config.REDIS_URL);
+  readonly health = createWorkerHealthServer(this.worker);
+
+  beforeApplicationShutdown(): void {
+    this.health.setDraining();
+  }
 
   async onApplicationShutdown(): Promise<void> {
     try {
@@ -23,6 +35,7 @@ class WorkerModule implements OnApplicationShutdown {
       reportError("worker.shutdown_failed");
       process.exitCode = 1;
     } finally {
+      await new Promise<void>((resolve) => this.health.close(() => resolve()));
       await closeTelemetry();
     }
   }
@@ -39,8 +52,17 @@ async function main() {
     abortOnError: false,
   });
   app.enableShutdownHooks();
-  await app.get(WorkerModule).worker.waitUntilReady();
-  logEvent("info", "worker.ready");
+  const module = app.get(WorkerModule);
+  module.health.listen(
+    module.config.WORKER_HEALTH_PORT,
+    module.config.WORKER_HEALTH_HOST,
+  );
+  await once(module.health, "listening");
+  await module.worker.waitUntilReady();
+  const address = module.health.address();
+  logEvent("info", "worker.ready", {
+    ...(address && typeof address !== "string" ? { port: address.port } : {}),
+  });
 }
 
 main().catch(async () => {

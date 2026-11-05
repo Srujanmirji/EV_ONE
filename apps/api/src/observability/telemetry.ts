@@ -27,6 +27,7 @@ const events = z.enum([
   "queue.connection_failed",
   "worker.connection_failed",
   "worker.job_failed",
+  "worker.job_retrying",
   "worker.job_completed",
   "telemetry.test",
   "telemetry.delivery_failed",
@@ -45,6 +46,7 @@ const fieldsSchema = z.object({
   status: z.number().int().min(100).max(599).optional(),
   durationMs: z.number().finite().min(0).optional(),
   attempts: z.number().int().min(0).optional(),
+  port: z.number().int().min(1).max(65535).optional(),
   failedHooks: z.number().int().min(0).optional(),
   configKeys: z
     .array(
