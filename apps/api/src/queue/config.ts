@@ -12,9 +12,17 @@ export const redisUrl = z.url().refine((value) => {
   );
 }, "must be a redis:// or rediss:// URL with an optional database number");
 
-export function loadWorkerConfig(env: NodeJS.ProcessEnv): string {
-  const result = redisUrl.safeParse(env.REDIS_URL);
+const workerConfig = z.object({
+  REDIS_URL: redisUrl,
+  WORKER_HEALTH_HOST: z.union([z.ipv4(), z.ipv6()]).default("127.0.0.1"),
+  WORKER_HEALTH_PORT: z.coerce.number().int().min(0).max(65535).default(4010),
+});
+
+export function loadWorkerConfig(env: NodeJS.ProcessEnv) {
+  const result = workerConfig.safeParse(env);
   if (!result.success)
-    throw new Error("Invalid worker configuration: REDIS_URL");
+    throw new Error(
+      `Invalid worker configuration: ${result.error.issues.map((issue) => issue.path.join(".")).join(", ")}`,
+    );
   return result.data;
 }

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { redisUrl } from "./config.js";
 
 export const FOUNDATION_QUEUE = "evone-foundation";
+export const WORKER_HEARTBEAT_KEY = "evone:worker:last-probe-at";
 export const PROBE_EVENT = "foundation.probe.v1";
 const probe = z.strictObject({ eventId: z.uuid() });
 
@@ -54,18 +55,31 @@ export function createFoundationWorker(
   processor: (job: Job<unknown>) => Promise<unknown> = (job) =>
     Promise.resolve(processProbe(job)),
 ) {
-  const worker = new Worker(FOUNDATION_QUEUE, processor, {
-    connection: { ...connectionOptions(url), maxRetriesPerRequest: null },
-    concurrency: 1,
-  });
+  const worker = new Worker(
+    FOUNDATION_QUEUE,
+    async (job) => {
+      const result = await processor(job);
+      const redis = await worker.getBackend().client;
+      await redis.set(WORKER_HEARTBEAT_KEY, new Date().toISOString());
+      return result;
+    },
+    {
+      connection: { ...connectionOptions(url), maxRetriesPerRequest: null },
+      concurrency: 1,
+    },
+  );
   // Never log Redis errors or job payloads: they may contain credentials/PII.
   worker.on("error", () => reportError("worker.connection_failed"));
   worker.on("failed", (job) => {
-    const payload = probe.safeParse(job?.data);
-    reportError("worker.job_failed", {
-      attempts: job?.attemptsMade ?? 0,
+    if (!job) return;
+    const payload = probe.safeParse(job.data);
+    const fields = {
+      attempts: job.attemptsMade,
       ...(payload.success ? { eventId: payload.data.eventId } : {}),
-    });
+    };
+    // BullMQ sets finishedOn only when the failure is terminal, including rejection.
+    if (job.finishedOn !== undefined) reportError("worker.job_failed", fields);
+    else logEvent("warn", "worker.job_retrying", fields);
   });
   worker.on("completed", () => logEvent("info", "worker.job_completed"));
   return worker;

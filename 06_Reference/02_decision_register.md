@@ -114,3 +114,11 @@ Context: The owner selected “Proceed with local-only EV-022 exception”. EV-0
 Decision: Add new-entry catalogue drafts and forms, owner-controlled save/submit, a different admin’s explicit source review, rejection/resubmission and atomic publication as demo data. Keep production auth disabled and task completion pending remaining acceptance. Drafts never edit public rows; approved snapshots are immutable and version checks reject stale actions. No existing published model editing, public provisioning or role-management UI is included.
 Consequences: One draft table with restricted owner/reviewer/model FKs, state constraints and snapshot retention; fixed catalogue audit actions. Existing SQL provenance/publish guards remain authoritative. Concurrent slug conflicts retry once so a policy-conflict denial can be audited. Availability/date remain UNKNOWN/null until model-level provenance is added. Reuse the local Clerk configuration and existing UI system; the editor page requires its own development-only opt-in. No service or project dependency is added. Temporary native PostgreSQL tooling and browser fixtures live outside the repository.
 Evidence: `04_Delivery/31_EV-022_catalogue_editor_evidence.md` and the scoped plan. Live sign-in/session acceptance and hosted PostgreSQL 17/PostGIS CI remain pending; this exception does not authorize other later tasks or production rollout.
+
+
+### EV-014 / EV-019 — Preserve PR #22 monitoring behavior
+
+Date: 2026-11-05 | Status: owner authorized
+Context: The owner requested adapting the three useful PR #22 additions to current main, testing them and closing the superseded PR, while preserving local changes and avoiding assistant commit attribution.
+Decision: Keep the existing NestJS worker entry and telemetry allowlist. Add a private worker health listener, one timestamp outside BullMQ's job namespace, and retry warnings distinct from terminal error reports. No new workspace packages, dependencies, public API or customer data are introduced. Failed-job retention stays bounded. No external Sentry project is configured; EV-019 remains in progress pending real issue/alert acceptance.
+Evidence: `04_Delivery/33_EV-014_worker_monitoring_evidence.md`. Implementation and tests use an isolated clone; the original working tree is not modified.
