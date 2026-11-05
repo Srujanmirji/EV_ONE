@@ -15,6 +15,8 @@ stateDiagram-v2
 ```
 A listing title/price edit may require moderation by policy; always retain version and actor audit. Duplicate submission uses idempotency/version constraints.
 
+EV-027 implements the database lifecycle locally for individual-owned demo data, with no listing endpoints. Submitted content is frozen; published numeric/content edits move back to PENDING_REVIEW, while photo changes require ARCHIVED→DRAFT relisting. Reviews require a different active moderator/admin and the current version. History/review records are immutable and snapshot only whitelisted non-text facts. Dealer membership, public visibility, badge evidence and live provider acceptance remain later gates.
+
 ## Enquiry lifecycle
 `NEW → NOTIFIED → ACKNOWLEDGED → CLOSED` with `SPAM`/`BLOCKED` outcomes. Buyer may request follow-up privacy action. Seller never gets unrelated buyer PII merely by owning a listing.
 

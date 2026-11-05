@@ -1,6 +1,6 @@
 # EVONE — Startup & Engineering Blueprint
 
-**Status:** 16/87 tasks complete; EV-048/EV-049 passed CI; EV-019 live alert pending; EV-050 passed CI · **Date:** 2026-11-04 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
+**Status:** 16/87 tasks complete; EV-048/EV-049 passed CI; EV-019 live alert pending; EV-050 passed CI · **Date:** 2026-11-05 · **Region:** India · **Design:** approved EVONE monochrome automotive + restrained Liquid Glass concept.
 
 > **Purpose:** source of truth for a web-first electric-vehicle ecosystem. The workspace contains the web shell, read-only EV catalogue/comparison, API/database/contracts and a foundation queue worker. The exact savings API and `/calculator` customer flow are implemented. Marketplace, checkout and other business journeys remain pending.
 
@@ -108,4 +108,6 @@ EV-017 adds a local scoped-permission and decision-audit foundation under a sepa
 
 EV-020 adds a local-only private media foundation: owner-authorized signed uploads, bounded image validation, sanitized WebP output and temporary private reads. No R2 bucket exists yet; production media/auth remain disabled and native CI passed and completion awaits live provider evidence. See `04_Delivery/29_EV-020_local_media_evidence.md`.
 
-EV-022 adds a development-only `/admin/catalogue` workspace for new catalogue entries. Editors save/submit private drafts; a different admin reviews citations and publishes the complete entry as demo data. Production auth remains disabled and live Clerk acceptance is pending. Enable only with the existing local Clerk setup plus `CATALOGUE_EDITOR_ENABLED=true`; no instance is configured yet. See `04_Delivery/31_EV-022_catalogue_editor_evidence.md`.
+EV-022 adds a development-only `/admin/catalogue` workspace for new catalogue entries. Editors save/submit private drafts; a different admin reviews citations and publishes the complete entry as demo data. Hosted CI passed; production auth remains disabled and live Clerk acceptance is pending. Enable only with the existing local Clerk setup plus `CATALOGUE_EDITOR_ENABLED=true`; no instance is configured yet. See `04_Delivery/31_EV-022_catalogue_editor_evidence.md`.
+
+EV-027 adds the database-only individual listing/media/review foundation: owner and role constraints, versioned lifecycle, validated private media links and immutable review/history. It enables no listing screen or public listing API and allows only demo records. Local native PostgreSQL checks pass; hosted CI and live auth acceptance remain pending. See `04_Delivery/32_EV-027_listing_schema_evidence.md`.

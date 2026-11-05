@@ -58,4 +58,8 @@ Screenshots contain only fictional data:
 
 ## Remaining acceptance
 
-Run hosted PostgreSQL 17/PostGIS migration/rollback/drift and full CI after committing/pushing. Verify the real development Clerk sign-in/template/claims/cookies/session flow using separate approved editor/admin identities, including revocation and session switching. No project is configured and no credentials were requested. Production auth stays disabled. Existing published-model editing, model-level availability/date provenance and public production rollout are outside this new-entry local slice. EV-022 remains in progress until remaining acceptance is verified.
+Hosted PostgreSQL 17/PostGIS migration/rollback/drift and full CI passed as recorded below. Verify the real development Clerk sign-in/template/claims/cookies/session flow using separate approved editor/admin identities, including revocation and session switching. No project is configured and no credentials were requested. Production auth stays disabled. Existing published-model editing, model-level availability/date provenance and public production rollout are outside this new-entry local slice. EV-022 remains in progress until remaining acceptance is verified.
+
+## Hosted verification follow-up
+
+[PR #18 CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41964485433) and [push CI](https://github.com/Srujanmirji/EV_ONE/actions/runs/41964197671) both passed at exact head `d863a59264eb0917badd1a7f32db279498754fdd`. Results: formatting/lint/typecheck/build/contracts/gates, full PostgreSQL 17/PostGIS migration/drift/rollback/reapply, 292 unit, 159 integration (36 DB + 123 API/queue), 16 process and 220 browser checks, with four expected skips. This resolves the hosted verification pending in the original local notes. EV-022 remains in progress for real Clerk acceptance, with production auth disabled.

@@ -218,3 +218,13 @@ Use only approved synthetic development identities. Their issuer/subject must ma
 Open `/admin/catalogue`: create a new brand/model/variant draft, add spec citations, save, submit, then sign in as a different admin and open the submitted entry. Open each cited source, compare its wording/value, explicitly attest and approve; alternatively request changes with a reason. The owner can edit/resubmit rejected entries. Stale revisions require reload; errors retain form values. New publication is marked demo. Availability/date remain unknown and existing published-model editing is outside this slice.
 
 Without instance configuration the opted-in page shows an honest unavailable state without contacting a provider. The actual workspace→API→PostgreSQL browser checks use a temporary isolated UI fixture with signed synthetic JWTs; they do not prove real Clerk sign-in/cookies/logout. See `04_Delivery/31_EV-022_catalogue_editor_evidence.md` for exact verification and remaining gates.
+
+## EV-027 database-only listing foundation
+
+There is no listing UI or public listing API yet. Production auth remains disabled. Apply the new reviewed migration only to a disposable development database. It creates individual-owner demo-only listings, private media links, reviews and immutable history. Do not insert real inventory, contacts or private documents.
+
+Future trusted server writers must resolve the verified issuer/subject to an ACTIVE app-owned user, then within one transaction set `evone.actor_id` to that UUID and `evone.request_id` to the validated request UUID using parameterized `SELECT set_config('evone.actor_id', $1, true), set_config('evone.request_id', $2, true)`. Both settings are transaction-local. Never accept an actor UUID or roles from a client body/token metadata, and never use persistent `SET` on a pooled connection. The database checks active/unexpired global roles again on each mutation. The settings themselves are not authentication for untrusted SQL access.
+
+Use expected-version matching under a parent row lock before listing/media batches and increment ordinary updates once. Media attachments and review inserts update the parent version automatically. A review must name its current submitted version, a different moderator/admin and the same context request UUID; its supplied snapshot is overwritten from server evidence. All linked media remains private. Published photo edits require owner archive/relist; no approval creates an inspection badge or starts a used-vehicle payment.
+
+Development rollback refuses after listing/review/history evidence exists. Preserve it and use a reviewed forward repair. Native test harness details and remaining hosted/live acceptance are in `04_Delivery/32_EV-027_listing_schema_evidence.md`.
