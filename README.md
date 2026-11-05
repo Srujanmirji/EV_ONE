@@ -4,6 +4,12 @@
 
 > **Purpose:** source of truth for a web-first electric-vehicle ecosystem. The workspace contains the web shell, read-only EV catalogue/comparison, API/database/contracts and a foundation queue worker. The exact savings API and `/calculator` customer flow are implemented. Marketplace, checkout and other business journeys remain pending.
 
+## License
+
+Unless separately noted, EVONE's original source code and documentation are licensed under the [MIT License](LICENSE), copyright © 2026 Srujan Mirji. MIT permits commercial use, modification and redistribution, including proprietary forks, provided the copyright and permission notice are retained.
+
+The reference images `assets/approved_ui_reference.png` and `assets/homepage_hero_reference.png` are excluded from this license grant pending documented provenance and reuse rights. Dependencies and any third-party material retain their own licenses; the MIT license does not grant rights to third-party vehicle imagery, data or trademarks.
+
 ## Run the foundation
 
 Use Node `24.18.0` and pnpm `11.20.0` (pinned in `.node-version` and `package.json`).

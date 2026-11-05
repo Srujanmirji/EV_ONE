@@ -15,6 +15,7 @@ Task IDs reference the specs in `PRD.md`, `UI_UX.md`, `DATABASE.md`, `API_CONTRA
   Depends: `-` · **Done when:** At least 20 seller-consented real listing leads documented or launch scope revised.
 - [ ] **EV-003** · P0 · S · **Confirm domain brand and IP checks**  
   Depends: `-` · **Done when:** Brand decision and trademark risk review recorded.
+  Software licensing scope (2026-11-05): added MIT `LICENSE`, root package SPDX metadata and README scope/exclusions for the open-source application. Public GitHub visibility verified; reference-image reuse rights, brand/domain and trademark review remain unresolved. EV-003 stays open. See the EV-003 licensing decision in `06_Reference/02_decision_register.md`.
 - [ ] **EV-004** · P0 · M · **Approve final UI reference and sitemap**  
   Depends: `-` · **Done when:** Desktop/mobile homepage and core screens signed off.
 - [~] **EV-005** · P0 · S · **Agree authentication vendor and implementation model**

@@ -21,6 +21,20 @@ All undecided decisions have an owner/date and block relevant implementation. Th
 | ADR-015 | Retention/privacy | define exact retention, breach and deletion policy with legal counsel | legal + security | production gate |
 | ADR-016 | Payment gateway | Razorpay for accessories and future paid promotions | finance/engineering review | EV-045 |
 
+### EV-003 — Open-source software license
+
+Date: 2026-11-05 | Status: MIT license adopted at owner request; broader IP review pending
+
+Context: The owner requested verification of public visibility and an appropriate open-source license before applying to Codex for Open Source. GitHub's repository API reports `private: false`, `visibility: public` and no detected license before this change.
+
+Decision: Use the standard MIT license for original EVONE source code and documentation, with copyright © 2026 Srujan Mirji (the local author name). MIT keeps reuse simple and allows commercial/proprietary forks with notice retention. Apache-2.0 adds an express patent grant; copyleft licenses require source sharing in defined circumstances. Neither additional policy was requested.
+
+Scope: Root `LICENSE`, `package.json` SPDX identifier and README licensing section. The two reference PNGs in `assets/` are excluded pending documented reuse rights; dependencies and third-party content keep their own licenses. No brand/trademark or third-party data rights are granted. No runtime code, database or provider configuration changes.
+
+Verification: Compared the license text with the SPDX MIT template, substituting only year/holder; validated root package JSON and checked the added diff for whitespace errors. No application tests are needed for this documentation/metadata change. Remote license detection must be verified after pushing the licensing-only commit. EV-003 remains open for brand/domain/trademark and image-rights checks.
+
+Revisit trigger: Verified image provenance, contribution ownership concerns, an explicit patent-license requirement or a decision to require reciprocal source sharing.
+
 ## Assumptions to validate
 - Used EV supply and buyer intent exist in initial market.
 - Buyers are willing to contact sellers through EVONE rather than direct platforms.
