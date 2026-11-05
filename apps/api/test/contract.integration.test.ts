@@ -1,6 +1,11 @@
-import type { INestApplication } from "@nestjs/common";
+import {
+  ServiceUnavailableException,
+  type INestApplication,
+} from "@nestjs/common";
+import { CatalogueEditorService } from "../src/catalogue/catalogue-editor.service.js";
+import { catalogueDocument } from "./fixtures/catalogue-document.js";
 import { ErrorEnvelope, routes } from "@evone/contracts";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
 import { mediaFixture } from "./media-fixture.js";
 import type { ApiConfig } from "../src/config/env.js";
@@ -98,11 +103,114 @@ beforeAll(async () => {
   const noGrantHeader = {
     Authorization: `Bearer ${authToken({ sub: `no_grant_${run}`, exp: Math.floor(Date.now() / 1000) + 3600 })}`,
   };
+  const editor = await db.user.create({
+    data: {
+      authIssuer: authEnv.AUTH_ISSUER,
+      authProviderId: `contract_editor_${run}`,
+      status: "ACTIVE",
+      roles: { create: { role: "EDITOR", scopeType: "GLOBAL" } },
+    },
+  });
+  const admin = await db.user.create({
+    data: {
+      authIssuer: authEnv.AUTH_ISSUER,
+      authProviderId: `contract_admin_${run}`,
+      status: "ACTIVE",
+      roles: { create: { role: "ADMIN", scopeType: "GLOBAL" } },
+    },
+  });
+  const editorHeaders = {
+    Authorization: `Bearer ${authToken({ sub: editor.authProviderId, exp: Math.floor(Date.now() / 1000) + 3600 })}`,
+  };
+  const adminHeaders = {
+    Authorization: `Bearer ${authToken({ sub: admin.authProviderId, exp: Math.floor(Date.now() / 1000) + 3600 })}`,
+  };
+  const document = catalogueDocument(`contract-${run}`);
+  const getDraft = await db.catalogueDraft.create({
+    data: { ownerId: editor.id, document },
+  });
+  const saveDraft = await db.catalogueDraft.create({
+    data: { ownerId: editor.id, document },
+  });
+  const submitDraft = await db.catalogueDraft.create({
+    data: { ownerId: editor.id, document },
+  });
+  const reviewDraft = await db.catalogueDraft.create({
+    data: { ownerId: editor.id, document, status: "IN_REVIEW" },
+  });
+  const editorRequests: Record<string, Record<string, ContractRequest>> = {};
+  for (const [operationId, path, body, headers] of [
+    [
+      "listCatalogueDrafts",
+      "/admin/catalogue/drafts",
+      undefined,
+      editorHeaders,
+    ],
+    [
+      "createCatalogueDraft",
+      "/admin/catalogue/drafts",
+      { document },
+      editorHeaders,
+    ],
+    [
+      "getCatalogueDraft",
+      `/admin/catalogue/drafts/${getDraft.id}`,
+      undefined,
+      editorHeaders,
+    ],
+    [
+      "saveCatalogueDraft",
+      `/admin/catalogue/drafts/${saveDraft.id}`,
+      { version: 1, document },
+      editorHeaders,
+    ],
+    [
+      "submitCatalogueDraft",
+      `/admin/catalogue/drafts/${submitDraft.id}/submit`,
+      { version: 1 },
+      editorHeaders,
+    ],
+    [
+      "reviewCatalogueDraft",
+      `/admin/catalogue/drafts/${reviewDraft.id}/review`,
+      { version: 1, decision: "APPROVE", reviewedSources: true },
+      adminHeaders,
+    ],
+  ] as const) {
+    const request = { path, ...(body ? { body } : {}), headers };
+    const invalid = body
+      ? { ...request, body: {} }
+      : {
+          ...request,
+          path: path.includes(getDraft.id)
+            ? path.replace(getDraft.id, "bad-id")
+            : path + "?cursor=bad-id",
+        };
+    const cases: Record<string, ContractRequest> = {
+      200: request,
+      400: invalid,
+      401: { path, ...(body ? { body } : {}) },
+      403: { ...request, headers: authorizationHeader },
+      503: request,
+    };
+    if (path.includes("/drafts/"))
+      cases[404] = {
+        ...request,
+        path: path.replace(
+          /drafts\/[^/]+/,
+          "drafts/7f088e6e-32fd-4086-af08-0aef72dabef2",
+        ),
+      };
+    if (body && "version" in body)
+      cases[409] = { ...request, body: { ...body, version: 999 } };
+    editorRequests[operationId] = cases;
+  }
   const brand = await publishedBrand();
   const m = await model(brand.id);
   const v = await variant(m.id);
   const v2 = await variant(m.id);
   requests = {
+    ...editorRequests,
     presignMediaUpload: {
       200: {
         path: "/media/presign",
@@ -288,6 +396,12 @@ describe("API contract", () => {
         const originalMedia = config.media;
         if (route.tag === "media" && status === "503")
           config.media = { mode: "disabled" };
+        const failureMock =
+          route.tag === "catalogue-editor" && status === "503"
+            ? vi
+                .spyOn(app.get(CatalogueEditorService), "run")
+                .mockRejectedValueOnce(new ServiceUnavailableException())
+            : undefined;
         const res = await fetch(`${base}${request.path}`, {
           method: route.method.toUpperCase(),
           headers: {
@@ -302,6 +416,7 @@ describe("API contract", () => {
               }
             : {}),
         });
+        failureMock?.mockRestore();
         config.media = originalMedia;
         dependencyUp = true;
         expect(res.status).toBe(Number(status));
