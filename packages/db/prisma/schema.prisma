@@ -125,6 +125,7 @@ model EvVariant {
   updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   model          EvModel        @relation(fields: [modelId], references: [id], onDelete: Restrict)
   sources        SpecSource[]
+  listings       Listing[]
 
   @@unique([modelId, slug])
   @@index([status])
@@ -202,6 +203,9 @@ model User {
   roles          RoleAssignment[]
   auditEvents    AuditEvent[]
   mediaAssets    MediaAsset[]
+  listings       Listing[]
+  listingReviews ListingReview[]
+  listingHistory ListingHistory[]
   catalogueDrafts CatalogueDraft[] @relation("DraftOwner")
   catalogueReviews CatalogueDraft[] @relation("DraftReviewer")
 
@@ -262,6 +266,8 @@ model MediaAsset {
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
   owner       User        @relation(fields: [ownerId], references: [id], onDelete: Restrict)
 
+  listingMedia ListingMedia[]
+
   @@index([ownerId, status])
   @@map("media_assets")
 }
@@ -293,4 +299,104 @@ model CatalogueDraft {
   @@index([reviewerId])
   @@index([modelId])
   @@map("catalogue_drafts")
+}
+
+// Marketplace foundation (EV-027). No listing API or public reads are enabled.
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+  SOLD
+}
+
+enum ListingReviewDecision {
+  APPROVE
+  REJECT
+}
+
+model Listing {
+  id               String @id @default(uuid()) @db.Uuid
+  sellerUserId     String @map("seller_user_id") @db.Uuid
+  variantId        String? @map("variant_id") @db.Uuid
+  slug             String @unique @db.VarChar(160)
+  year             Int?
+  odometerKm       Int? @map("odometer_km")
+  city             String? @db.VarChar(120)
+  askingPricePaise BigInt? @map("asking_price_paise")
+  ownershipCount   Int? @map("ownership_count")
+  conditionNotes   String? @map("condition_notes") @db.VarChar(3000)
+  status           ListingStatus @default(DRAFT)
+  version          Int @default(1)
+  isDemo           Boolean @default(true) @map("is_demo")
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz(6)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  seller           User @relation(fields:[sellerUserId],references:[id],onDelete:Restrict)
+  variant          EvVariant? @relation(fields:[variantId],references:[id],onDelete:Restrict)
+  media            ListingMedia[]
+  reviews          ListingReview[]
+  history          ListingHistory[]
+
+  @@index([sellerUserId,status])
+  @@index([variantId])
+  @@index([status,publishedAt])
+  @@index([status,askingPricePaise])
+  @@index([city,status])
+  @@map("listings")
+}
+
+model ListingMedia {
+  id           String @id @default(uuid()) @db.Uuid
+  listingId    String @map("listing_id") @db.Uuid
+  mediaAssetId String @map("media_asset_id") @db.Uuid
+  position     Int
+  alt          String @db.VarChar(300)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  listing      Listing @relation(fields:[listingId],references:[id],onDelete:Restrict)
+  asset        MediaAsset @relation(fields:[mediaAssetId],references:[id],onDelete:Restrict)
+
+  @@unique([listingId,position])
+  @@unique([listingId,mediaAssetId])
+  @@index([mediaAssetId])
+  @@map("listing_media")
+}
+
+model ListingReview {
+  id              String @id @default(uuid()) @db.Uuid
+  listingId       String @map("listing_id") @db.Uuid
+  listingVersion  Int @map("listing_version")
+  reviewerId      String @map("reviewer_id") @db.Uuid
+  decision        ListingReviewDecision
+  reason          String? @db.VarChar(500)
+  snapshot        Json @db.JsonB
+  requestId       String @map("request_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing         Listing @relation(fields:[listingId],references:[id],onDelete:Restrict)
+  reviewer        User @relation(fields:[reviewerId],references:[id],onDelete:Restrict)
+
+  @@unique([listingId,listingVersion])
+  @@index([reviewerId])
+  @@map("listing_reviews")
+}
+
+model ListingHistory {
+  id          String @id @default(uuid()) @db.Uuid
+  listingId   String @map("listing_id") @db.Uuid
+  version     Int
+  actorUserId String @map("actor_user_id") @db.Uuid
+  fromStatus  ListingStatus? @map("from_status")
+  toStatus    ListingStatus @map("to_status")
+  beforeJson  Json? @map("before_json") @db.JsonB
+  afterJson   Json @map("after_json") @db.JsonB
+  requestId   String @map("request_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing     Listing @relation(fields:[listingId],references:[id],onDelete:Restrict)
+  actor       User @relation(fields:[actorUserId],references:[id],onDelete:Restrict)
+
+  @@unique([listingId,version])
+  @@index([actorUserId,createdAt])
+  @@map("listing_history")
 }
