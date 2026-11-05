@@ -8,6 +8,7 @@ import { z } from "zod";
 import { telemetryConfigSchema } from "./config.js";
 
 const events = z.enum([
+  "catalogue.editor_failed",
   "media.cleanup_failed",
   "media.operation_failed",
   "process.uncaught_exception",

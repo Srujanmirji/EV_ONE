@@ -4,6 +4,76 @@
  */
 
 export interface paths {
+  "/admin/catalogue/drafts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only catalogue draft/review workflow. */
+    get: operations["listCatalogueDrafts"];
+    put?: never;
+    /** Local-only catalogue draft/review workflow. */
+    post: operations["createCatalogueDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/catalogue/drafts/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only catalogue draft/review workflow. */
+    get: operations["getCatalogueDraft"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Local-only catalogue draft/review workflow. */
+    patch: operations["saveCatalogueDraft"];
+    trace?: never;
+  };
+  "/admin/catalogue/drafts/{id}/review": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only catalogue draft/review workflow. */
+    post: operations["reviewCatalogueDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/catalogue/drafts/{id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only catalogue draft/review workflow. */
+    post: operations["submitCatalogueDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/auth/access/{scope}/{scopeId}": {
     parameters: {
       query?: never;
@@ -251,6 +321,96 @@ export interface components {
       name: string;
       isDemo: boolean;
       vehicleTypes: components["schemas"]["VehicleType"][];
+    };
+    CatalogueDocument: {
+      brand: {
+        name: string;
+        slug: string;
+      };
+      model: {
+        name: string;
+        slug: string;
+        vehicleType: components["schemas"]["VehicleType"];
+        /** @constant */
+        availability: "UNKNOWN";
+        releaseDate: null;
+      };
+      variants: {
+        name: string;
+        slug: string;
+        specs: {
+          batteryKwh: number | null;
+          claimedRange: {
+            km: number;
+            standard: components["schemas"]["RangeStandard"];
+          } | null;
+          motorKw: number | null;
+          chargingAcKw: number | null;
+          chargingDcKw: number | null;
+          warrantyText: string | null;
+        };
+        sources: {
+          fieldName: components["schemas"]["SpecField"];
+          valueText: string;
+          /** Format: uri */
+          sourceUrl: string;
+          sourceKind: components["schemas"]["SourceKind"];
+          effectiveAt: string | null;
+        }[];
+      }[];
+    };
+    CatalogueDraftCreate: {
+      document: components["schemas"]["CatalogueDocument"];
+    };
+    CatalogueDraftListResponse: {
+      data: {
+        /** @enum {string} */
+        role: "EDITOR" | "ADMIN";
+        items: {
+          /** Format: uuid */
+          id: string;
+          name: string;
+          version: number;
+          status: components["schemas"]["CatalogueDraftStatus"];
+        }[];
+        nextCursor: string | null;
+      };
+      meta: components["schemas"]["Meta"];
+    };
+    CatalogueDraftResponse: {
+      data: components["schemas"]["CatalogueDraftView"];
+      meta: components["schemas"]["Meta"];
+    };
+    CatalogueDraftReview: {
+      version: number;
+      /** @enum {string} */
+      decision: "APPROVE" | "REJECT";
+      reason?: string;
+      reviewedSources: boolean;
+    };
+    CatalogueDraftSave: {
+      version: number;
+      document: components["schemas"]["CatalogueDocument"];
+    };
+    /** @enum {string} */
+    CatalogueDraftStatus: "DRAFT" | "IN_REVIEW" | "REJECTED" | "PUBLISHED";
+    CatalogueDraftSubmit: {
+      version: number;
+    };
+    CatalogueDraftView: {
+      /** Format: uuid */
+      id: string;
+      version: number;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: uuid */
+      lastActorId: string;
+      status: components["schemas"]["CatalogueDraftStatus"];
+      document: components["schemas"]["CatalogueDocument"];
+      reviewReason: string | null;
+      modelId: string | null;
+      isOwner: boolean;
+      canReview: boolean;
     };
     ClaimedRange: {
       km: number;
@@ -505,6 +665,24 @@ export type SchemaBrandListResponse =
   components["schemas"]["BrandListResponse"];
 export type SchemaBrandRef = components["schemas"]["BrandRef"];
 export type SchemaBrandSummary = components["schemas"]["BrandSummary"];
+export type SchemaCatalogueDocument =
+  components["schemas"]["CatalogueDocument"];
+export type SchemaCatalogueDraftCreate =
+  components["schemas"]["CatalogueDraftCreate"];
+export type SchemaCatalogueDraftListResponse =
+  components["schemas"]["CatalogueDraftListResponse"];
+export type SchemaCatalogueDraftResponse =
+  components["schemas"]["CatalogueDraftResponse"];
+export type SchemaCatalogueDraftReview =
+  components["schemas"]["CatalogueDraftReview"];
+export type SchemaCatalogueDraftSave =
+  components["schemas"]["CatalogueDraftSave"];
+export type SchemaCatalogueDraftStatus =
+  components["schemas"]["CatalogueDraftStatus"];
+export type SchemaCatalogueDraftSubmit =
+  components["schemas"]["CatalogueDraftSubmit"];
+export type SchemaCatalogueDraftView =
+  components["schemas"]["CatalogueDraftView"];
 export type SchemaClaimedRange = components["schemas"]["ClaimedRange"];
 export type SchemaCompareResponse = components["schemas"]["CompareResponse"];
 export type SchemaErrorCode = components["schemas"]["ErrorCode"];
@@ -555,6 +733,485 @@ export type SchemaVariantSummary = components["schemas"]["VariantSummary"];
 export type SchemaVehicleType = components["schemas"]["VehicleType"];
 export type $defs = Record<string, never>;
 export interface operations {
+  listCatalogueDrafts: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Local catalogue operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDraftListResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Catalogue role or separate admin review required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  createCatalogueDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CatalogueDraftCreate"];
+      };
+    };
+    responses: {
+      /** @description Local catalogue operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDraftResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Catalogue role or separate admin review required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getCatalogueDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Local catalogue operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDraftResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Catalogue role or separate admin review required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  saveCatalogueDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CatalogueDraftSave"];
+      };
+    };
+    responses: {
+      /** @description Local catalogue operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDraftResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Catalogue role or separate admin review required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Revision, state or publication slug conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  reviewCatalogueDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CatalogueDraftReview"];
+      };
+    };
+    responses: {
+      /** @description Local catalogue operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDraftResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Catalogue role or separate admin review required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Revision, state or publication slug conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  submitCatalogueDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CatalogueDraftSubmit"];
+      };
+    };
+    responses: {
+      /** @description Local catalogue operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDraftResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Catalogue role or separate admin review required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Revision, state or publication slug conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
   checkResourceAccess: {
     parameters: {
       query?: never;
