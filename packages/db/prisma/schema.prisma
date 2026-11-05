@@ -100,6 +100,7 @@ model EvModel {
   updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   brand              Brand             @relation(fields: [brandId], references: [id], onDelete: Restrict)
   variants           EvVariant[]
+  catalogueDrafts     CatalogueDraft[]
 
   @@unique([brandId, slug])
   @@index([status, vehicleType])
@@ -176,6 +177,10 @@ enum AccessScope {
 }
 
 enum AuditAction {
+  CATALOGUE_READ
+  CATALOGUE_WRITE
+  CATALOGUE_SUBMIT
+  CATALOGUE_REVIEW
   MEDIA_UPLOAD
   MEDIA_COMPLETE
   MEDIA_READ
@@ -197,6 +202,8 @@ model User {
   roles          RoleAssignment[]
   auditEvents    AuditEvent[]
   mediaAssets    MediaAsset[]
+  catalogueDrafts CatalogueDraft[] @relation("DraftOwner")
+  catalogueReviews CatalogueDraft[] @relation("DraftReviewer")
 
   @@unique([authIssuer, authProviderId])
   @@map("users")
@@ -257,4 +264,33 @@ model MediaAsset {
 
   @@index([ownerId, status])
   @@map("media_assets")
+}
+
+enum CatalogueDraftStatus {
+  DRAFT
+  IN_REVIEW
+  REJECTED
+  PUBLISHED
+}
+
+model CatalogueDraft {
+  id           String @id @default(uuid()) @db.Uuid
+  ownerId      String @map("owner_id") @db.Uuid
+  document     Json @db.JsonB
+  version      Int @default(1)
+  status       CatalogueDraftStatus @default(DRAFT)
+  reviewReason String? @map("review_reason") @db.VarChar(500)
+  reviewerId   String? @map("reviewer_id") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  modelId      String? @map("model_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  owner        User @relation("DraftOwner",fields:[ownerId],references:[id],onDelete:Restrict)
+  reviewer     User? @relation("DraftReviewer",fields:[reviewerId],references:[id],onDelete:Restrict)
+  model        EvModel? @relation(fields:[modelId],references:[id],onDelete:Restrict)
+
+  @@index([ownerId,id])
+  @@index([reviewerId])
+  @@index([modelId])
+  @@map("catalogue_drafts")
 }

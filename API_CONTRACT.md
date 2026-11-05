@@ -257,3 +257,22 @@ All routes are below `/api/v1`, bearer-only and no-store. Media defaults disable
 Upload the exact declared bytes with the supplied Content-Type before the five-minute expiry. Content-Length and Content-Type are SigV4 signed; a browser supplies Content-Length itself. Real R2 enforcement and browser CORS await a bucket. URLs are bearer capabilities: do not log/cache/share them. Original objects are quarantine-only and never served through the read route. Completion checks actual length/type, image magic, bounded decoding (16 million pixels), non-animation, re-encodes to WebP at most 1200×1200 and strips metadata. This is not a malware-scanner claim. Reads sign only the committed sanitized object; retries of READY completion do not process a replacement original.
 
 Responses: 400 validation/invalid image/expired or unready asset; 401 authentication; 403 unknown/suspended actor or missing grant; 404 missing/cross-owner resource (same result); 503 disabled mode, storage or DB/audit failure. DB/audit failures release no capability URL. Validation failures before policy evaluation produce no decision audit. Existing signed read URLs remain usable for up to 60 seconds after revocation; upload URLs may recreate private quarantine objects until expiry. Bucket lifecycle cleanup and public-access controls require live acceptance.
+
+## Implemented catalogue editor (EV-022, local only, in progress)
+
+All routes require the local Clerk bearer guard and an ACTIVE app-owned account with an active/unexpired GLOBAL EDITOR or ADMIN grant. Production refuses local auth. Cookies and token roles grant no permissions. GET list is paginated by UUID (`cursor`, 20 entries); editors see only their drafts, admins can read all. Unknown/cross-editor drafts share 404. Private responses inherit no-store.
+
+| Method | Route | Body / purpose |
+|---|---|---|
+| GET | `/admin/catalogue/drafts?cursor=` | Role, summaries and next cursor |
+| POST | `/admin/catalogue/drafts` | `{ document }`; creates private revision 1 |
+| GET | `/admin/catalogue/drafts/{id}` | Owned/admin-readable document, status, revision, last actor/time |
+| PATCH | `/admin/catalogue/drafts/{id}` | `{ version, document }`; owner-only DRAFT/REJECTED save |
+| POST | `/admin/catalogue/drafts/{id}/submit` | `{ version }`; owner-only saved DRAFT, citation coverage required |
+| POST | `/admin/catalogue/drafts/{id}/review` | `{ version, decision, reviewedSources, reason? }`; a different ADMIN approves or requests changes |
+
+Documents contain a brand/model and 1–5 distinct-slug variants with nullable specs and up to six citations each. Every stated spec requires a citation before submission/approval. Citations use credential-free HTTPS URLs, cited wording, source kind and optional effective date. The server supplies reviewer/time on approval; callers cannot set them. Availability/date remain UNKNOWN/null because model-level provenance is outside this local slice. Approval requires `reviewedSources: true`; rejection needs a reason of 10–500 characters. The UI blocks implicit approval when Enter is pressed in the rejection field.
+
+Success uses 200. Errors: 400 malformed input/coverage/attestation; 401 missing/invalid auth; 403 missing catalogue role, non-owner mutation or self-review; 404 inaccessible/missing draft; 409 stale revision/state or publication slug conflict; 503 DB/audit failure. Saves/submissions/reviews increment the revision, and published snapshots cannot be edited. Concurrent approvals of different drafts with conflicting slugs yield one publication and an audited conflict. Actual publication and audit commit together; failure exposes no partial catalogue entry.
+
+The development-only web gateway forwards explicit bearer/JSON only to a configured loopback API, bounds request bytes and rejects conflicting origins. Its production route is 404 even if enabled. No catalogue data becomes production inventory: new publication is demo-flagged and existing production reads exclude it.

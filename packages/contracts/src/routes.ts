@@ -1,4 +1,14 @@
 import {
+  CatalogueDraftCreate,
+  CatalogueDraftSave,
+  CatalogueDraftSubmit,
+  CatalogueDraftReview,
+  CatalogueDraftParams,
+  CatalogueDraftQuery,
+  CatalogueDraftResponse,
+  CatalogueDraftListResponse,
+} from "./catalogue-editor.js";
+import {
   MediaUploadRequest,
   MediaUploadResponse,
   MediaCompleteRequest,
@@ -63,6 +73,81 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  ...[
+    {
+      operationId: "listCatalogueDrafts",
+      method: "get" as const,
+      path: "/admin/catalogue/drafts",
+      query: CatalogueDraftQuery,
+      schema: CatalogueDraftListResponse,
+    },
+    {
+      operationId: "createCatalogueDraft",
+      method: "post" as const,
+      path: "/admin/catalogue/drafts",
+      body: CatalogueDraftCreate,
+      schema: CatalogueDraftResponse,
+    },
+    {
+      operationId: "getCatalogueDraft",
+      method: "get" as const,
+      path: "/admin/catalogue/drafts/{id}",
+      params: CatalogueDraftParams,
+      schema: CatalogueDraftResponse,
+    },
+    {
+      operationId: "saveCatalogueDraft",
+      method: "patch" as const,
+      path: "/admin/catalogue/drafts/{id}",
+      params: CatalogueDraftParams,
+      body: CatalogueDraftSave,
+      schema: CatalogueDraftResponse,
+    },
+    {
+      operationId: "submitCatalogueDraft",
+      method: "post" as const,
+      path: "/admin/catalogue/drafts/{id}/submit",
+      params: CatalogueDraftParams,
+      body: CatalogueDraftSubmit,
+      schema: CatalogueDraftResponse,
+    },
+    {
+      operationId: "reviewCatalogueDraft",
+      method: "post" as const,
+      path: "/admin/catalogue/drafts/{id}/review",
+      params: CatalogueDraftParams,
+      body: CatalogueDraftReview,
+      schema: CatalogueDraftResponse,
+    },
+  ].map(({ schema, ...route }): RouteContract => {
+    const responses: Record<number, RouteResponse> = {
+      200: { description: "Local catalogue operation succeeded.", schema },
+      400: badRequest,
+      401: { description: "Authentication required.", schema: ErrorEnvelope },
+      403: {
+        description: "Catalogue role or separate admin review required.",
+        schema: ErrorEnvelope,
+      },
+      503: {
+        description: "Database/audit unavailable.",
+        schema: ErrorEnvelope,
+      },
+    };
+    if (route.params) responses[404] = notFound;
+    if (route.body && route.params)
+      responses[409] = {
+        description: "Revision, state or publication slug conflict.",
+        schema: ErrorEnvelope,
+      };
+    return {
+      ...route,
+      summary: "Local-only catalogue draft/review workflow.",
+      tag: "catalogue-editor",
+      bearerAuth: true,
+      responses,
+    };
+  }),
+
   ...[
     {
       operationId: "presignMediaUpload",
