@@ -13,3 +13,4 @@ export {
 export { schemaRegistry } from "./registry.js";
 export * from "./media.js";
 export * from "./catalogue-editor.js";
+export * from "./listings.js";

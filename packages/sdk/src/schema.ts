@@ -210,6 +210,93 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/listings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    post: operations["createListingDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/listings/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    get: operations["getOwnListing"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    patch: operations["saveListingDraft"];
+    trace?: never;
+  };
+  "/listings/{id}/media": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    post: operations["attachListingPhoto"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/listings/{id}/media/{photoId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    delete: operations["removeListingPhoto"];
+    options?: never;
+    head?: never;
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    patch: operations["editListingPhoto"];
+    trace?: never;
+  };
+  "/listings/{id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    post: operations["submitListingDraft"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/media/{id}/complete": {
     parameters: {
       query?: never;
@@ -270,6 +357,23 @@ export interface paths {
     };
     /** Published models, ordered by name then id, cursor-paginated. */
     get: operations["listModels"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/seller/listings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Local-only owner listing draft workflow; no public listing reads. */
+    get: operations["listOwnListings"];
     put?: never;
     post?: never;
     delete?: never;
@@ -443,6 +547,39 @@ export interface components {
       };
       meta: components["schemas"]["Meta"];
     };
+    ListingAttachRequest: {
+      version: number;
+      /** Format: uuid */
+      mediaAssetId: string;
+      alt: string;
+    };
+    ListingCreateRequest: Record<string, never>;
+    ListingFields: {
+      preferredVehicleType: components["schemas"]["VehicleType"] | null;
+      variantId: string | null;
+      year: number | null;
+      odometerKm: number | null;
+      city: string | null;
+      askingPricePaise: string | null;
+      ownershipCount: number | null;
+      conditionNotes: string | null;
+    };
+    ListingPhotoDeleteRequest: {
+      version: number;
+    };
+    ListingPhotoEditRequest: {
+      version: number;
+      alt: string;
+    };
+    ListingSaveRequest: {
+      version: number;
+      fields: components["schemas"]["ListingFields"];
+    };
+    ListingSubmitRequest: {
+      version: number;
+      /** @constant */
+      sellerDeclaration: true;
+    };
     LiveResponse: {
       data: components["schemas"]["LiveStatus"];
       meta: components["schemas"]["Meta"];
@@ -582,6 +719,64 @@ export interface components {
       estimatedPaybackMonths: number | null;
       exclusions: ["maintenance", "depreciation", "charging losses", "finance"];
     };
+    SellerListing: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      version: number;
+      status: components["schemas"]["SellerListingStatus"];
+      /** Format: date-time */
+      updatedAt: string;
+      fields: components["schemas"]["ListingFields"];
+      canonical: {
+        brand: string;
+        /** Format: uuid */
+        brandId: string;
+        brandSlug: string;
+        model: string;
+        /** Format: uuid */
+        modelId: string;
+        modelSlug: string;
+        variant: string;
+        vehicleType: components["schemas"]["VehicleType"];
+      } | null;
+      media: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        mediaAssetId: string;
+        position: number;
+        alt: string;
+      }[];
+      reviewReason: string | null;
+    };
+    SellerListingListResponse: {
+      data: {
+        items: {
+          /** Format: uuid */
+          id: string;
+          status: components["schemas"]["SellerListingStatus"];
+          version: number;
+          label: string | null;
+          /** Format: date-time */
+          updatedAt: string;
+        }[];
+        nextCursor: string | null;
+      };
+      meta: components["schemas"]["Meta"];
+    };
+    SellerListingResponse: {
+      data: components["schemas"]["SellerListing"];
+      meta: components["schemas"]["Meta"];
+    };
+    /** @enum {string} */
+    SellerListingStatus:
+      | "DRAFT"
+      | "PENDING_REVIEW"
+      | "PUBLISHED"
+      | "REJECTED"
+      | "ARCHIVED"
+      | "SOLD";
     SessionResponse: {
       data: {
         /** @constant */
@@ -687,6 +882,19 @@ export type SchemaClaimedRange = components["schemas"]["ClaimedRange"];
 export type SchemaCompareResponse = components["schemas"]["CompareResponse"];
 export type SchemaErrorCode = components["schemas"]["ErrorCode"];
 export type SchemaErrorEnvelope = components["schemas"]["ErrorEnvelope"];
+export type SchemaListingAttachRequest =
+  components["schemas"]["ListingAttachRequest"];
+export type SchemaListingCreateRequest =
+  components["schemas"]["ListingCreateRequest"];
+export type SchemaListingFields = components["schemas"]["ListingFields"];
+export type SchemaListingPhotoDeleteRequest =
+  components["schemas"]["ListingPhotoDeleteRequest"];
+export type SchemaListingPhotoEditRequest =
+  components["schemas"]["ListingPhotoEditRequest"];
+export type SchemaListingSaveRequest =
+  components["schemas"]["ListingSaveRequest"];
+export type SchemaListingSubmitRequest =
+  components["schemas"]["ListingSubmitRequest"];
 export type SchemaLiveResponse = components["schemas"]["LiveResponse"];
 export type SchemaLiveStatus = components["schemas"]["LiveStatus"];
 export type SchemaMediaCompleteRequest =
@@ -720,6 +928,13 @@ export type SchemaReadinessResponse =
 export type SchemaSavingsRequest = components["schemas"]["SavingsRequest"];
 export type SchemaSavingsResponse = components["schemas"]["SavingsResponse"];
 export type SchemaSavingsResult = components["schemas"]["SavingsResult"];
+export type SchemaSellerListing = components["schemas"]["SellerListing"];
+export type SchemaSellerListingListResponse =
+  components["schemas"]["SellerListingListResponse"];
+export type SchemaSellerListingResponse =
+  components["schemas"]["SellerListingResponse"];
+export type SchemaSellerListingStatus =
+  components["schemas"]["SellerListingStatus"];
 export type SchemaSessionResponse = components["schemas"]["SessionResponse"];
 export type SchemaSourceKind = components["schemas"]["SourceKind"];
 export type SchemaSpecField = components["schemas"]["SpecField"];
@@ -1537,6 +1752,598 @@ export interface operations {
       };
     };
   };
+  createListingDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ListingCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getOwnListing: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  saveListingDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ListingSaveRequest"];
+      };
+    };
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Stale revision, frozen state or reference conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  attachListingPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ListingAttachRequest"];
+      };
+    };
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Stale revision, frozen state or reference conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  removeListingPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        photoId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ListingPhotoDeleteRequest"];
+      };
+    };
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Stale revision, frozen state or reference conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  editListingPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        photoId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ListingPhotoEditRequest"];
+      };
+    };
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Stale revision, frozen state or reference conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  submitListingDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ListingSubmitRequest"];
+      };
+    };
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Stale revision, frozen state or reference conflict. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
   completeMediaUpload: {
     parameters: {
       query?: never;
@@ -1787,6 +2594,73 @@ export interface operations {
       };
       /** @description Invalid parameters (VALIDATION_ERROR). */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  listOwnListings: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Private seller operation succeeded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SellerListingListResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Active individual seller permission required. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Database/audit unavailable. */
+      503: {
         headers: {
           [name: string]: unknown;
         };

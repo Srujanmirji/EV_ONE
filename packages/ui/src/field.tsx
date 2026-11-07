@@ -4,6 +4,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
   useId,
 } from "react";
 import { cn } from "./cn";
@@ -191,5 +192,37 @@ export function Checkbox({
         </p>
       ) : null}
     </div>
+  );
+}
+
+export type TextAreaFieldProps = FieldChrome &
+  Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "children">;
+export function TextAreaField({
+  label,
+  hint,
+  error,
+  id,
+  required,
+  className,
+  ...props
+}: TextAreaFieldProps) {
+  const ids = useFieldIds(id);
+  return (
+    <Chrome
+      ids={ids}
+      label={label}
+      hint={hint}
+      error={error}
+      required={required}
+    >
+      <textarea
+        id={ids.id}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(ids, hint, error)}
+        className={cn(control, "min-h-32 resize-y py-3", className)}
+        {...props}
+      />
+    </Chrome>
   );
 }

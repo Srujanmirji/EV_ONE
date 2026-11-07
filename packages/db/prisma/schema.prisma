@@ -178,6 +178,8 @@ enum AccessScope {
 }
 
 enum AuditAction {
+  LISTING_ACCESS
+  LISTING_SUBMIT
   CATALOGUE_READ
   CATALOGUE_WRITE
   CATALOGUE_SUBMIT
@@ -319,6 +321,7 @@ enum ListingReviewDecision {
 model Listing {
   id               String @id @default(uuid()) @db.Uuid
   sellerUserId     String @map("seller_user_id") @db.Uuid
+  preferredVehicleType VehicleType? @map("preferred_vehicle_type")
   variantId        String? @map("variant_id") @db.Uuid
   slug             String @unique @db.VarChar(160)
   year             Int?

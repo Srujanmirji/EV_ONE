@@ -18,3 +18,5 @@ export {
 export { Modal, type ModalProps } from "./modal";
 export { EmptyState, ErrorState, Skeleton } from "./states";
 export { Gallery, type GalleryImage, type GalleryProps } from "./gallery";
+
+export { TextAreaField, type TextAreaFieldProps } from "./field";

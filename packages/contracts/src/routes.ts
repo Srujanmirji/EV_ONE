@@ -1,4 +1,17 @@
 import {
+  ListingCreateRequest,
+  ListingSaveRequest,
+  ListingSubmitRequest,
+  ListingAttachRequest,
+  ListingPhotoEditRequest,
+  ListingPhotoDeleteRequest,
+  ListingParams,
+  ListingPhotoParams,
+  SellerListQuery,
+  SellerListingResponse,
+  SellerListingListResponse,
+} from "./listings.js";
+import {
   CatalogueDraftCreate,
   CatalogueDraftSave,
   CatalogueDraftSubmit,
@@ -73,6 +86,98 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  ...[
+    {
+      operationId: "listOwnListings",
+      method: "get" as const,
+      path: "/seller/listings",
+      query: SellerListQuery,
+      schema: SellerListingListResponse,
+    },
+    {
+      operationId: "createListingDraft",
+      method: "post" as const,
+      path: "/listings",
+      body: ListingCreateRequest,
+      schema: SellerListingResponse,
+    },
+    {
+      operationId: "getOwnListing",
+      method: "get" as const,
+      path: "/listings/{id}",
+      params: ListingParams,
+      schema: SellerListingResponse,
+    },
+    {
+      operationId: "saveListingDraft",
+      method: "patch" as const,
+      path: "/listings/{id}",
+      params: ListingParams,
+      body: ListingSaveRequest,
+      schema: SellerListingResponse,
+    },
+    {
+      operationId: "submitListingDraft",
+      method: "post" as const,
+      path: "/listings/{id}/submit",
+      params: ListingParams,
+      body: ListingSubmitRequest,
+      schema: SellerListingResponse,
+    },
+    {
+      operationId: "attachListingPhoto",
+      method: "post" as const,
+      path: "/listings/{id}/media",
+      params: ListingParams,
+      body: ListingAttachRequest,
+      schema: SellerListingResponse,
+    },
+    {
+      operationId: "editListingPhoto",
+      method: "patch" as const,
+      path: "/listings/{id}/media/{photoId}",
+      params: ListingPhotoParams,
+      body: ListingPhotoEditRequest,
+      schema: SellerListingResponse,
+    },
+    {
+      operationId: "removeListingPhoto",
+      method: "delete" as const,
+      path: "/listings/{id}/media/{photoId}",
+      params: ListingPhotoParams,
+      body: ListingPhotoDeleteRequest,
+      schema: SellerListingResponse,
+    },
+  ].map(({ schema, ...route }): RouteContract => {
+    const responses: Record<number, RouteResponse> = {
+      200: { description: "Private seller operation succeeded.", schema },
+      400: badRequest,
+      401: { description: "Authentication required.", schema: ErrorEnvelope },
+      403: {
+        description: "Active individual seller permission required.",
+        schema: ErrorEnvelope,
+      },
+      503: {
+        description: "Database/audit unavailable.",
+        schema: ErrorEnvelope,
+      },
+    };
+    if (route.params) responses[404] = notFound;
+    if (route.params && route.body)
+      responses[409] = {
+        description: "Stale revision, frozen state or reference conflict.",
+        schema: ErrorEnvelope,
+      };
+    return {
+      ...route,
+      summary:
+        "Local-only owner listing draft workflow; no public listing reads.",
+      tag: "seller-listings",
+      bearerAuth: true,
+      responses,
+    };
+  }),
+
   ...[
     {
       operationId: "listCatalogueDrafts",
