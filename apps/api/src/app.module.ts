@@ -17,6 +17,7 @@ import { CalculatorsModule } from "./calculators/calculators.module.js";
 import { CatalogueModule } from "./catalogue/catalogue.module.js";
 import { DB_CLIENT } from "./database/database.token.js";
 import { MediaModule } from "./media/media.module.js";
+import { MarketplaceModule } from "./marketplace/marketplace.module.js";
 import { IdentityModule } from "./identity/identity.module.js";
 import { HealthModule } from "./health/health.module.js";
 import { READINESS_CHECKS, type ReadinessCheck } from "./health/readiness.js";
@@ -78,6 +79,7 @@ export class AppModule implements OnApplicationShutdown {
         CoreModule.register(options),
         HealthModule,
         IdentityModule,
+        MarketplaceModule,
         MediaModule,
         CatalogueModule,
         CalculatorsModule,
