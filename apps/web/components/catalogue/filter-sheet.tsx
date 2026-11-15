@@ -6,9 +6,11 @@ import { type ReactNode, useState } from "react";
 /** Below lg: filters open in a dialog (UX-02 mobile sheet). */
 export function FilterSheet({
   activeCount,
+  title = "Filter models",
   children,
 }: {
   activeCount: number;
+  title?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -20,7 +22,7 @@ export function FilterSheet({
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Filter models"
+        title={title}
         placement="sheet"
       >
         {children}

@@ -1,10 +1,29 @@
-import type { ModelSummary, SpecSummary } from "@evone/contracts";
+import type {
+  ModelSummary,
+  PublicListingSort,
+  PublicListingSummary,
+  SpecSummary,
+} from "@evone/contracts";
 
 export const VEHICLE_TYPE_LABEL: Record<ModelSummary["vehicleType"], string> = {
   SCOOTER: "Scooter",
   MOTORCYCLE: "Motorcycle",
   CAR: "Car",
   THREE_WHEELER: "Three-wheeler",
+};
+
+export const SELLER_TYPE_LABEL: Record<
+  PublicListingSummary["sellerType"],
+  string
+> = {
+  INDIVIDUAL_OWNER: "Individual seller",
+};
+
+export const LISTING_SORT_LABEL: Record<PublicListingSort, string> = {
+  PRICE_ASC: "Price: low to high",
+  PRICE_DESC: "Price: high to low",
+  YEAR_DESC: "Year: newest first",
+  ODOMETER_ASC: "Kilometres: lowest first",
 };
 
 export const AVAILABILITY_LABEL: Record<ModelSummary["availability"], string> =
@@ -42,4 +61,36 @@ export function formatReviewDate(iso: string): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(iso));
+}
+
+const inrWhole = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const inrPaise = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export function formatInrFromPaise(paise: string): string {
+  const totalPaise = BigInt(paise);
+  const rupees = Number(totalPaise) / 100;
+  return totalPaise % 100n === 0n
+    ? inrWhole.format(rupees)
+    : inrPaise.format(rupees);
+}
+
+export function formatKilometres(km: number): string {
+  return `${number.format(km)} km`;
+}
+
+export function formatOwnership(count: number): string {
+  if (count === 1) return "1st owner";
+  if (count === 2) return "2nd owner";
+  if (count === 3) return "3rd owner";
+  return `${count}th owner`;
 }

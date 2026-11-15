@@ -59,3 +59,5 @@ Meet WCAG 2.2 AA wherever feasible; keyboard support, 44×44px touch-target inte
 Generate homepage, then approved used-vehicle listing/detail flow, then catalogue, commerce, calculators/charging, editorial/finance, account and dashboards. Use [`02_UI_UX/04_stitch_prompts.md`](02_UI_UX/04_stitch_prompts.md); attach `assets/approved_ui_reference.png` to every new Stitch project generation for consistency.
 
 EV-049 implements UX-13 using the established tokens/components. See `02_UI_UX/08_EV-049_calculator_direction.md` for inherited visual direction, responsive composition and accessibility decisions.
+
+EV-030 implements UX-02 (`/used-evs`) using the established tokens/components (`Card`, `SelectField`, `TextField`, `Modal` bottom sheet, `EmptyState`, `ErrorState`, `Skeleton`), URL-persistent GET filters and sorting, truthful `Demo data` / `Individual seller` / `Enquiry only` labels, and sourced canonical spec display. See `04_Delivery/36_EV-030_used_ev_search_ui_evidence.md`.
