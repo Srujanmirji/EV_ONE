@@ -1,10 +1,12 @@
+import { randomUUID } from "node:crypto";
 import {
   ServiceUnavailableException,
   type INestApplication,
 } from "@nestjs/common";
 import { CatalogueEditorService } from "../src/catalogue/catalogue-editor.service.js";
+import { ListingService } from "../src/marketplace/listing.service.js";
 import { catalogueDocument } from "./fixtures/catalogue-document.js";
-import { ErrorEnvelope, routes } from "@evone/contracts";
+import { ErrorEnvelope, SellerListingResponse, routes } from "@evone/contracts";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
 import { mediaFixture } from "./media-fixture.js";
@@ -209,8 +211,154 @@ beforeAll(async () => {
   const m = await model(brand.id);
   const v = await variant(m.id);
   const v2 = await variant(m.id);
+
+  // Seller listing drafts. Listings and their variant references are
+  // immutable evidence (ON DELETE RESTRICT), so the demo catalogue rows below
+  // deliberately avoid the `${run}-` slugs that cleanup() deletes.
+  const seller = async (path: string, method: string, body?: unknown) => {
+    const res = await fetch(`${base}${path}`, {
+      method,
+      headers: { ...authorizationHeader, "Content-Type": "application/json" },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    expect(res.status, `${method} ${path}`).toBe(200);
+    return SellerListingResponse.parse(await res.json()).data;
+  };
+  const draft = () => seller("/listings", "POST", {});
+  const readyPhoto = async () => {
+    const asset = await db.mediaAsset.create({
+      data: {
+        ownerId: authorizationUser.id,
+        contentType: "image/webp",
+        sizeBytes: 12,
+        status: "READY",
+        objectKey: `ready/synthetic-contract-${randomUUID()}.webp`,
+        expiresAt: new Date(Date.now() + 300000),
+      },
+    });
+    return { mediaAssetId: asset.id, alt: "DEMO synthetic contract photo" };
+  };
+  const listingBrand = await db.brand.create({
+    data: {
+      name: "DEMO Contract Listing Brand",
+      slug: `demo-contract-${randomUUID()}`,
+      isDemo: true,
+      status: "PUBLISHED",
+    },
+  });
+  const listingModel = await db.evModel.create({
+    data: {
+      brandId: listingBrand.id,
+      name: "DEMO Contract Listing Model",
+      slug: "demo-model",
+      vehicleType: "SCOOTER",
+      isDemo: true,
+      status: "PUBLISHED",
+    },
+  });
+  const listingVariant = await db.evVariant.create({
+    data: {
+      modelId: listingModel.id,
+      name: "DEMO Contract Listing Variant",
+      slug: "demo-variant",
+      isDemo: true,
+      status: "PUBLISHED",
+    },
+  });
+  const getRow = await draft();
+  const saveRow = await draft();
+  const attachRow = await draft();
+  let submitRow = await draft();
+  submitRow = await seller(`/listings/${submitRow.id}`, "PATCH", {
+    version: submitRow.version,
+    fields: {
+      ...submitRow.fields,
+      preferredVehicleType: "SCOOTER",
+      variantId: listingVariant.id,
+      year: 2024,
+      odometerKm: 123,
+      ownershipCount: 1,
+      city: "DEMO City",
+      askingPricePaise: "25000000",
+      conditionNotes: "DEMO synthetic condition; no personal information.",
+    },
+  });
+  const withPhoto = async (row: { id: string; version: number }) =>
+    seller(`/listings/${row.id}/media`, "POST", {
+      version: row.version,
+      ...(await readyPhoto()),
+    });
+  submitRow = await withPhoto(submitRow);
+  const editRow = await withPhoto(await draft());
+  const removeRow = await withPhoto(await draft());
+  const listingCases: [string, string, Record<string, unknown>?][] = [
+    ["listOwnListings", "/seller/listings"],
+    ["createListingDraft", "/listings", {}],
+    ["getOwnListing", `/listings/${getRow.id}`],
+    [
+      "saveListingDraft",
+      `/listings/${saveRow.id}`,
+      { version: saveRow.version, fields: saveRow.fields },
+    ],
+    [
+      "submitListingDraft",
+      `/listings/${submitRow.id}/submit`,
+      { version: submitRow.version, sellerDeclaration: true },
+    ],
+    [
+      "attachListingPhoto",
+      `/listings/${attachRow.id}/media`,
+      { version: attachRow.version, ...(await readyPhoto()) },
+    ],
+    [
+      "editListingPhoto",
+      `/listings/${editRow.id}/media/${editRow.media[0]!.id}`,
+      { version: editRow.version, alt: "DEMO updated contract photo" },
+    ],
+    [
+      "removeListingPhoto",
+      `/listings/${removeRow.id}/media/${removeRow.media[0]!.id}`,
+      { version: removeRow.version },
+    ],
+  ];
+  const listingRequests: Record<string, Record<string, ContractRequest>> = {};
+  for (const [operationId, path, body] of listingCases) {
+    const request = {
+      path,
+      ...(body ? { body } : {}),
+      headers: authorizationHeader,
+    };
+    const cases: Record<string, ContractRequest> = {
+      200: request,
+      // Strict schemas reject unknown keys; GETs get a malformed UUID instead.
+      400: body
+        ? { ...request, body: { ...body, unexpected: true } }
+        : {
+            ...request,
+            path: path.startsWith("/listings/")
+              ? "/listings/not-a-uuid"
+              : `${path}?cursor=bad-id`,
+          },
+      401: { path, ...(body ? { body } : {}) },
+      403: { ...request, headers: noGrantHeader },
+      503: request,
+    };
+    if (path.startsWith("/listings/")) {
+      cases[404] = {
+        ...request,
+        path: path.replace(
+          /^\/listings\/[^/]+/,
+          "/listings/7f088e6e-32fd-4086-af08-0aef72dabef2",
+        ),
+      };
+      if (body) cases[409] = { ...request, body: { ...body, version: 999 } };
+    }
+    listingRequests[operationId] = cases;
+  }
+
   requests = {
     ...editorRequests,
+    ...listingRequests,
     presignMediaUpload: {
       200: {
         path: "/media/presign",
@@ -401,7 +549,11 @@ describe("API contract", () => {
             ? vi
                 .spyOn(app.get(CatalogueEditorService), "run")
                 .mockRejectedValueOnce(new ServiceUnavailableException())
-            : undefined;
+            : route.tag === "seller-listings" && status === "503"
+              ? vi
+                  .spyOn(app.get(ListingService), "run")
+                  .mockRejectedValueOnce(new ServiceUnavailableException())
+              : undefined;
         const res = await fetch(`${base}${request.path}`, {
           method: route.method.toUpperCase(),
           headers: {
