@@ -30,7 +30,8 @@ export const sections: SiteSection[] = [
       "Browse used electric vehicles from individual sellers and dealers, and contact them directly.",
     placement: "primary",
     availability:
-      "Listings are not available yet. No vehicles are for sale on EVONE today.",
+      "Only moderation-approved listings from active sellers are published.",
+    live: true,
   },
   {
     href: "/evs",
