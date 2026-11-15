@@ -62,7 +62,7 @@ async function createCatalogueFixture(
   const brand = await db.brand.create({
     data: {
       slug: `demo-pub-brand-${suffix}`,
-      name: opts.brandName ?? `DEMO Brand ${suffix}`,
+      name: opts.brandName ?? `ZZZ DEMO Brand ${suffix}`,
       isDemo: true,
       status: "PUBLISHED",
     },
@@ -71,7 +71,7 @@ async function createCatalogueFixture(
     data: {
       brandId: brand.id,
       slug: `demo-pub-model-${suffix}`,
-      name: `DEMO Model ${suffix}`,
+      name: `ZZZ DEMO Model ${suffix}`,
       vehicleType: opts.vehicleType ?? "CAR",
       isDemo: true,
       status: "PUBLISHED",

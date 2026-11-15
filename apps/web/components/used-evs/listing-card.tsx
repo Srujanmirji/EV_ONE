@@ -31,6 +31,7 @@ export function ListingCard({ listing }: { listing: PublicListingSummary }) {
         <h2 className="font-display text-xl font-semibold">
           <Link
             href={usedEvDetailHref(listing.slug)}
+            prefetch={false}
             className="underline-offset-4 hover:underline"
           >
             {model.name} {variant.name}
