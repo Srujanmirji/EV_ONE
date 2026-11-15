@@ -217,7 +217,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** Filtered, cursor-paginated published used EV listings; demo rows hidden in production. */
+    get: operations["listPublicListings"];
     put?: never;
     /** Local-only owner listing draft workflow; no public listing reads. */
     post: operations["createListingDraft"];
@@ -374,6 +375,23 @@ export interface paths {
     };
     /** Local-only owner listing draft workflow; no public listing reads. */
     get: operations["listOwnListings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/used-evs/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Published used EV listing detail with canonical specs and reviewed sources. */
+    get: operations["getPublicListing"];
     put?: never;
     post?: never;
     delete?: never;
@@ -675,6 +693,76 @@ export interface components {
       nextCursor: string | null;
       hasMore: boolean;
     };
+    PublicListingDetail: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      year: number;
+      odometerKm: number;
+      city: string;
+      askingPricePaise: string;
+      ownershipCount: number;
+      isDemo: boolean;
+      /** Format: date-time */
+      publishedAt: string;
+      sellerType: components["schemas"]["PublicSellerType"];
+      photoCount: number;
+      vehicle: components["schemas"]["PublicListingVehicle"];
+      conditionNotes: string;
+      media: components["schemas"]["PublicListingPhoto"][];
+      sources: components["schemas"]["SpecSourceView"][];
+    };
+    PublicListingDetailResponse: {
+      data: components["schemas"]["PublicListingDetail"];
+      meta: components["schemas"]["Meta"];
+    };
+    PublicListingListResponse: {
+      data: components["schemas"]["PublicListingSummary"][];
+      page: components["schemas"]["PageInfo"];
+      meta: components["schemas"]["Meta"];
+    };
+    PublicListingPhoto: {
+      /** Format: uuid */
+      id: string;
+      position: number;
+      alt: string;
+    };
+    /** @enum {string} */
+    PublicListingSort:
+      "PRICE_ASC" | "PRICE_DESC" | "YEAR_DESC" | "ODOMETER_ASC";
+    PublicListingSummary: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      year: number;
+      odometerKm: number;
+      city: string;
+      askingPricePaise: string;
+      ownershipCount: number;
+      isDemo: boolean;
+      /** Format: date-time */
+      publishedAt: string;
+      sellerType: components["schemas"]["PublicSellerType"];
+      photoCount: number;
+      vehicle: components["schemas"]["PublicListingVehicle"];
+    };
+    PublicListingVehicle: {
+      brand: components["schemas"]["BrandRef"];
+      model: {
+        slug: string;
+        name: string;
+        vehicleType: components["schemas"]["VehicleType"];
+      };
+      variant: {
+        /** Format: uuid */
+        id: string;
+        slug: string;
+        name: string;
+        specs: components["schemas"]["VariantSpecs"];
+      };
+    };
+    /** @enum {string} */
+    PublicSellerType: "INDIVIDUAL_OWNER";
     RangeByStandard: {
       standard: components["schemas"]["RangeStandard"];
       minKm: number;
@@ -918,6 +1006,21 @@ export type SchemaModelListResponse =
 export type SchemaModelSummary = components["schemas"]["ModelSummary"];
 export type SchemaNumberRange = components["schemas"]["NumberRange"];
 export type SchemaPageInfo = components["schemas"]["PageInfo"];
+export type SchemaPublicListingDetail =
+  components["schemas"]["PublicListingDetail"];
+export type SchemaPublicListingDetailResponse =
+  components["schemas"]["PublicListingDetailResponse"];
+export type SchemaPublicListingListResponse =
+  components["schemas"]["PublicListingListResponse"];
+export type SchemaPublicListingPhoto =
+  components["schemas"]["PublicListingPhoto"];
+export type SchemaPublicListingSort =
+  components["schemas"]["PublicListingSort"];
+export type SchemaPublicListingSummary =
+  components["schemas"]["PublicListingSummary"];
+export type SchemaPublicListingVehicle =
+  components["schemas"]["PublicListingVehicle"];
+export type SchemaPublicSellerType = components["schemas"]["PublicSellerType"];
 export type SchemaRangeByStandard = components["schemas"]["RangeByStandard"];
 export type SchemaRangeStandard = components["schemas"]["RangeStandard"];
 export type SchemaReadinessCheckResult =
@@ -1739,6 +1842,57 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ReadinessResponse"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  listPublicListings: {
+    parameters: {
+      query?: {
+        vehicleType?: components["schemas"]["VehicleType"];
+        brandSlug?: string;
+        modelSlug?: string;
+        city?: string;
+        minPricePaise?: string;
+        maxPricePaise?: string;
+        minYear?: number;
+        maxYear?: number;
+        maxOdometerKm?: number;
+        sort?: components["schemas"]["PublicListingSort"];
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Published used EV listings. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicListingListResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
         };
       };
       /** @description Error in the contract error envelope. */
@@ -2661,6 +2815,55 @@ export interface operations {
       };
       /** @description Database/audit unavailable. */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getPublicListing: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Published used EV listing detail. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicListingDetailResponse"];
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
         headers: {
           [name: string]: unknown;
         };

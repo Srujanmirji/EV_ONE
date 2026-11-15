@@ -1,7 +1,13 @@
 import { z } from "zod";
 import { component } from "./registry.js";
-import { dataEnvelope } from "./common.js";
-import { VehicleType } from "./catalogue.js";
+import { Meta, dataEnvelope } from "./common.js";
+import {
+  BrandRef,
+  PageInfo,
+  SpecSourceView,
+  VariantSpecs,
+  VehicleType,
+} from "./catalogue.js";
 
 const paise = z
   .string()
@@ -134,3 +140,128 @@ export const SellerListingListResponse = dataEnvelope(
 export type SellerListingListResponse = z.infer<
   typeof SellerListingListResponse
 >;
+
+export const PublicListingSort = component(
+  "PublicListingSort",
+  z.enum(["PRICE_ASC", "PRICE_DESC", "YEAR_DESC", "ODOMETER_ASC"]),
+);
+export type PublicListingSort = z.infer<typeof PublicListingSort>;
+
+export const PublicSellerType = component(
+  "PublicSellerType",
+  z.enum(["INDIVIDUAL_OWNER"]),
+  "Asserted seller role only; never implies identity, dealer or battery verification.",
+);
+export type PublicSellerType = z.infer<typeof PublicSellerType>;
+
+export const PublicListingVehicle = component(
+  "PublicListingVehicle",
+  z.strictObject({
+    brand: BrandRef,
+    model: z.strictObject({
+      slug: z.string(),
+      name: z.string(),
+      vehicleType: VehicleType,
+    }),
+    variant: z.strictObject({
+      id: z.uuid(),
+      slug: z.string(),
+      name: z.string(),
+      specs: VariantSpecs,
+    }),
+  }),
+);
+export type PublicListingVehicle = z.infer<typeof PublicListingVehicle>;
+
+export const PublicListingSummary = component(
+  "PublicListingSummary",
+  z.strictObject({
+    id: z.uuid(),
+    slug: z.string(),
+    year: z.int().min(1900).max(2100),
+    odometerKm: z.int().nonnegative(),
+    city: z.string(),
+    askingPricePaise: paise,
+    ownershipCount: z.int().positive(),
+    isDemo: z.boolean(),
+    publishedAt: z.iso.datetime(),
+    sellerType: PublicSellerType,
+    photoCount: z.int().nonnegative(),
+    vehicle: PublicListingVehicle,
+  }),
+);
+export type PublicListingSummary = z.infer<typeof PublicListingSummary>;
+
+export const PublicListingPhoto = component(
+  "PublicListingPhoto",
+  z.strictObject({
+    id: z.uuid(),
+    position: z.int().min(0).max(11),
+    alt: z.string(),
+  }),
+  "Reviewed attachment metadata only; private storage keys and capability URLs are excluded.",
+);
+export type PublicListingPhoto = z.infer<typeof PublicListingPhoto>;
+
+export const PublicListingDetail = component(
+  "PublicListingDetail",
+  z.strictObject({
+    ...PublicListingSummary.shape,
+    conditionNotes: z.string(),
+    media: z.array(PublicListingPhoto).min(1).max(12),
+    sources: z.array(SpecSourceView),
+  }),
+);
+export type PublicListingDetail = z.infer<typeof PublicListingDetail>;
+
+export const PublicListingListResponse = component(
+  "PublicListingListResponse",
+  z.strictObject({
+    data: z.array(PublicListingSummary),
+    page: PageInfo,
+    meta: Meta,
+  }),
+);
+export type PublicListingListResponse = z.infer<
+  typeof PublicListingListResponse
+>;
+
+export const PublicListingDetailResponse = dataEnvelope(
+  "PublicListingDetailResponse",
+  PublicListingDetail,
+);
+export type PublicListingDetailResponse = z.infer<
+  typeof PublicListingDetailResponse
+>;
+
+export const PublicListingPathParams = z.strictObject({
+  slug: z
+    .string()
+    .max(160)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+});
+export type PublicListingPathParams = z.infer<typeof PublicListingPathParams>;
+
+export const PublicListingListQuery = z.strictObject({
+  vehicleType: VehicleType.optional(),
+  brandSlug: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .optional(),
+  modelSlug: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .optional(),
+  city: z.string().min(1).max(120).regex(/\S/).optional(),
+  minPricePaise: paise.optional(),
+  maxPricePaise: paise.optional(),
+  minYear: z.coerce.number().int().min(1900).max(2100).optional(),
+  maxYear: z.coerce.number().int().min(1900).max(2100).optional(),
+  maxOdometerKm: z.coerce.number().int().min(0).max(2147483647).optional(),
+  sort: PublicListingSort.default("PRICE_ASC"),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.string().max(512).optional(),
+});
+export type PublicListingListQuery = z.infer<typeof PublicListingListQuery>;

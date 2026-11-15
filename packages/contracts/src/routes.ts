@@ -7,6 +7,10 @@ import {
   ListingPhotoDeleteRequest,
   ListingParams,
   ListingPhotoParams,
+  PublicListingDetailResponse,
+  PublicListingListQuery,
+  PublicListingListResponse,
+  PublicListingPathParams,
   SellerListQuery,
   SellerListingResponse,
   SellerListingListResponse,
@@ -86,6 +90,39 @@ const notFound: RouteResponse = {
  * served but missing here, or listed here but not served.
  */
 export const routes: RouteContract[] = [
+  {
+    operationId: "listPublicListings",
+    method: "get",
+    path: "/listings",
+    summary:
+      "Filtered, cursor-paginated published used EV listings; demo rows hidden in production.",
+    tag: "marketplace",
+    query: PublicListingListQuery,
+    responses: {
+      200: {
+        description: "Published used EV listings.",
+        schema: PublicListingListResponse,
+      },
+      400: badRequest,
+    },
+  },
+  {
+    operationId: "getPublicListing",
+    method: "get",
+    path: "/used-evs/{slug}",
+    summary:
+      "Published used EV listing detail with canonical specs and reviewed sources.",
+    tag: "marketplace",
+    params: PublicListingPathParams,
+    responses: {
+      200: {
+        description: "Published used EV listing detail.",
+        schema: PublicListingDetailResponse,
+      },
+      400: badRequest,
+      404: notFound,
+    },
+  },
   ...[
     {
       operationId: "listOwnListings",
