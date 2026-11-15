@@ -279,6 +279,25 @@ The development-only web gateway forwards explicit bearer/JSON only to a configu
 
 ## Listing schema foundation (EV-027, local only, in progress)
 
-Listing/media/review/history tables and SQL guards are implemented for individual-owned demo records. The listing routes in the planning tables above remain unimplemented; this migration enables no public read, seller mutation, moderation endpoint or checkout. OpenAPI/SDK routes are unchanged. Future API writers must derive the app actor from verified auth, set actor/request context transaction-locally and check expected revisions under a parent lock before a mutation/attachment batch. PostgreSQL context settings are not an authentication mechanism for arbitrary SQL clients. Database stale-version SQLSTATE 40001 maps to Prisma P2034 and should become a safe conflict response in the future API.
+Listing/media/review/history tables and SQL guards are implemented for individual-owned demo records. Public browse/detail, moderation queue and enquiry routes in the planning tables above remain unimplemented; see EV-028 below for the local-only owner draft writer. Trusted API writers derive the app actor from verified auth, set actor/request context transaction-locally and check expected revisions under a parent lock before a mutation/attachment batch. PostgreSQL context settings are not an authentication mechanism for arbitrary SQL clients. Database stale-version SQLSTATE 40001 maps to Prisma P2034 and becomes a safe 409 conflict response in the API.
 
 READY media means the existing image-validation/re-encoding stage, not malware/inspection/licensing certification. Listing approval is a separate review decision and must not generate verification/battery badges. Future published reads must check seller activity and demo visibility as well as status. Dealer membership and public media policies remain their named later tasks. See `DATABASE.md` and EV-027 evidence for exact constraints and remaining acceptance.
+
+## Implemented seller listing writer (EV-028, local only, in progress)
+
+All routes are below `/api/v1`, require the local Clerk bearer guard (`ClerkGuard`) and an ACTIVE app-owned account with an active, unexpired GLOBAL `USER` or `ADMIN` grant. Production refuses local auth. ADMIN has no cross-owner bypass (`404` on another seller's draft), and dealer-only grants (`DEALER_STAFF` / `DEALER_OWNER`) are refused (`403`). Every response inherits `Cache-Control: no-store`.
+
+| Method | Route | Body / query | 200 data |
+|---|---|---|---|
+| GET | `/seller/listings?cursor=` | optional UUID `cursor` | `{ items, nextCursor }` (20 per page, own drafts only) |
+| POST | `/listings` | `{}` | `SellerListing` (`DRAFT`, revision 1, `demo-{id}` slug) |
+| GET | `/listings/{id}` | — | `SellerListing` (owner only, with latest rejection reason if `REJECTED`) |
+| PATCH | `/listings/{id}` | `{ version, fields }` | `SellerListing` (`DRAFT`/`REJECTED` → `DRAFT`, increments revision) |
+| POST | `/listings/{id}/submit` | `{ version, sellerDeclaration: true }` | `SellerListing` (complete `DRAFT` + ≥1 photo → `PENDING_REVIEW`) |
+| POST | `/listings/{id}/media` | `{ version, mediaAssetId, alt }` | `SellerListing` (attaches `READY` same-owner asset at lowest free slot 0–11) |
+| PATCH | `/listings/{id}/media/{photoId}` | `{ version, alt }` | `SellerListing` (updates alt text and increments revision) |
+| DELETE | `/listings/{id}/media/{photoId}` | `{ version }` | `SellerListing` (detaches photo and increments revision) |
+
+`ListingFields` stores `preferredVehicleType`, `variantId`, `year`, `odometerKm`, `city`, `askingPricePaise` (positive bigint string), `ownershipCount` and `conditionNotes`. If `variantId` is set, the variant, model and brand must be `PUBLISHED` and match `preferredVehicleType` when both are present. Every allow/deny decision records `LISTING_ACCESS` or `LISTING_SUBMIT` in `audit_events` (including a fresh denial audit if a database trigger or serialization check aborts the transaction).
+
+The development-only `/sell/api/[[...path]]` web gateway (`LOCAL_SELL_ENABLED=true` in development) forwards only allowlisted seller, media and catalogue paths with explicit bearer/JSON to the loopback API. In production `/sell/api/*` returns `404` with `no-store`. See `04_Delivery/34_EV-028_sell_wizard_evidence.md`.
