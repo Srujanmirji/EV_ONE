@@ -240,7 +240,7 @@ beforeAll(async () => {
   };
   const listingBrand = await db.brand.create({
     data: {
-      name: "DEMO Contract Listing Brand",
+      name: "ZZZ DEMO Contract Listing Brand",
       slug: `demo-contract-${randomUUID()}`,
       isDemo: true,
       status: "PUBLISHED",
@@ -249,7 +249,7 @@ beforeAll(async () => {
   const listingModel = await db.evModel.create({
     data: {
       brandId: listingBrand.id,
-      name: "DEMO Contract Listing Model",
+      name: "ZZZ DEMO Contract Listing Model",
       slug: "demo-model",
       vehicleType: "SCOOTER",
       isDemo: true,
