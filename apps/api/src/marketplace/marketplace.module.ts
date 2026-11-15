@@ -2,9 +2,12 @@ import { Module } from "@nestjs/common";
 import { IdentityModule } from "../identity/identity.module.js";
 import { ListingController } from "./listing.controller.js";
 import { ListingService } from "./listing.service.js";
+import { PublicListingController } from "./public-listing.controller.js";
+import { PublicListingRepository } from "./public-listing.repository.js";
+
 @Module({
   imports: [IdentityModule],
-  controllers: [ListingController],
-  providers: [ListingService],
+  controllers: [PublicListingController, ListingController],
+  providers: [PublicListingRepository, ListingService],
 })
 export class MarketplaceModule {}

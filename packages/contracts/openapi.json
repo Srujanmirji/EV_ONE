@@ -1016,6 +1016,161 @@
       }
     },
     "/listings": {
+      "get": {
+        "operationId": "listPublicListings",
+        "summary": "Filtered, cursor-paginated published used EV listings; demo rows hidden in production.",
+        "tags": ["marketplace"],
+        "parameters": [
+          {
+            "name": "vehicleType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/VehicleType"
+            }
+          },
+          {
+            "name": "brandSlug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          },
+          {
+            "name": "modelSlug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            }
+          },
+          {
+            "name": "minPricePaise",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d{0,18}$"
+            }
+          },
+          {
+            "name": "maxPricePaise",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d{0,18}$"
+            }
+          },
+          {
+            "name": "minYear",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1900,
+              "maximum": 2100
+            }
+          },
+          {
+            "name": "maxYear",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1900,
+              "maximum": 2100
+            }
+          },
+          {
+            "name": "maxOdometerKm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "PRICE_ASC",
+              "$ref": "#/components/schemas/PublicListingSort"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published used EV listings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicListingListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters (VALIDATION_ERROR).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "operationId": "createListingDraft",
         "summary": "Local-only owner listing draft workflow; no public listing reads.",
@@ -2242,6 +2397,67 @@
         }
       }
     },
+    "/used-evs/{slug}": {
+      "get": {
+        "operationId": "getPublicListing",
+        "summary": "Published used EV listing detail with canonical specs and reviewed sources.",
+        "tags": ["marketplace"],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 160,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published used EV listing detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicListingDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters (VALIDATION_ERROR).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not published.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error in the contract error envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/variants/{id}": {
       "get": {
         "operationId": "getVariant",
@@ -3414,6 +3630,271 @@
         },
         "required": ["nextCursor", "hasMore"],
         "additionalProperties": false
+      },
+      "PublicListingDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2100
+          },
+          "odometerKm": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "city": {
+            "type": "string"
+          },
+          "askingPricePaise": {
+            "type": "string",
+            "pattern": "^[1-9]\\d{0,18}$"
+          },
+          "ownershipCount": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "sellerType": {
+            "$ref": "#/components/schemas/PublicSellerType"
+          },
+          "photoCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "vehicle": {
+            "$ref": "#/components/schemas/PublicListingVehicle"
+          },
+          "conditionNotes": {
+            "type": "string"
+          },
+          "media": {
+            "minItems": 1,
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicListingPhoto"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecSourceView"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "year",
+          "odometerKm",
+          "city",
+          "askingPricePaise",
+          "ownershipCount",
+          "isDemo",
+          "publishedAt",
+          "sellerType",
+          "photoCount",
+          "vehicle",
+          "conditionNotes",
+          "media",
+          "sources"
+        ],
+        "additionalProperties": false
+      },
+      "PublicListingDetailResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PublicListingDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "meta"],
+        "additionalProperties": false
+      },
+      "PublicListingListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicListingSummary"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageInfo"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "required": ["data", "page", "meta"],
+        "additionalProperties": false
+      },
+      "PublicListingPhoto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 11
+          },
+          "alt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "position", "alt"],
+        "additionalProperties": false
+      },
+      "PublicListingSort": {
+        "type": "string",
+        "enum": ["PRICE_ASC", "PRICE_DESC", "YEAR_DESC", "ODOMETER_ASC"]
+      },
+      "PublicListingSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 1900,
+            "maximum": 2100
+          },
+          "odometerKm": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "city": {
+            "type": "string"
+          },
+          "askingPricePaise": {
+            "type": "string",
+            "pattern": "^[1-9]\\d{0,18}$"
+          },
+          "ownershipCount": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "sellerType": {
+            "$ref": "#/components/schemas/PublicSellerType"
+          },
+          "photoCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "vehicle": {
+            "$ref": "#/components/schemas/PublicListingVehicle"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "year",
+          "odometerKm",
+          "city",
+          "askingPricePaise",
+          "ownershipCount",
+          "isDemo",
+          "publishedAt",
+          "sellerType",
+          "photoCount",
+          "vehicle"
+        ],
+        "additionalProperties": false
+      },
+      "PublicListingVehicle": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "$ref": "#/components/schemas/BrandRef"
+          },
+          "model": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "vehicleType": {
+                "$ref": "#/components/schemas/VehicleType"
+              }
+            },
+            "required": ["slug", "name", "vehicleType"],
+            "additionalProperties": false
+          },
+          "variant": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "specs": {
+                "$ref": "#/components/schemas/VariantSpecs"
+              }
+            },
+            "required": ["id", "slug", "name", "specs"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["brand", "model", "variant"],
+        "additionalProperties": false
+      },
+      "PublicSellerType": {
+        "type": "string",
+        "enum": ["INDIVIDUAL_OWNER"]
       },
       "RangeByStandard": {
         "type": "object",

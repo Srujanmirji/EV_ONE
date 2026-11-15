@@ -301,3 +301,18 @@ All routes are below `/api/v1`, require the local Clerk bearer guard (`ClerkGuar
 `ListingFields` stores `preferredVehicleType`, `variantId`, `year`, `odometerKm`, `city`, `askingPricePaise` (positive bigint string), `ownershipCount` and `conditionNotes`. If `variantId` is set, the variant, model and brand must be `PUBLISHED` and match `preferredVehicleType` when both are present. Every allow/deny decision records `LISTING_ACCESS` or `LISTING_SUBMIT` in `audit_events` (including a fresh denial audit if a database trigger or serialization check aborts the transaction).
 
 The development-only `/sell/api/[[...path]]` web gateway (`LOCAL_SELL_ENABLED=true` in development) forwards only allowlisted seller, media and catalogue paths with explicit bearer/JSON to the loopback API. In production `/sell/api/*` returns `404` with `no-store`. See `04_Delivery/34_EV-028_sell_wizard_evidence.md`.
+
+## Implemented public listing search and detail (EV-029, local only, in progress)
+
+Public marketplace read endpoints are implemented under the owner-approved `EV-029` local-only prerequisite exception while `EV-027` awaits live Clerk acceptance:
+
+| Operation | Method & Path | Purpose |
+|---|---|---|
+| `listPublicListings` | `GET /api/v1/listings` | Cursor-paginated search and filter over `PUBLISHED` listings (`PublicListingListResponse`). |
+| `getPublicListing` | `GET /api/v1/used-evs/{slug}` | Single `PUBLISHED` listing detail by slug with ordered photo metadata and reviewed canonical spec provenance (`PublicListingDetailResponse`). |
+
+**Deliberate deviations and invariants:**
+- **Detail path `/api/v1/used-evs/{slug}` instead of `/api/v1/listings/{idOrSlug}`:** `GET /api/v1/listings/{id}` is already registered as the bearer-guarded seller draft read route (`getOwnListing`). Serving public detail at `/api/v1/used-evs/{slug}` matches the canonical web URL `/used-evs/[slug]` (`SYSTEM_DESIGN.md`) and keeps public unauthenticated reads strictly separated from private seller draft routes.
+- **Keyset pagination without timestamp truncation:** `GET /api/v1/listings` sorts by `PRICE_ASC` (default), `PRICE_DESC`, `YEAR_DESC`, or `ODOMETER_ASC` with UUID `id` as the deterministic tie-breaker. Using integer/bigint and UUID keysets avoids PostgreSQL `timestamptz(6)` to JavaScript millisecond truncation.
+- **Query filters:** `vehicleType` (`CAR` | `SCOOTER`), `brandSlug`, `modelSlug`, `city` (case-insensitive exact match), `minPricePaise`, `maxPricePaise`, `minYear`, `maxYear`, `maxOdometerKm`, `sort`, `cursor`, and `limit` (1–50, default 20). Inverted ranges (`minPricePaise > maxPricePaise` or `minYear > maxYear`) and cursors reused across a different `sort` return `400 VALIDATION_ERROR`.
+- **Visibility & privacy guards:** Only rows with `status = 'PUBLISHED'`, `published_at IS NOT NULL`, an `ACTIVE` seller holding an active unexpired global `USER` or `ADMIN` grant, and a `PUBLISHED` canonical variant/model/brand hierarchy are returned. In `NODE_ENV=production`, `isDemo: true` rows are excluded (`GET /listings` returns `[]` and `GET /used-evs/{slug}` returns `404`). Responses never expose `sellerUserId`, `mediaAssetId`, `objectKey`, signed URLs, unreviewed spec sources, or `reviewerId`. See `04_Delivery/35_EV-029_listing_search_api_evidence.md`.

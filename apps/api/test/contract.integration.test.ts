@@ -289,6 +289,40 @@ beforeAll(async () => {
       ...(await readyPhoto()),
     });
   submitRow = await withPhoto(submitRow);
+  let publishedRow = await draft();
+  publishedRow = await seller(`/listings/${publishedRow.id}`, "PATCH", {
+    version: publishedRow.version,
+    fields: {
+      ...publishedRow.fields,
+      preferredVehicleType: "SCOOTER",
+      variantId: listingVariant.id,
+      year: 2024,
+      odometerKm: 123,
+      ownershipCount: 1,
+      city: "DEMO City",
+      askingPricePaise: "25000000",
+      conditionNotes: "DEMO synthetic condition; no personal information.",
+    },
+  });
+  publishedRow = await withPhoto(publishedRow);
+  publishedRow = await seller(`/listings/${publishedRow.id}/submit`, "POST", {
+    version: publishedRow.version,
+    sellerDeclaration: true,
+  });
+  await db.$transaction(async (tx) => {
+    const requestId = randomUUID();
+    await tx.$queryRaw`SELECT set_config('evone.actor_id', ${admin.id}, true), set_config('evone.request_id', ${requestId}, true)`;
+    await tx.listingReview.create({
+      data: {
+        listingId: publishedRow.id,
+        listingVersion: publishedRow.version,
+        reviewerId: admin.id,
+        decision: "APPROVE",
+        snapshot: {},
+        requestId,
+      },
+    });
+  });
   const editRow = await withPhoto(await draft());
   const removeRow = await withPhoto(await draft());
   const listingCases: [string, string, Record<string, unknown>?][] = [
@@ -480,6 +514,15 @@ beforeAll(async () => {
       200: `/variants/${v.id}`,
       400: "/variants/not-a-uuid",
       404: "/variants/3f1c2a9e-8b7d-4c6e-9a1b-2d3e4f5a6b7c",
+    },
+    listPublicListings: {
+      200: `/listings?brandSlug=${listingBrand.slug}&limit=1`,
+      400: "/listings?limit=500",
+    },
+    getPublicListing: {
+      200: `/used-evs/${publishedRow.slug}`,
+      400: "/used-evs/INVALID_SLUG!",
+      404: "/used-evs/no-such-published-listing",
     },
   };
 });
