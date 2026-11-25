@@ -61,3 +61,5 @@ Generate homepage, then approved used-vehicle listing/detail flow, then catalogu
 EV-049 implements UX-13 using the established tokens/components. See `02_UI_UX/08_EV-049_calculator_direction.md` for inherited visual direction, responsive composition and accessibility decisions.
 
 EV-030 implements UX-02 (`/used-evs`) using the established tokens/components (`Card`, `SelectField`, `TextField`, `Modal` bottom sheet, `EmptyState`, `ErrorState`, `Skeleton`), URL-persistent GET filters and sorting, truthful `Demo data` / `Individual seller` / `Enquiry only` labels, and sourced canonical spec display. See `04_Delivery/36_EV-030_used_ev_search_ui_evidence.md`.
+
+Proposed native app designs (iOS and Android, 145 screens, not approved) are in [`02_UI_UX/09_mobile_app/`](02_UI_UX/09_mobile_app/README.md). They use the owner's later master brief and differ from the tokens above; see its `06_open_decisions.md`.

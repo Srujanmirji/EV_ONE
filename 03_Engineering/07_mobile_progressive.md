@@ -14,3 +14,5 @@ Add installable PWA behavior after baseline SEO/CWV. Offline pages may cache pub
 
 ## Trigger to build
 Evidence: meaningful returning mobile audience, push notifications improve lead response, browser limitations materially hurt enquiry completion, and capacity for separate app store review/support.
+
+Detailed stack and store requirements: [`08_mobile_app_stack.md`](08_mobile_app_stack.md). Proposed screen designs: [`../02_UI_UX/09_mobile_app/`](../02_UI_UX/09_mobile_app/README.md).

@@ -75,3 +75,14 @@
 - [`assets/homepage_hero_reference.png`](assets/homepage_hero_reference.png) — cinematic minimal homepage hero reference.
 
 The images are generated UI concepts: any displayed counts, prices, sellers, verification badges or station statuses are **illustrative and not actual verified business facts**.
+
+## Mobile app design (proposed)
+
+- [`02_UI_UX/09_mobile_app/README.md`](02_UI_UX/09_mobile_app/README.md) — overview, canvas link, status
+- [`02_UI_UX/09_mobile_app/01_mobile_design_system.md`](02_UI_UX/09_mobile_app/01_mobile_design_system.md) — tokens, glass, components
+- [`02_UI_UX/09_mobile_app/02_screen_inventory.md`](02_UI_UX/09_mobile_app/02_screen_inventory.md) — 145 screens, iOS and Android
+- [`02_UI_UX/09_mobile_app/03_mobile_user_flows.md`](02_UI_UX/09_mobile_app/03_mobile_user_flows.md) — journeys
+- [`02_UI_UX/09_mobile_app/04_content_and_data_rules.md`](02_UI_UX/09_mobile_app/04_content_and_data_rules.md) — honesty, privacy, consent, money
+- [`02_UI_UX/09_mobile_app/05_android_adaptations.md`](02_UI_UX/09_mobile_app/05_android_adaptations.md) — Android differences
+- [`02_UI_UX/09_mobile_app/06_open_decisions.md`](02_UI_UX/09_mobile_app/06_open_decisions.md) — owner decisions needed
+- [`03_Engineering/08_mobile_app_stack.md`](03_Engineering/08_mobile_app_stack.md) — mobile stack and release requirements
