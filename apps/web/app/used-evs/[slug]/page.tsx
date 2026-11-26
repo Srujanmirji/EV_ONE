@@ -1,3 +1,4 @@
+import { publicListingPreviewPath } from "@evone/contracts";
 import { buttonClasses, Card, cn, Gallery } from "@evone/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -66,6 +67,17 @@ export default async function UsedEvDetailPage({ params }: { params: Params }) {
     .at(-1);
 
   const title = `${listing.year} ${model.name} ${variant.name}`;
+  const origin = URL.parse(process.env.API_BASE_URL ?? "");
+  const images =
+    listing.isDemo &&
+    origin?.protocol === "http:" &&
+    ["127.0.0.1", "localhost", "[::1]"].includes(origin.hostname)
+      ? listing.media.flatMap(({ id, previewPath, alt }) =>
+          previewPath === publicListingPreviewPath(listing.slug, id)
+            ? [{ src: new URL(previewPath, origin.origin).href, alt }]
+            : [],
+        )
+      : [];
   const price = BigInt(listing.askingPricePaise);
   const structuredData = {
     "@context": "https://schema.org",
@@ -132,7 +144,7 @@ export default async function UsedEvDetailPage({ params }: { params: Params }) {
       <div className="mx-auto grid w-full max-w-content items-start gap-8 px-4 py-10 sm:px-8 sm:py-14 min-[769px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] min-[769px]:grid-rows-[auto_1fr]">
         <div className="flex flex-col gap-4">
           <Gallery
-            images={[]}
+            images={images}
             label={`Photos of ${listing.year} ${model.name} ${variant.name}`}
             emptyText="Photos are unavailable online."
           />

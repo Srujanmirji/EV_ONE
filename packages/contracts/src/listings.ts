@@ -198,8 +198,12 @@ export const PublicListingPhoto = component(
     id: z.uuid(),
     position: z.int().min(0).max(11),
     alt: z.string(),
+    previewPath: z
+      .string()
+      .regex(/^\/api\/v1\/used-evs\/[a-z0-9-]+\/photos\/[a-f0-9-]+$/)
+      .optional(),
   }),
-  "Reviewed attachment metadata only; private storage keys and capability URLs are excluded.",
+  "Reviewed attachment metadata with an optional local demo preview path.",
 );
 export type PublicListingPhoto = z.infer<typeof PublicListingPhoto>;
 
@@ -241,6 +245,13 @@ export const PublicListingPathParams = z.strictObject({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
 });
 export type PublicListingPathParams = z.infer<typeof PublicListingPathParams>;
+
+export const PublicListingPreviewParams = PublicListingPathParams.extend({
+  photoId: z.uuid(),
+});
+
+export const publicListingPreviewPath = (slug: string, photoId: string) =>
+  `/api/v1/used-evs/${slug}/photos/${photoId}`;
 
 export const PublicListingListQuery = z.strictObject({
   vehicleType: VehicleType.optional(),

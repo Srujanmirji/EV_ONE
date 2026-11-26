@@ -32,7 +32,18 @@ const sampleRow = {
   isDemo: true,
   publishedAt: new Date("2026-11-15T06:00:00.000Z"),
   _count: { media: 2 },
-  media: [{ id: photoId, position: 0, alt: "DEMO front three-quarter view" }],
+  media: [
+    {
+      id: photoId,
+      position: 0,
+      alt: "DEMO front three-quarter view",
+      asset: {
+        id: listingId,
+        status: "READY",
+        objectKey: `ready/${listingId}/${photoId}.webp`,
+      },
+    },
+  ],
   variant: {
     id: variantId,
     slug: "demo-variant-lr",
@@ -175,7 +186,9 @@ describe("public listing mappers", () => {
       warrantyText: "8 yr / 160,000 km battery",
     });
 
-    const detail = PublicListingDetail.parse(toPublicListingDetail(sampleRow));
+    const detail = PublicListingDetail.parse(
+      toPublicListingDetail(sampleRow, false),
+    );
     expect(detail.conditionNotes).toBe(sampleRow.conditionNotes);
     expect(detail.media).toEqual([
       { id: photoId, position: 0, alt: "DEMO front three-quarter view" },

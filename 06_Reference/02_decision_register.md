@@ -153,3 +153,12 @@ Decision: Implement and verify the server-rendered `/used-evs` listing and searc
 Consequences: `/used-evs` renders a desktop filter/sort sidebar (`>= 1024px`) and mobile bottom sheet (`< 1024px` using native `<dialog>`), URL-persistent GET filters (`sort`, `brandSlug`, `vehicleType`, `city`, `maxPriceInr`, `minYear`, `maxOdometerKm`, plus deep-linked `modelSlug`/`minPriceInr`/`maxYear`), 12-per-page keyset pagination, loading skeleton, empty states (`No listings match these filters` with `Clear filters` and `No used listings have been published yet`), invalid-filter recovery and API-unavailable recovery. Cards show only moderation-approved listing facts, sourced canonical battery/range with test standard (`Not stated` when absent), `Individual seller`, `Demo data` when `isDemo` is true, and an explicit `Enquiry only (sale happens off-platform)` notice—never invented verification badges or direct checkout. In production (`NODE_ENV=production`), the API returns no demo rows so `/used-evs` honestly shows `No used listings have been published yet`.
 Evidence: `04_Delivery/36_EV-030_used_ev_search_ui_evidence.md`.
 Revisit trigger: Live Clerk sign-in/session/claims verification for `EV-027`/`EV-029`, or consented production listing inventory (`EV-002`/`EV-077`).
+
+### EV-031 — Local synthetic listing photo previews
+Date: 2026-11-26 | Status: owner approved for local testing
+
+Decision: Add an opt-in preview endpoint and connect it to the existing listing gallery. Enable it only on an authenticated-development-mode loopback API backed by a loopback storage fixture. Use synthetic demo listings and sanitized WebP outputs. Reuse the published listing visibility rules on each photo request and after storage I/O. Keep original uploads private.
+
+Consequences: The application streams preview bytes with `private, no-store`. The metadata path is scoped to its listing attachment and contains no object key or signed storage URL. Previously delivered bytes may still be retained by the viewer. The feature stays disabled by default and refuses production enablement. Live storage, licensing and moderation acceptance remain open.
+
+Evidence: `04_Delivery/38_EV-031_local_photo_preview_evidence.md`.

@@ -3,18 +3,22 @@ import {
   PublicListingListQuery,
   type PublicListingListResponse,
   PublicListingPathParams,
+  PublicListingPreviewParams,
 } from "@evone/contracts";
 import {
   Controller,
   Get,
+  Header,
   Inject,
   NotFoundException,
   Param,
   Query,
   Req,
+  StreamableFile,
 } from "@nestjs/common";
 import type { Request } from "express";
 import { requestIdOf } from "../common/request-id.js";
+import { MediaStorage } from "../media/storage.js";
 import { parseRequest } from "../common/validation.js";
 import {
   decodeListingCursor,
@@ -33,6 +37,7 @@ export class PublicListingController {
   constructor(
     @Inject(PublicListingRepository)
     private readonly repo: PublicListingRepository,
+    @Inject(MediaStorage) private readonly storage: MediaStorage,
   ) {}
 
   @Get("listings")
@@ -71,8 +76,24 @@ export class PublicListingController {
     const row = await this.repo.findListingBySlug(slug);
     if (!row) throw new NotFoundException("Listing not found");
     return {
-      data: toPublicListingDetail(row),
+      data: toPublicListingDetail(row, this.repo.previewsEnabled),
       meta: { requestId: requestIdOf(req) },
     };
+  }
+
+  @Get("used-evs/:slug/photos/:photoId")
+  @Header("Cache-Control", "private, no-store")
+  @Header("X-Content-Type-Options", "nosniff")
+  async preview(@Param() params: unknown): Promise<StreamableFile> {
+    const { slug, photoId } = parseRequest(PublicListingPreviewParams, params);
+    const key = await this.repo.findPreviewKey(slug, photoId);
+    if (!key) throw new NotFoundException("Photo not found");
+
+    const bytes = await this.storage.preview(key);
+    // Check again before sending bytes if listing visibility changed during storage I/O.
+    if ((await this.repo.findPreviewKey(slug, photoId)) !== key)
+      throw new NotFoundException("Photo not found");
+
+    return new StreamableFile(bytes, { type: "image/webp" });
   }
 }

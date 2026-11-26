@@ -481,6 +481,10 @@ describe("public listing visibility and security guards", () => {
       position: 0,
       alt: "DEMO synthetic front angle",
     });
+    expect(body.data.media[0]?.previewPath).toBeUndefined();
+    const preview = `/used-evs/${published.slug}/photos/${body.data.media[0]!.id}`;
+    expect((await api.get(preview)).status).toBe(404);
+    expect((await prod.get(preview)).status).toBe(404);
     expect(body.data.sources.map((s) => s.fieldName).sort()).toEqual([
       "BATTERY_KWH",
       "CLAIMED_RANGE",

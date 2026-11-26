@@ -44,11 +44,16 @@ const dependency: ReadinessCheck = {
 type ContractRequest =
   string | { path: string; body?: unknown; headers?: Record<string, string> };
 let requests: Record<string, Record<string, ContractRequest>> = {};
+const pathOf = (request: ContractRequest) =>
+  typeof request === "string" ? request : request.path;
+let archiveTarget: { id: string; sellerId: string };
+let syntheticWebp: Buffer;
 
 beforeAll(async () => {
   storage = await mediaFixture();
   config = loadConfig({
     ...storage.env,
+    LOCAL_LISTING_PREVIEWS: "true",
     ...authEnv,
     NODE_ENV: "test",
     DATABASE_URL: databaseUrl,
@@ -80,6 +85,7 @@ beforeAll(async () => {
   })
     .png()
     .toBuffer();
+  syntheticWebp = await sharp(image).webp().toBuffer();
   const pending = await db.mediaAsset.create({
     data: {
       ownerId: authorizationUser.id,
@@ -226,13 +232,20 @@ beforeAll(async () => {
   };
   const draft = () => seller("/listings", "POST", {});
   const readyPhoto = async () => {
+    const id = randomUUID();
+    const key = `ready/${id}/${randomUUID()}.webp`;
+    storage.objects.set(`/local-media/${key}`, {
+      body: syntheticWebp,
+      type: "image/webp",
+    });
     const asset = await db.mediaAsset.create({
       data: {
+        id,
         ownerId: authorizationUser.id,
         contentType: "image/webp",
-        sizeBytes: 12,
+        sizeBytes: syntheticWebp.length,
         status: "READY",
-        objectKey: `ready/synthetic-contract-${randomUUID()}.webp`,
+        objectKey: key,
         expiresAt: new Date(Date.now() + 300000),
       },
     });
@@ -323,6 +336,7 @@ beforeAll(async () => {
       },
     });
   });
+  archiveTarget = { id: publishedRow.id, sellerId: authorizationUser.id };
   const editRow = await withPhoto(await draft());
   const removeRow = await withPhoto(await draft());
   const listingCases: [string, string, Record<string, unknown>?][] = [
@@ -519,6 +533,12 @@ beforeAll(async () => {
       200: `/listings?brandSlug=${listingBrand.slug}&limit=1`,
       400: "/listings?limit=500",
     },
+    getPublicListingPreview: {
+      200: `/used-evs/${publishedRow.slug}/photos/${publishedRow.media[0]!.id}`,
+      400: `/used-evs/${publishedRow.slug}/photos/not-a-uuid`,
+      404: `/used-evs/${editRow.slug}/photos/${editRow.media[0]!.id}`,
+      503: `/used-evs/${publishedRow.slug}/photos/${publishedRow.media[0]!.id}`,
+    },
     getPublicListing: {
       200: `/used-evs/${publishedRow.slug}`,
       400: "/used-evs/INVALID_SLUG!",
@@ -597,6 +617,9 @@ describe("API contract", () => {
                   .spyOn(app.get(ListingService), "run")
                   .mockRejectedValueOnce(new ServiceUnavailableException())
               : undefined;
+        const previewOutage =
+          route.operationId === "getPublicListingPreview" && status === "503";
+        if (previewOutage) storage.fail(true);
         const res = await fetch(`${base}${request.path}`, {
           method: route.method.toUpperCase(),
           headers: {
@@ -611,16 +634,50 @@ describe("API contract", () => {
               }
             : {}),
         });
+        if (previewOutage) storage.fail(false);
         failureMock?.mockRestore();
         config.media = originalMedia;
         dependencyUp = true;
         expect(res.status).toBe(Number(status));
+        if ("mediaType" in response) {
+          expect(res.headers.get("content-type")).toBe(response.mediaType);
+          expect(res.headers.get("cache-control")).toBe("private, no-store");
+          expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+          expect(Buffer.from(await res.arrayBuffer())).toEqual(syntheticWebp);
+          return;
+        }
         const body: unknown = await res.json();
         const parsed = response.schema.safeParse(body);
         expect(parsed.success, JSON.stringify(parsed.error?.issues)).toBe(true);
       });
     }
   }
+
+  it("advertises a preview only through its listing path and revokes it after archive", async () => {
+    const detail = pathOf(requests.getPublicListing!["200"]!);
+    const preview = pathOf(requests.getPublicListingPreview!["200"]!);
+    const response = await fetch(`${base}${detail}`);
+    expect(await response.json()).toMatchObject({
+      data: { media: [{ previewPath: `/${API_PREFIX}${preview}` }] },
+    });
+    const foreignPhoto = pathOf(requests.getPublicListingPreview!["404"]!)
+      .split("/")
+      .at(-1)!;
+    expect(
+      (await fetch(`${base}${detail}/photos/${foreignPhoto}`)).status,
+    ).toBe(404);
+    await db.$transaction(async (tx) => {
+      const requestId = randomUUID();
+      await tx.$queryRaw`SELECT set_config('evone.actor_id', ${archiveTarget.sellerId}, true), set_config('evone.request_id', ${requestId}, true)`;
+      await tx.listing.update({
+        where: { id: archiveTarget.id },
+        data: { status: "ARCHIVED", version: { increment: 1 } },
+      });
+    });
+    const archived = await fetch(`${base}${preview}`);
+    expect(archived.status).toBe(404);
+    expect(archived.headers.get("cache-control")).toBe("private, no-store");
+  });
 
   it("errors use the contract error envelope", async () => {
     const res = await fetch(`${base}/no-such-route`);
