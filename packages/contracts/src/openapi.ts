@@ -60,7 +60,14 @@ export function buildOpenApiDocument(): Record<string, unknown> {
     for (const [status, response] of Object.entries(route.responses)) {
       responses[status] = {
         description: response.description,
-        content: { "application/json": { schema: refFor(response.schema) } },
+        content:
+          "mediaType" in response
+            ? {
+                [response.mediaType]: {
+                  schema: { type: "string", format: "binary" },
+                },
+              }
+            : { "application/json": { schema: refFor(response.schema) } },
       };
     }
     responses.default = {

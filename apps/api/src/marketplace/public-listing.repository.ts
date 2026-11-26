@@ -1,8 +1,9 @@
-import type {
-  PublicListingDetail,
-  PublicListingListQuery,
-  PublicListingSort,
-  PublicListingSummary,
+import {
+  publicListingPreviewPath,
+  type PublicListingDetail,
+  type PublicListingListQuery,
+  type PublicListingSort,
+  type PublicListingSummary,
 } from "@evone/contracts";
 import type { DbClient } from "@evone/db";
 import { Inject, Injectable } from "@nestjs/common";
@@ -53,12 +54,36 @@ const summarySelect = {
   variant: { select: variantSelect },
 } as const;
 
+const previewAssetSelect = {
+  id: true,
+  status: true,
+  objectKey: true,
+} as const;
+
+function previewKey(asset: {
+  id: string;
+  status: string;
+  objectKey: string | null;
+}) {
+  if (asset.status !== "READY" || !asset.objectKey) return null;
+  const prefix = `ready/${asset.id}/`;
+  return asset.objectKey.startsWith(prefix) &&
+    /^[a-f0-9-]{36}\.webp$/.test(asset.objectKey.slice(prefix.length))
+    ? asset.objectKey
+    : null;
+}
+
 const detailSelect = {
   ...summarySelect,
   conditionNotes: true,
   media: {
     orderBy: { position: "asc" as const },
-    select: { id: true, position: true, alt: true },
+    select: {
+      id: true,
+      position: true,
+      alt: true,
+      asset: { select: previewAssetSelect },
+    },
   },
   variant: {
     select: {
@@ -107,7 +132,12 @@ interface SummaryRow {
 
 interface DetailRow extends SummaryRow {
   conditionNotes: string | null;
-  media: { id: string; position: number; alt: string }[];
+  media: {
+    id: string;
+    position: number;
+    alt: string;
+    asset: Parameters<typeof previewKey>[0];
+  }[];
   variant:
     | (NonNullable<SummaryRow["variant"]> & {
         sources: SourceRow[];
@@ -146,11 +176,21 @@ export function toPublicListingSummary(row: SummaryRow): PublicListingSummary {
   };
 }
 
-export function toPublicListingDetail(row: DetailRow): PublicListingDetail {
+export function toPublicListingDetail(
+  row: DetailRow,
+  previews: boolean,
+): PublicListingDetail {
   return {
     ...toPublicListingSummary(row),
     conditionNotes: row.conditionNotes!,
-    media: row.media.map(({ id, position, alt }) => ({ id, position, alt })),
+    media: row.media.map(({ id, position, alt, asset }) => ({
+      id,
+      position,
+      alt,
+      ...(previews && row.isDemo && previewKey(asset)
+        ? { previewPath: publicListingPreviewPath(row.slug, id) }
+        : {}),
+    })),
     sources: toSources(row.variant!.sources),
   };
 }
@@ -224,12 +264,17 @@ export function cursorFromRow(
 @Injectable()
 export class PublicListingRepository {
   private readonly includeDemo: boolean;
+  readonly previewsEnabled: boolean;
 
   constructor(
     @Inject(DB_CLIENT) private readonly db: DbClient,
     @Inject(API_CONFIG) config: ApiConfig,
   ) {
     this.includeDemo = config.NODE_ENV !== "production";
+    this.previewsEnabled =
+      this.includeDemo &&
+      config.media.mode === "r2-local" &&
+      config.media.listingPreviews;
   }
 
   private get visibleCatalogue() {
@@ -318,24 +363,40 @@ export class PublicListingRepository {
     });
   }
 
-  findListingBySlug(slug: string) {
-    const now = new Date();
-    return this.db.listing.findFirst({
-      where: {
-        slug,
-        status: "PUBLISHED",
-        publishedAt: { not: null },
-        ...(this.includeDemo ? {} : { isDemo: false }),
-        seller: this.activeSeller(now),
-        variant: {
+  private visibleListing(slug: string) {
+    return {
+      slug,
+      status: "PUBLISHED" as const,
+      publishedAt: { not: null },
+      ...(this.includeDemo ? {} : { isDemo: false }),
+      seller: this.activeSeller(new Date()),
+      variant: {
+        ...this.visibleCatalogue,
+        model: {
           ...this.visibleCatalogue,
-          model: {
-            ...this.visibleCatalogue,
-            brand: this.visibleCatalogue,
-          },
+          brand: this.visibleCatalogue,
         },
       },
+    };
+  }
+
+  findListingBySlug(slug: string) {
+    return this.db.listing.findFirst({
+      where: this.visibleListing(slug),
       select: detailSelect,
     });
+  }
+
+  async findPreviewKey(slug: string, photoId: string) {
+    if (!this.previewsEnabled) return null;
+
+    const photo = await this.db.listingMedia.findFirst({
+      where: {
+        id: photoId,
+        listing: { ...this.visibleListing(slug), isDemo: true },
+      },
+      select: { asset: { select: previewAssetSelect } },
+    });
+    return photo ? previewKey(photo.asset) : null;
   }
 }

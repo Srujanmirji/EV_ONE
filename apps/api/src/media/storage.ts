@@ -48,10 +48,10 @@ export class MediaStorage {
       },
     );
   }
-  async original(
+  private async read(
     Key: string,
     contentType: string,
-    sizeBytes: number,
+    expectedSize?: number,
   ): Promise<Buffer> {
     const { client, Bucket } = this.connection();
     const object = await client.send(new GetObjectCommand({ Bucket, Key }), {
@@ -59,8 +59,12 @@ export class MediaStorage {
     });
     if (!object.Body) throw new InvalidImage();
     try {
+      const sizeBytes = object.ContentLength;
       if (
-        object.ContentLength !== sizeBytes ||
+        sizeBytes === undefined ||
+        sizeBytes < 1 ||
+        sizeBytes > MAX_MEDIA_BYTES ||
+        (expectedSize !== undefined && sizeBytes !== expectedSize) ||
         object.ContentType !== contentType
       )
         throw new InvalidImage();
@@ -80,6 +84,18 @@ export class MediaStorage {
         object.Body.destroy();
     }
   }
+  original(key: string, contentType: string, sizeBytes: number) {
+    return this.read(key, contentType, sizeBytes);
+  }
+
+  async preview(key: string) {
+    try {
+      return await this.read(key, "image/webp");
+    } catch {
+      throw new ServiceUnavailableException();
+    }
+  }
+
   async store(Key: string, Body: Buffer) {
     const { client, Bucket } = this.connection();
     await client.send(

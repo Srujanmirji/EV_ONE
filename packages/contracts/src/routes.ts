@@ -11,6 +11,7 @@ import {
   PublicListingListQuery,
   PublicListingListResponse,
   PublicListingPathParams,
+  PublicListingPreviewParams,
   SellerListQuery,
   SellerListingResponse,
   SellerListingListResponse,
@@ -73,7 +74,10 @@ export interface RouteContract {
   /** Validated JSON request body. */
   body?: z.ZodObject;
   bearerAuth?: true;
-  responses: Record<number, RouteResponse>;
+  responses: Record<
+    number,
+    RouteResponse | { description: string; mediaType: "image/webp" }
+  >;
 }
 
 const badRequest: RouteResponse = {
@@ -121,6 +125,27 @@ export const routes: RouteContract[] = [
       },
       400: badRequest,
       404: notFound,
+    },
+  },
+  {
+    operationId: "getPublicListingPreview",
+    method: "get",
+    path: "/used-evs/{slug}/photos/{photoId}",
+    summary:
+      "Sanitized WebP for an eligible published demo listing in opted-in local environments.",
+    tag: "marketplace",
+    params: PublicListingPreviewParams,
+    responses: {
+      200: {
+        description: "Sanitized listing preview.",
+        mediaType: "image/webp",
+      },
+      400: badRequest,
+      404: notFound,
+      503: {
+        description: "Preview storage unavailable.",
+        schema: ErrorEnvelope,
+      },
     },
   },
   ...[

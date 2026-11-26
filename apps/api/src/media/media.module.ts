@@ -8,5 +8,6 @@ import { MediaStorage } from "./storage.js";
   imports: [IdentityModule],
   controllers: [MediaController],
   providers: [MediaService, MediaStorage],
+  exports: [MediaStorage],
 })
 export class MediaModule {}

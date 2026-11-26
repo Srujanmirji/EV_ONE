@@ -38,3 +38,20 @@ it("configuration errors never contain secrets", () => {
     expect(String(error)).not.toContain("secret-value");
   }
 });
+
+it("public demo previews require explicit opt-in and loopback-only storage", () => {
+  expect(loadConfig(env).media).toMatchObject({ listingPreviews: false });
+  const enabled = { ...env, LOCAL_LISTING_PREVIEWS: "true" };
+  expect(loadConfig(enabled).media).toMatchObject({ listingPreviews: true });
+  for (const patch of [
+    { MEDIA_MODE: "disabled" },
+    { NODE_ENV: "production" },
+    { API_HOST: "0.0.0.0" },
+    {
+      MEDIA_ENDPOINT:
+        "https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.r2.cloudflarestorage.com",
+    },
+  ]) {
+    expect(() => loadConfig({ ...enabled, ...patch })).toThrow(ConfigError);
+  }
+});

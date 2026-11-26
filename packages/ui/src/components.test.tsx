@@ -134,6 +134,14 @@ describe("Gallery", () => {
     expect(screen.getByText("Photo 3 of 3")).toBeTruthy();
   });
 
+  it("reports failed photos and lets the buyer continue through the gallery", () => {
+    render(<Gallery images={images} label="Photos" />);
+    fireEvent.error(screen.getByRole("img", { name: "Example photo 1" }));
+    expect(screen.getByText("This photo is unavailable.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next photo" }));
+    expect(screen.getByRole("img", { name: "Example photo 2" })).toBeTruthy();
+  });
+
   it("supports arrow keys on thumbnails with one tab stop", () => {
     render(<Gallery images={images} label="Photos" />);
     const thumbs = screen.getAllByRole("button", { name: /Show photo/ });

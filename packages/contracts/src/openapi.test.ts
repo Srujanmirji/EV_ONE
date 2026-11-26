@@ -105,7 +105,8 @@ describe("OpenAPI document", () => {
     for (const route of routes) {
       if (route.body) expect(schemaRegistry.get(route.body)).toBeDefined();
       for (const response of Object.values(route.responses)) {
-        expect(schemaRegistry.get(response.schema)).toBeDefined();
+        if ("schema" in response)
+          expect(schemaRegistry.get(response.schema)).toBeDefined();
       }
     }
     expect(schemaRegistry.get(defaultErrorResponse.schema)).toBeDefined();

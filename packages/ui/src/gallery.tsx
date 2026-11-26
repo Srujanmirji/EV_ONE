@@ -8,8 +8,8 @@ export interface GalleryImage {
   src: string;
   /** Required: describe what the photo shows, not "image". */
   alt: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
 }
 
 export interface GalleryProps {
@@ -31,6 +31,7 @@ export function Gallery({
   emptyText = "No photos yet.",
 }: GalleryProps) {
   const [index, setIndex] = useState(0);
+  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set());
   const statusId = useId();
   const thumbs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -49,6 +50,9 @@ export function Gallery({
 
   const count = images.length;
   const current = images[index]!;
+  const currentFailed = failed.has(current.src);
+  const markFailed = (src: string) =>
+    setFailed((previous) => new Set([...previous, src]));
   const go = (next: number) => setIndex((next + count) % count);
 
   const onThumbKey = (event: KeyboardEvent<HTMLButtonElement>, i: number) => {
@@ -68,13 +72,24 @@ export function Gallery({
       className="flex flex-col gap-3"
     >
       <figure className="overflow-hidden rounded-card bg-mist">
-        <img
-          src={current.src}
-          alt={current.alt}
-          width={current.width}
-          height={current.height}
-          className="aspect-[16/9] w-full object-cover"
-        />
+        {currentFailed ? (
+          <figcaption
+            role="status"
+            className="flex aspect-[16/9] items-center justify-center p-6 text-center text-secondary"
+          >
+            This photo is unavailable.
+          </figcaption>
+        ) : (
+          <img
+            key={current.src}
+            src={current.src}
+            alt={current.alt}
+            width={current.width}
+            height={current.height}
+            onError={() => markFailed(current.src)}
+            className="aspect-[16/9] w-full object-cover"
+          />
+        )}
       </figure>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p id={statusId} aria-live="polite" className="text-sm text-secondary">
@@ -100,7 +115,7 @@ export function Gallery({
         ) : null}
       </div>
       {count > 1 ? (
-        <ul className="flex gap-2 overflow-x-auto pb-1">
+        <ul className="flex gap-2 overflow-x-auto p-1.5">
           {images.map((image, i) => (
             <li key={image.src} className="shrink-0">
               <button
@@ -118,13 +133,23 @@ export function Gallery({
                   i === index ? "border-ink" : "border-transparent",
                 )}
               >
-                <img
-                  src={image.src}
-                  alt=""
-                  width={64}
-                  height={64}
-                  className="size-full object-cover"
-                />
+                {!failed.has(image.src) ? (
+                  <img
+                    src={image.src}
+                    alt=""
+                    width={64}
+                    height={64}
+                    onError={() => markFailed(image.src)}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="flex size-full items-center justify-center bg-mist text-sm text-secondary"
+                  >
+                    {i + 1}
+                  </span>
+                )}
               </button>
             </li>
           ))}

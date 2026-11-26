@@ -400,6 +400,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/used-evs/{slug}/photos/{photoId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Sanitized WebP for an eligible published demo listing in opted-in local environments. */
+    get: operations["getPublicListingPreview"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/variants/{id}": {
     parameters: {
       query?: never;
@@ -726,6 +743,7 @@ export interface components {
       id: string;
       position: number;
       alt: string;
+      previewPath?: string;
     };
     /** @enum {string} */
     PublicListingSort:
@@ -2864,6 +2882,65 @@ export interface operations {
       };
       /** @description Not found or not published. */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Error in the contract error envelope. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  getPublicListingPreview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+        photoId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sanitized listing preview. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/webp": string;
+        };
+      };
+      /** @description Invalid parameters (VALIDATION_ERROR). */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not found or not published. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Preview storage unavailable. */
+      503: {
         headers: {
           [name: string]: unknown;
         };
