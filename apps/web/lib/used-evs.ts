@@ -1,11 +1,13 @@
 import {
   type BrandSummary,
+  type PublicListingDetail,
   PublicListingListQuery,
+  PublicListingPathParams,
   type PublicListingSort,
   type PublicListingSummary,
 } from "@evone/contracts";
 import { createEvoneClient } from "@evone/sdk";
-import type { SearchParams } from "./catalogue";
+import type { DetailResult, SearchParams } from "./catalogue";
 
 export const USED_EV_PAGE_SIZE = 12;
 
@@ -188,6 +190,57 @@ export function usedEvsHref(filters: Partial<UsedEvFilters>): string {
 }
 
 export const usedEvDetailHref = (slug: string) => `/used-evs/${slug}`;
+
+export interface UsedEvDetailData {
+  listing: PublicListingDetail;
+  related: Promise<PublicListingSummary[]>;
+}
+
+export async function loadUsedEvDetail(
+  slug: string,
+  options: { apiOrigin?: string; fetch?: typeof fetch } = {},
+): Promise<DetailResult<UsedEvDetailData>> {
+  const parsed = PublicListingPathParams.safeParse({ slug });
+  if (!parsed.success) return { kind: "not-found" };
+
+  const origin = options.apiOrigin ?? process.env.API_BASE_URL;
+  if (!origin) {
+    console.error("used-evs: API_BASE_URL is not set");
+    return { kind: "unavailable" };
+  }
+  try {
+    const api = createEvoneClient({
+      origin,
+      ...(options.fetch ? { fetch: options.fetch } : {}),
+    });
+    const res = await api.GET("/used-evs/{slug}", {
+      params: { path: { slug: parsed.data.slug } },
+    });
+    if (res.response.status === 404) {
+      return { kind: "not-found" };
+    }
+    if (!res.data) return { kind: "unavailable" };
+
+    const listing = res.data.data;
+    // Related results may load after the route has resolved listing visibility.
+    const related = api
+      .GET("/listings", {
+        params: {
+          query: { vehicleType: listing.vehicle.model.vehicleType, limit: 4 },
+        },
+      })
+      .then(
+        ({ data }) =>
+          data?.data.filter((item) => item.id !== listing.id).slice(0, 3) ?? [],
+      )
+      .catch(() => []);
+
+    return { kind: "ok", data: { listing, related } };
+  } catch {
+    console.error("used-evs: detail API request failed");
+    return { kind: "unavailable" };
+  }
+}
 
 export async function loadUsedEvs(
   params: SearchParams,
