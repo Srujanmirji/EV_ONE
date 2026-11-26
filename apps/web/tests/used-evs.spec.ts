@@ -326,3 +326,76 @@ test("explains invalid or outdated filter links", async ({ page }) => {
   }
   await noAxeViolations(page);
 });
+
+test("opens used EV detail with sourced specifications and a responsive enquiry link", async ({
+  page,
+}) => {
+  const width = page.viewportSize()!.width;
+  await page.goto(`/used-evs?brandSlug=${BRAND_SLUG}&vehicleType=SCOOTER`);
+  await cards(page)
+    .getByRole("link", { name: "ZZZ Used E2E Scooter Pro" })
+    .click();
+  await expect(page).toHaveURL("/used-evs/demo-used-e2e-scooter-0");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1 })).toContainText(
+    "2025 ZZZ Used E2E Scooter Pro",
+  );
+  await expect(main).toContainText("₹1,15,000");
+  await expect(main).toContainText("1,800 km");
+  await expect(main).toContainText("1st owner");
+  await expect(main).toContainText("Seller-declared condition");
+  await expect(main).toContainText("Individual seller · DEMO Kochi");
+  await expect(main).toContainText("DEMO synthetic side profile");
+  await expect(main).toContainText("Photos are unavailable online");
+  await expect(main).toContainText("3.2 kWh");
+  await expect(main).toContainText("125 km");
+  await expect(main).toContainText("Test standard: IDC: Indian Driving Cycle");
+  await expect(
+    main.getByRole("link", { name: /example\.com/ }).first(),
+  ).toHaveAttribute("href", "https://example.com/spec");
+  await expect(main.getByText("—", { exact: true })).toHaveCount(4);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/used-evs\/demo-used-e2e-scooter-0$/,
+  );
+  const enquiry = main.getByRole("link", { name: "Enquire", exact: true });
+  await expect(enquiry).toHaveCount(1);
+  const quickAction = main.getByRole("region", {
+    name: "Quick enquiry action",
+  });
+  if (width <= 768) {
+    await expect(
+      quickAction.getByRole("link", { name: "Enquire" }),
+    ).toBeVisible();
+    await expect(quickAction).toHaveCSS("position", "fixed");
+    const box = (await quickAction.boundingBox())!;
+    expect(Math.round(box.y + box.height)).toBe(page.viewportSize()!.height);
+  } else {
+    await expect(quickAction).toBeHidden();
+    const gallery = (await main.getByRole("figure").boundingBox())!;
+    const details = (await main.getByRole("complementary").boundingBox())!;
+    expect(gallery.width / details.width).toBeCloseTo(1.5, 1);
+    expect(gallery.y).toEqual(details.y);
+  }
+  await noAxeViolations(page);
+  await enquiry.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#enquire$/);
+  const contact = main.getByRole("region", { name: "Contact & enquiry" });
+  await expect(contact).toBeFocused();
+  await expect(contact).toContainText(
+    "Online enquiries are currently unavailable.",
+  );
+});
+
+test("returns an HTTP 404 and a route back to used EVs for an unknown listing", async ({
+  page,
+}) => {
+  const response = await page.goto("/used-evs/unknown-demo-ev");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Used EV listing not found",
+  );
+  await page.getByRole("link", { name: "Browse used EVs" }).click();
+  await expect(page).toHaveURL("/used-evs");
+});

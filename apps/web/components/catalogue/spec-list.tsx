@@ -6,18 +6,24 @@ import { SOURCE_KIND_LABEL, type SpecRow } from "@/lib/specs";
  * stated value shows the source(s) it came from with review date; unknown
  * values say so and show no source.
  */
-export function SpecList({ rows }: { rows: SpecRow[] }) {
+export function SpecList({
+  rows,
+  unknownLabel = "Not stated",
+}: {
+  rows: SpecRow[];
+  unknownLabel?: string;
+}) {
   return (
-    <dl className="divide-y divide-line rounded-card border border-line bg-paper">
+    <dl className="@container divide-y divide-line rounded-card border border-line bg-paper">
       {rows.map((row) => (
         <div
           key={row.field}
-          className="grid gap-2 p-5 sm:grid-cols-[14rem_1fr] sm:gap-6 sm:p-6"
+          className="grid gap-2 p-5 @xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-6 sm:p-6"
         >
           <dt className="font-semibold">{row.label}</dt>
-          <dd className="flex flex-col gap-2">
+          <dd className="flex min-w-0 flex-col gap-2 wrap-anywhere">
             {row.value === null ? (
-              <span className="text-secondary">Not stated</span>
+              <span className="text-secondary">{unknownLabel}</span>
             ) : (
               <>
                 <span className="font-display text-lg font-semibold">
@@ -38,7 +44,7 @@ export function SpecList({ rows }: { rows: SpecRow[] }) {
                       <a
                         href={s.sourceUrl}
                         rel="noopener noreferrer"
-                        className="text-ink underline underline-offset-4"
+                        className="inline-flex min-h-11 items-center text-ink underline underline-offset-4"
                       >
                         {new URL(s.sourceUrl).hostname}
                         <span className="sr-only">, external site</span>

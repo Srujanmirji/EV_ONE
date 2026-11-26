@@ -1,0 +1,9 @@
+@media (width < 769px) {
+  :global(html):has(.detail) {
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  :global(body):has(.detail) {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}

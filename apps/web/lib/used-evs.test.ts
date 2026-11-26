@@ -6,6 +6,7 @@ import {
 } from "./format";
 import {
   activeUsedEvFilterCount,
+  loadUsedEvDetail,
   loadUsedEvs,
   parseUsedEvFilters,
   usedEvDetailHref,
@@ -194,5 +195,138 @@ describe("loadUsedEvs", () => {
       { apiOrigin: "http://127.0.0.1:4000", fetch: badCursorFetch },
     );
     expect(invalid.kind).toBe("invalid-filters");
+  });
+});
+
+describe("loadUsedEvDetail", () => {
+  const detailPayload = {
+    data: {
+      id: "1a088e6e-32fd-4086-af08-0aef72dabef2",
+      slug: "demo-listing-1",
+      year: 2024,
+      odometerKm: 12000,
+      city: "DEMO Pune",
+      askingPricePaise: "90000000",
+      ownershipCount: 1,
+      isDemo: true,
+      publishedAt: "2026-11-15T06:00:00.000Z",
+      sellerType: "INDIVIDUAL_OWNER",
+      photoCount: 1,
+      conditionNotes: "DEMO synthetic condition notes.",
+      media: [
+        {
+          id: "3c088e6e-32fd-4086-af08-0aef72dabef2",
+          position: 0,
+          alt: "DEMO synthetic side profile",
+        },
+      ],
+      sources: [
+        {
+          fieldName: "BATTERY_KWH",
+          valueText: "40.5 kWh usable",
+          sourceUrl: "https://example.com/battery",
+          sourceKind: "OEM",
+          effectiveAt: null,
+          reviewedAt: "2026-11-03T10:00:00.000Z",
+        },
+      ],
+      vehicle: {
+        brand: { slug: "demo-motors", name: "DEMO Motors" },
+        model: {
+          slug: "demo-hatch",
+          name: "DEMO Hatch",
+          vehicleType: "CAR",
+        },
+        variant: {
+          id: "2b088e6e-32fd-4086-af08-0aef72dabef2",
+          slug: "demo-lr",
+          name: "LR",
+          specs: {
+            batteryKwh: 40.5,
+            claimedRange: { km: 400, standard: "MIDC" },
+            motorKw: null,
+            chargingAcKw: null,
+            chargingDcKw: null,
+            warrantyText: null,
+          },
+        },
+      },
+    },
+  };
+
+  it("rejects malformed slugs immediately without calling fetch", async () => {
+    let called = false;
+    const result = await loadUsedEvDetail("Not A Slug!", {
+      apiOrigin: "http://127.0.0.1:4000",
+      fetch: async () => {
+        called = true;
+        return new Response(null, { status: 500 });
+      },
+    });
+    expect(result).toEqual({ kind: "not-found" });
+    expect(called).toBe(false);
+  });
+
+  it("loads published detail and filters the current listing out of related results", async () => {
+    const relatedItem = {
+      ...detailPayload.data,
+      id: "9f088e6e-32fd-4086-af08-0aef72dabef2",
+      slug: "demo-listing-2",
+    };
+    const fakeFetch: typeof fetch = async (input) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url.includes("/used-evs/demo-listing-1")) {
+        return new Response(JSON.stringify(detailPayload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify({
+          data: [detailPayload.data, relatedItem],
+          page: { nextCursor: null, hasMore: false },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    };
+
+    const result = await loadUsedEvDetail("demo-listing-1", {
+      apiOrigin: "http://127.0.0.1:4000",
+      fetch: fakeFetch,
+    });
+    expect(result.kind).toBe("ok");
+    if (result.kind === "ok") {
+      expect(result.data.listing.slug).toBe("demo-listing-1");
+      expect((await result.data.related).map((r) => r.slug)).toEqual([
+        "demo-listing-2",
+      ]);
+    }
+  });
+
+  it("maps 404 to not-found and missing API_BASE_URL to unavailable", async () => {
+    expect(await loadUsedEvDetail("demo-listing-1", { apiOrigin: "" })).toEqual(
+      { kind: "unavailable" },
+    );
+
+    const notFound = await loadUsedEvDetail("demo-listing-missing", {
+      apiOrigin: "http://127.0.0.1:4000",
+      fetch: async () =>
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "NOT_FOUND",
+              message: "Listing not found",
+              requestId: "7f088e6e-32fd-4086-af08-0aef72dabef2",
+            },
+          }),
+          { status: 404, headers: { "Content-Type": "application/json" } },
+        ),
+    });
+    expect(notFound).toEqual({ kind: "not-found" });
   });
 });
